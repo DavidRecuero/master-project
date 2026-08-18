@@ -5,6 +5,9 @@
 *.jpeg filter=lfs diff=lfs merge=lfs -text
 *.tga filter=lfs diff=lfs merge=lfs -text
 *.exr filter=lfs diff=lfs merge=lfs -text
+*.tif filter=lfs diff=lfs merge=lfs -text
+*.tiff filter=lfs diff=lfs merge=lfs -text
+*.bmp filter=lfs diff=lfs merge=lfs -text
 
 # 3D models
 *.fbx filter=lfs diff=lfs merge=lfs -text
@@ -16,6 +19,9 @@
 *.mp3 filter=lfs diff=lfs merge=lfs -text
 *.ogg filter=lfs diff=lfs merge=lfs -text
 *.mp4 filter=lfs diff=lfs merge=lfs -text
+*.mov filter=lfs diff=lfs merge=lfs -text
+*.webm filter=lfs diff=lfs merge=lfs -text
+*.avi filter=lfs diff=lfs merge=lfs -text
 
 # Compiled files and libraries
 *.dll filter=lfs diff=lfs merge=lfs -text
@@ -23,3 +29,19 @@
 *.a filter=lfs diff=lfs merge=lfs -text
 *.apk filter=lfs diff=lfs merge=lfs -text
 *.aab filter=lfs diff=lfs merge=lfs -text
+
+# Unity Templates
+*.scenetemplate filter=lfs diff=lfs merge=lfs -text
+
+# Typography files
+*.ttf filter=lfs diff=lfs merge=lfs -text
+*.otf filter=lfs diff=lfs merge=lfs -text
+
+# Addressables y AssetBundles
+*.bundle filter=lfs diff=lfs merge=lfs -text
+*.hash filter=lfs diff=lfs merge=lfs -text
+
+# Compressed files
+*.zip filter=lfs diff=lfs merge=lfs -text
+*.rar filter=lfs diff=lfs merge=lfs -text
+*.bytes filter=lfs diff=lfs merge=lfs -text

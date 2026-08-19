@@ -11,6 +11,13 @@ public class Pipe
 
     [Tooltip("List of positions. Index 0 is the origin, the last index is the destination")]
     public List<Vector2Int> path;
+
+    [Tooltip("Queue of items IDs (0, 1, 2...). Must match possibleItemColors indices.")]
+    public List<int> itemsQueue = new List<int>();
+
+    // Runtime list tracking the active GameObjects sitting on the path
+    [HideInInspector]
+    public List<Item> activeItems = new List<Item>();
 }
 
 public class BoardManager : MonoBehaviour
@@ -25,6 +32,10 @@ public class BoardManager : MonoBehaviour
 
     [Header("Pipes Data")]
     public List<Pipe> pipes = new List<Pipe>();
+
+    [Header("Item Settings")]
+    public Sprite itemSprite;
+    public Color[] possibleItemColors = new Color[] { Color.red, Color.blue, Color.yellow, Color.green };
 
     [Header("Camera Settings")]
     public float edgeMargin = 1f; // Extra space around the board
@@ -96,6 +107,9 @@ public class BoardManager : MonoBehaviour
         }
 
         CenterBoard();
+
+        // --- SPAWN ITEMS ---
+        InitializePipesAndItems();
     }
 
     // Helper function to find the highest layer pipe at a specific coordinate
@@ -127,5 +141,95 @@ public class BoardManager : MonoBehaviour
 
         //Pick the larger size(so nothing gets cut off) and add the margin
         cam.orthographicSize = Mathf.Max(sizeForHeight, sizeForWidth) + edgeMargin;
+    }
+
+    void InitializePipesAndItems()
+    {
+        foreach (Pipe pipe in pipes)
+        {
+            if (pipe.path == null || pipe.path.Count == 0) continue;
+
+            pipe.activeItems.Clear();
+
+            int pathLen = pipe.path.Count;
+            int queueLen = pipe.itemsQueue.Count;
+            int itemsToSpawn = Mathf.Min(pathLen, queueLen);
+
+            for (int i = 0; i < itemsToSpawn; i++)
+            {
+                int pathIndex = pathLen - 1 - i;
+                Vector2Int pos = pipe.path[pathIndex];
+
+                int idColor = pipe.itemsQueue[i];
+                Color color = possibleItemColors[idColor];
+
+                Item item = SpawnItemObject(pos, idColor, color, pipe);
+                pipe.activeItems.Add(item);
+            }
+        }
+    }
+
+    Item SpawnItemObject(Vector2Int pos, int idColor, Color color, Pipe pipe)
+    {
+        GameObject itemObj = new GameObject($"Item_P{pipe.layer}_{pos.x}_{pos.y}");
+        itemObj.transform.SetParent(this.transform);
+
+        Vector3 cellWorldPos = tilemap.CellToWorld(new Vector3Int(pos.x, pos.y, 0));
+        Vector3 centerOffset = new Vector3(tilemap.cellSize.x / 2f, tilemap.cellSize.y / 2f, 0);
+        itemObj.transform.position = cellWorldPos + centerOffset;
+
+        Item itemComponent = itemObj.AddComponent<Item>();
+        itemComponent.Init(color, pos, pipe, itemSprite);
+
+        // Visibility Check
+        Pipe topPipe = GetHighestLayerPipeAt(pos);
+        itemObj.SetActive(topPipe == pipe);
+
+        return itemComponent;
+    }
+
+    // Call this method when a candy is picked at the end of the pipe
+    public void AdvancePipe(Pipe pipe)
+    {
+        if (pipe.activeItems.Count == 0) return;
+
+        // Remove the first item from the active list and the queue
+        pipe.activeItems.RemoveAt(0);
+        if (pipe.itemsQueue.Count > 0) pipe.itemsQueue.RemoveAt(0);
+
+        int pathLen = pipe.path.Count;
+
+        // Move all remaining active items one step forward along the path
+        for (int i = 0; i < pipe.activeItems.Count; i++)
+        {
+            int pathIndex = pathLen - 1 - i;
+            Vector2Int newPos = pipe.path[pathIndex];
+
+            Item item = pipe.activeItems[i];
+            item.gridPosition = newPos;
+
+            Vector3 cellWorldPos = tilemap.CellToWorld(new Vector3Int(newPos.x, newPos.y, 0));
+            Vector3 centerOffset = new Vector3(tilemap.cellSize.x / 2f, tilemap.cellSize.y / 2f, 0);
+            item.transform.position = cellWorldPos + centerOffset;
+
+            // Update visibility based on the highest layer pipe at the new position
+            Pipe topPipe = GetHighestLayerPipeAt(newPos);
+            item.gameObject.SetActive(topPipe == pipe);
+        }
+
+        // If there are still items in the queue, spawn a new item at the origin of the pipe
+        if (pipe.itemsQueue.Count >= pathLen)
+        {
+            // The item that enters is the one at the index equivalent to the path size minus 1
+            int newCandyIndex = pathLen - 1;
+            int idColor = pipe.itemsQueue[newCandyIndex];
+            Color color = possibleItemColors[idColor];
+
+            // The origin is always the index 0 of the path
+            Vector2Int originPos = pipe.path[0];
+
+            Item newItem = SpawnItemObject(originPos, idColor, color, pipe);
+            pipe.activeItems.Add(newItem);
+        }
     }
 }

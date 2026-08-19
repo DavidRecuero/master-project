@@ -161,6 +161,8 @@ MonoBehaviour:
     - {x: 2, y: 2}
     - {x: 2, y: 1}
     - {x: 2, y: 0}
+    itemsQueue: 0100000002000000030000000000000000000000020000000300000004000000
+    activeItems: []
   - layer: 1
     path:
     - {x: 4, y: 4}
@@ -172,6 +174,8 @@ MonoBehaviour:
     - {x: 0, y: 2}
     - {x: 0, y: 1}
     - {x: 0, y: 0}
+    itemsQueue: 0300000003000000020000000300000001000000000000000200000000000000
+    activeItems: []
   - layer: 2
     path:
     - {x: 0, y: 1}
@@ -179,6 +183,8 @@ MonoBehaviour:
     - {x: 2, y: 1}
     - {x: 3, y: 1}
     - {x: 3, y: 0}
+    itemsQueue: 000000000100000002000000030000000300000002000000010000000000000000000000
+    activeItems: []
   - layer: 3
     path:
     - {x: 1, y: 4}
@@ -186,6 +192,14 @@ MonoBehaviour:
     - {x: 1, y: 2}
     - {x: 1, y: 1}
     - {x: 1, y: 0}
+    itemsQueue: 0000000001000000010000000200000003000000
+    activeItems: []
+  itemSprite: {fileID: -2413806693520163455, guid: 9f949e1d48d7f664fb214fc446472e13, type: 3}
+  possibleItemColors:
+  - {r: 1, g: 0, b: 0, a: 1}
+  - {r: 0, g: 0, b: 1, a: 1}
+  - {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  - {r: 0, g: 1, b: 0, a: 1}
   edgeMargin: 1
 --- !u!4 &462780002
 Transform:

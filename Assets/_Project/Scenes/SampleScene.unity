@@ -153,6 +153,39 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 16042a9f40fdc2e4693fa5993ca76202, type: 2}
   width: 5
   height: 5
+  pipes:
+  - layer: 0
+    path:
+    - {x: 2, y: 4}
+    - {x: 2, y: 3}
+    - {x: 2, y: 2}
+    - {x: 2, y: 1}
+    - {x: 2, y: 0}
+  - layer: 1
+    path:
+    - {x: 4, y: 4}
+    - {x: 4, y: 3}
+    - {x: 4, y: 2}
+    - {x: 3, y: 2}
+    - {x: 2, y: 2}
+    - {x: 1, y: 2}
+    - {x: 0, y: 2}
+    - {x: 0, y: 1}
+    - {x: 0, y: 0}
+  - layer: 2
+    path:
+    - {x: 0, y: 1}
+    - {x: 1, y: 1}
+    - {x: 2, y: 1}
+    - {x: 3, y: 1}
+    - {x: 3, y: 0}
+  - layer: 3
+    path:
+    - {x: 1, y: 4}
+    - {x: 1, y: 3}
+    - {x: 1, y: 2}
+    - {x: 1, y: 1}
+    - {x: 1, y: 0}
   edgeMargin: 1
 --- !u!4 &462780002
 Transform:

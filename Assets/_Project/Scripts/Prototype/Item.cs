@@ -18,8 +18,9 @@ public class Item : MonoBehaviour
         }
     }
 
-    public void Init(Color color, Vector2Int pos, Pipe pipe, Sprite sprite)
+    public void Init(int id, Color color, Vector2Int pos, Pipe pipe, Sprite sprite)
     {
+        colorID = id;
         itemColor = color;
         gridPosition = pos;
         parentPipe = pipe;
@@ -35,5 +36,10 @@ public class Item : MonoBehaviour
 
         // Draw above the tilemap (Tilemap is usually layer 0)
         spriteRenderer.sortingOrder = 10 + pipe.layer;
+
+        // Collider to detect clicks or interactions
+        BoxCollider2D col = gameObject.GetComponent<BoxCollider2D>();
+        if (col == null) col = gameObject.AddComponent<BoxCollider2D>();
+        col.size = new Vector2(1f, 1f);
     }
 }

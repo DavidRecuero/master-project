@@ -143,6 +143,7 @@ public class BoardManager : MonoBehaviour
         cam.orthographicSize = Mathf.Max(sizeForHeight, sizeForWidth) + edgeMargin;
     }
 
+    // Initializes the items on each pipe based on their queue and path
     void InitializePipesAndItems()
     {
         foreach (Pipe pipe in pipes)
@@ -169,6 +170,7 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    // Spawns an item GameObject at the specified grid position, initializes it, and returns the Item component
     Item SpawnItemObject(Vector2Int pos, int idColor, Color color, Pipe pipe)
     {
         GameObject itemObj = new GameObject($"Item_P{pipe.layer}_{pos.x}_{pos.y}");
@@ -179,7 +181,7 @@ public class BoardManager : MonoBehaviour
         itemObj.transform.position = cellWorldPos + centerOffset;
 
         Item itemComponent = itemObj.AddComponent<Item>();
-        itemComponent.Init(color, pos, pipe, itemSprite);
+        itemComponent.Init(idColor, color, pos, pipe, itemSprite);
 
         // Visibility Check
         Pipe topPipe = GetHighestLayerPipeAt(pos);

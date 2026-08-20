@@ -27,13 +27,16 @@ public class BoardManager : MonoBehaviour
     public TileBase[] tiles; // Different possible tiles to use in the board
     public TrayManager trayManager;
 
-    [Header("Board Data")]
-    public int width = 5;
-    public int height = 5;
-    public float traySpace = 2.5f;  // Extra space reserved at the bottom for the tray
+    [Header("Level Data")]
+    public string levelFileName;
+    private int currentLevelNumber;
+    public int CurrentLevelNumber => currentLevelNumber;
 
-    [Header("Pipes Data")]
-    public List<Pipe> pipes = new List<Pipe>();
+    [Header("Board Data")]
+    private int width = 5;
+    private int height = 5;
+    private List<Pipe> pipes = new List<Pipe>();
+    public float traySpace = 2.5f;  // Extra space reserved at the bottom for the tray
 
     [Header("Item Settings")]
     public Sprite itemSprite;
@@ -45,6 +48,8 @@ public class BoardManager : MonoBehaviour
 
     void Start()
     {
+        LoadLevelData(levelFileName);
+
         GenerateBoard();
         AdjustCamera();
         trayManager.InitializeTray();
@@ -114,6 +119,46 @@ public class BoardManager : MonoBehaviour
 
         // --- SPAWN ITEMS ---
         InitializePipesAndItems();
+    }
+
+    // Loads the level data from a JSON file and populates the BoardManager's properties
+    private void LoadLevelData(string fileName)
+    {
+        // Load the JSON file from the Resources folder
+        TextAsset jsonTextFile = Resources.Load<TextAsset>(fileName);
+
+        if (jsonTextFile == null)
+        {
+            Debug.LogError($"Cannot find {fileName}.json in the Resources folder!");
+            return;
+        }
+
+        // Parse the JSON text into our C# class 
+        LevelData data = JsonUtility.FromJson<LevelData>(jsonTextFile.text);
+
+        // Apply the parsed data to the BoardManager
+        currentLevelNumber = data.levelNumber;
+        width = data.width;
+        height = data.height;
+
+        // Translate PipeData back into gameplay Pipes
+        pipes = new List<Pipe>();
+        foreach (PipeData pd in data.pipes)
+        {
+            Pipe newPipe = new Pipe
+            {
+                layer = pd.layer,
+                itemsQueue = new List<int>(pd.itemsQueue),
+                path = new List<Vector2Int>()
+            };
+
+            foreach (Vector2IntData v in pd.path)
+            {
+                newPipe.path.Add(new Vector2Int(v.x, v.y));
+            }
+
+            pipes.Add(newPipe);
+        }
     }
 
     // Helper function to find the highest layer pipe at a specific coordinate

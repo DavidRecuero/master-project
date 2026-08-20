@@ -28,7 +28,6 @@ public class BoardManager : MonoBehaviour
     public TrayManager trayManager;
 
     [Header("Level Data")]
-    public string levelFileName;
     private int currentLevelNumber;
     public int CurrentLevelNumber => currentLevelNumber;
 
@@ -46,9 +45,11 @@ public class BoardManager : MonoBehaviour
     public float edgeMargin = 1f; // Extra space around the board
     public float cameraZDepth = -10f;
 
-    void Start()
+    public void InitializeLevel(int levelIndex)
     {
-        LoadLevelData(levelFileName);
+        // Formats 1 into "level_001", 10 into "level_010", etc.
+        string fileName = $"level_{levelIndex:D3}";
+        LoadLevelData(fileName);
 
         GenerateBoard();
         AdjustCamera();
@@ -284,5 +285,16 @@ public class BoardManager : MonoBehaviour
             Item newItem = SpawnItemObject(originPos, idColor, color, pipe);
             pipe.activeItems.Add(newItem);
         }
+    }
+
+    // Checks if all items on all pipes have been collected
+    public bool IsBoardCleared()
+    {
+        foreach (Pipe pipe in pipes)
+        {
+            if (pipe.activeItems.Count > 0 || pipe.itemsQueue.Count > 0)
+                return false;
+        }
+        return true;
     }
 }

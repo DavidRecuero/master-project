@@ -25,6 +25,9 @@ public class TrayManager : MonoBehaviour
 
     public bool IsFull => trayItems.Count >= maxCapacity;
 
+    [Header("References")]
+    public BoardManager boardManager;
+
     public void InitializeTray()
     {
         GenerateSlotVisuals();
@@ -83,6 +86,12 @@ public class TrayManager : MonoBehaviour
         UpdateTrayLayout();
         CheckForMatches(item.colorID);
 
+        // Check for Game Over (Tray is full after inserting and matching)
+        if (IsFull)
+        {
+            GameManager.Instance.GameOver(false);                                                       // Lost
+        }
+
         return true;
     }
 
@@ -139,5 +148,11 @@ public class TrayManager : MonoBehaviour
         }
 
         UpdateTrayLayout();
+
+        // After items dissolve, check if the board and tray are completely cleared
+        if (boardManager.IsBoardCleared() && trayItems.Count == 0)
+        {
+            GameManager.Instance.GameOver(true);                                                // Won
+        }
     }
 }

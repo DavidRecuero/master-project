@@ -25,10 +25,12 @@ public class BoardManager : MonoBehaviour
     [Header("References")]
     public Tilemap tilemap;
     public TileBase[] tiles; // Different possible tiles to use in the board
+    public TrayManager trayManager;
 
     [Header("Board Data")]
     public int width = 5;
     public int height = 5;
+    public float traySpace = 2.5f;  // Extra space reserved at the bottom for the tray
 
     [Header("Pipes Data")]
     public List<Pipe> pipes = new List<Pipe>();
@@ -39,11 +41,13 @@ public class BoardManager : MonoBehaviour
 
     [Header("Camera Settings")]
     public float edgeMargin = 1f; // Extra space around the board
+    public float cameraZDepth = -10f;
 
     void Start()
     {
         GenerateBoard();
         AdjustCamera();
+        trayManager.InitializeTray();
     }
 
     void GenerateBoard()
@@ -133,10 +137,12 @@ public class BoardManager : MonoBehaviour
     {
         Camera cam = Camera.main;
 
-        //Ensure it's looking at the center (0,0) but pulled back on Z (-10)
-        cam.transform.position = new Vector3(0, 0, -10);
+        // Extra space reserved at the bottom for the tray
+        float totalHeight = height + traySpace;
 
-        float sizeForHeight = height / 2f;
+        cam.transform.position = new Vector3(0, -traySpace / 2f, cameraZDepth);
+
+        float sizeForHeight = totalHeight / 2f;
         float sizeForWidth = (width / 2f) / cam.aspect;
 
         //Pick the larger size(so nothing gets cut off) and add the margin

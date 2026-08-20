@@ -5,6 +5,7 @@ public class InputManager : MonoBehaviour
 {
     [Header("References")]
     public BoardManager boardManager;
+    public TrayManager trayManager;
 
     void Update()
     {
@@ -33,21 +34,16 @@ public class InputManager : MonoBehaviour
     void TryCollectItem(Item item)
     {
         Pipe parentPipe = item.parentPipe;
-
         Vector2Int exitPosition = parentPipe.path[parentPipe.path.Count - 1];
 
         if (item.gridPosition == exitPosition)
         {
-            Debug.Log($"Tap detected! Collecting item with ID: {item.colorID}");
-
-            // TODO: Add this item to the tray
-            Destroy(item.gameObject);
-
-            boardManager.AdvancePipe(parentPipe);
-        }
-        else
-        {
-            Debug.Log("You tapped an item, but it is not at the pipe's exit.");
+            // Try sending item to tray
+            if (trayManager.TryAddItem(item))
+            {
+                // Advance pipe only if item was successfully added to tray
+                boardManager.AdvancePipe(parentPipe);
+            }
         }
     }
 }

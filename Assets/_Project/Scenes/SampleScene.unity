@@ -119,6 +119,61 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &307449188
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 307449190}
+  - component: {fileID: 307449189}
+  m_Layer: 0
+  m_Name: TrayManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &307449189
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 307449188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c34ee10d6fd6654db5dd3ee59ed7fbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrayManager
+  maxCapacity: 7
+  slotSpacing: 0.85
+  moveSpeed: 15
+  bottomPadding: 1.2
+  snapDistance: 0.01
+  matchDestroyDelay: 0.25
+  slotSortingOrder: -10
+  itemInTraySortingOrder: 100
+  slotSprite: {fileID: 7482667652216324306, guid: b433130a007fa3247a153e9703b1027c, type: 3}
+  slotColor: {r: 0, g: 0, b: 0, a: 0.3}
+  slotScale: 0.8
+--- !u!4 &307449190
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 307449188}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &462780000
 GameObject:
   m_ObjectHideFlags: 0
@@ -151,8 +206,10 @@ MonoBehaviour:
   tilemap: {fileID: 855564688}
   tiles:
   - {fileID: 11400000, guid: 16042a9f40fdc2e4693fa5993ca76202, type: 2}
+  trayManager: {fileID: 307449189}
   width: 5
   height: 5
+  traySpace: 2.5
   pipes:
   - layer: 0
     path:
@@ -161,7 +218,7 @@ MonoBehaviour:
     - {x: 2, y: 2}
     - {x: 2, y: 1}
     - {x: 2, y: 0}
-    itemsQueue: 0100000002000000030000000000000000000000020000000300000004000000
+    itemsQueue: 0100000002000000030000000000000000000000020000000300000003000000
     activeItems: []
   - layer: 1
     path:
@@ -201,6 +258,7 @@ MonoBehaviour:
   - {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   - {r: 0, g: 1, b: 0, a: 1}
   edgeMargin: 1
+  cameraZDepth: -10
 --- !u!4 &462780002
 Transform:
   m_ObjectHideFlags: 0
@@ -639,6 +697,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InputManager
   boardManager: {fileID: 462780001}
+  trayManager: {fileID: 307449189}
 --- !u!4 &1101902248
 Transform:
   m_ObjectHideFlags: 0
@@ -663,3 +722,4 @@ SceneRoots:
   - {fileID: 1053507880}
   - {fileID: 462780002}
   - {fileID: 1101902248}
+  - {fileID: 307449190}

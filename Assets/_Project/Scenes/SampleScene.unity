@@ -455,6 +455,7 @@ MonoBehaviour:
   - {r: 0, g: 0, b: 1, a: 1}
   - {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   - {r: 0, g: 1, b: 0, a: 1}
+  - {r: 1, g: 0, b: 0.75, a: 1}
   edgeMargin: 1
   cameraZDepth: -10
 --- !u!4 &462780002
@@ -501,7 +502,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aff6cd35067dcaa4681fe5219bef0380, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  totalLevels: 3
+  totalLevels: 5
   resultPanel: {fileID: 1028451193}
   resultText: {fileID: 89665369}
   nextLevelButton: {fileID: 1739096216}

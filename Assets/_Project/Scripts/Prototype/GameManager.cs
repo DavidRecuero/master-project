@@ -15,6 +15,7 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI resultText;
     public GameObject nextLevelButton;
     public GameObject restartButton;
+    public TextMeshProUGUI levelIndicatorText;
 
     private void Awake()
     {
@@ -27,6 +28,9 @@ public class GameManager : MonoBehaviour
         BoardManager board = FindFirstObjectByType<BoardManager>();
         if (board != null)
             board.InitializeLevel(currentLevelIndex);
+
+        if (levelIndicatorText != null)
+            levelIndicatorText.text = $"LEVEL {currentLevelIndex}";
     }
 
     public void GameOver(bool hasWon)

@@ -73,6 +73,9 @@ public class TrayManager : MonoBehaviour
         Collider2D col = item.GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 
+        // To stop the tappeable animation
+        item.inTray = true;
+
         SpriteRenderer itemSr = item.GetComponent<SpriteRenderer>();
         if (itemSr != null) itemSr.sortingOrder = itemInTraySortingOrder;
 

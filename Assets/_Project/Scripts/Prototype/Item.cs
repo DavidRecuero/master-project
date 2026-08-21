@@ -12,6 +12,11 @@ public class Item : MonoBehaviour
     public int baseSortingOrder = 10;
     public Vector2 colliderSize = new Vector2(1f, 1f);
 
+    [Header("Animation Settings")]
+    public float pulseSpeed = 14f;
+    public float pulseAmount = 0.02f;
+    [HideInInspector] public bool inTray = false;
+
     private SpriteRenderer spriteRenderer;
 
     private void Awake()
@@ -46,5 +51,23 @@ public class Item : MonoBehaviour
         BoxCollider2D col = gameObject.GetComponent<BoxCollider2D>();
         if (col == null) col = gameObject.AddComponent<BoxCollider2D>();
         col.size = colliderSize;
+    }
+
+    private void Update()
+    {
+        // Check if this item is at the exit position of its pipe
+        Vector2Int exitPosition = parentPipe.path[parentPipe.path.Count - 1];
+
+        if (gridPosition == exitPosition && !inTray)
+        {
+            // Calculate a smooth pulsing value using Sine wave
+            float currentPulse = defaultScale + Mathf.Sin(Time.time * pulseSpeed) * pulseAmount;
+            transform.localScale = new Vector3(currentPulse, currentPulse, 1f);
+        }
+        else
+        {
+            // Ensure the scale is reset if it's not at the exit
+            transform.localScale = new Vector3(defaultScale, defaultScale, 1f);
+        }
     }
 }

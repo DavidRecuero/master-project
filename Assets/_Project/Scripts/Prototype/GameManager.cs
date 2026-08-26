@@ -17,6 +17,21 @@ public class GameManager : MonoBehaviour
     public GameObject restartButton;
     public TextMeshProUGUI levelIndicatorText;
 
+    private void OnEnable()
+    {
+        GameEvents.OnLevelCleared += HandleLevelCleared;
+        GameEvents.OnLevelFailed += HandleLevelFailed;
+    }
+
+    private void OnDisable()
+    {
+        GameEvents.OnLevelCleared -= HandleLevelCleared;
+        GameEvents.OnLevelFailed -= HandleLevelFailed;
+    }
+
+    private void HandleLevelCleared() => GameOver(true);
+    private void HandleLevelFailed() => GameOver(false);
+
     private void Awake()
     {
         if (Instance == null) Instance = this;

@@ -1,11 +1,18 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class InputManager : MonoBehaviour
 {
-    [Header("References")]
-    public BoardManager boardManager;
-    public TrayManager trayManager;
+    // Event subscribed to by other components
+    public static event Action<Item> OnItemClicked;
+
+    private Camera mainCamera;
+
+    private void Awake()
+    {
+        mainCamera = Camera.main;
+    }
 
     void Update()
     {
@@ -21,28 +28,9 @@ public class InputManager : MonoBehaviour
             // Cast an invisible ray to see if it hits any Collider
             RaycastHit2D hit = Physics2D.Raycast(tapPosition, Vector2.zero);
 
-            if (hit.collider != null)
+            if (hit.collider != null && hit.collider.TryGetComponent(out Item clickedItem))
             {
-                Item clickedItem = hit.collider.GetComponent<Item>();
-
-                if (clickedItem != null)
-                    TryCollectItem(clickedItem);
-            }
-        }
-    }
-
-    void TryCollectItem(Item item)
-    {
-        Pipe parentPipe = item.parentPipe;
-        Vector2Int exitPosition = parentPipe.path[parentPipe.path.Count - 1];
-
-        if (item.gridPosition == exitPosition)
-        {
-            // Try sending item to tray
-            if (trayManager.TryAddItem(item))
-            {
-                // Advance pipe only if item was successfully added to tray
-                boardManager.AdvancePipe(parentPipe);
+                OnItemClicked?.Invoke(clickedItem);
             }
         }
     }

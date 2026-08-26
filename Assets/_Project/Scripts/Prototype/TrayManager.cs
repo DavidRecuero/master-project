@@ -28,6 +28,16 @@ public class TrayManager : MonoBehaviour
     [Header("References")]
     public BoardManager boardManager;
 
+    private void OnEnable()
+    {
+        InputManager.OnItemClicked += HandleItemClicked;
+    }
+
+    private void OnDisable()
+    {
+        InputManager.OnItemClicked -= HandleItemClicked;
+    }
+
     public void InitializeTray()
     {
         GenerateSlotVisuals();
@@ -63,6 +73,25 @@ public class TrayManager : MonoBehaviour
         Camera cam = Camera.main;
         float bottomY = cam.transform.position.y - cam.orthographicSize;
         return new Vector3(0, bottomY + bottomPadding, 0);
+    }
+
+    // Manages the clicks on items
+    private void HandleItemClicked(Item item)
+    {
+        // Avoids processing touches on times already travelling or inside the tray
+        if (item.inTray) return;
+
+        Pipe parentPipe = item.parentPipe;
+        Vector2Int exitPosition = parentPipe.path[parentPipe.path.Count - 1];
+
+        // Checking if the item is in the last position of the pipe
+        if (item.gridPosition == exitPosition)
+        {
+            if (TryAddItem(item))
+            {
+                boardManager.AdvancePipe(parentPipe);
+            }
+        }
     }
 
     // Attempts to add an item to the tray. Returns true if successful, false if the tray is full.

@@ -58,6 +58,10 @@ public class BoardManager : MonoBehaviour
 
         ApplyLevelData(data);
 
+        // Notify the pool the amount of itmes to prepare
+        int totalItemsInLevel = pipes.Sum(p => p.itemsQueue.Count);
+        ItemPool.Instance.PreparePool(totalItemsInLevel);
+
         GenerateBoard();
         AdjustCamera();
         trayManager.InitializeTray();
@@ -222,14 +226,17 @@ public class BoardManager : MonoBehaviour
     // Spawns an item GameObject at the specified grid position, initializes it, and returns the Item component
     Item SpawnItemObject(Vector2Int pos, int idColor, Color color, Pipe pipe)
     {
-        GameObject itemObj = new GameObject($"Item_P{pipe.layer}_{pos.x}_{pos.y}");
+        // Extract object from pool
+        Item itemComponent = ItemPool.Instance.GetItem();
+        GameObject itemObj = itemComponent.gameObject;
+
+        itemObj.name = $"Item_P{pipe.layer}_{pos.x}_{pos.y}";
         itemObj.transform.SetParent(this.transform);
 
         Vector3 cellWorldPos = tilemap.CellToWorld(new Vector3Int(pos.x, pos.y, 0));
         Vector3 centerOffset = new Vector3(tilemap.cellSize.x / 2f, tilemap.cellSize.y / 2f, 0);
         itemObj.transform.position = cellWorldPos + centerOffset;
 
-        Item itemComponent = itemObj.AddComponent<Item>();
         itemComponent.Init(idColor, color, pos, pipe, itemSprite);
 
         // Visibility Check

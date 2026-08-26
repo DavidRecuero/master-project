@@ -176,7 +176,7 @@ public class TrayManager : MonoBehaviour
 
         foreach (Item item in matchedItems)
         {
-            if (item != null) Destroy(item.gameObject);
+            ItemPool.Instance.ReleaseItem(item);
         }
 
         UpdateTrayLayout();

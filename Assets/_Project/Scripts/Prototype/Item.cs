@@ -51,6 +51,7 @@ public class Item : MonoBehaviour
         BoxCollider2D col = gameObject.GetComponent<BoxCollider2D>();
         if (col == null) col = gameObject.AddComponent<BoxCollider2D>();
         col.size = colliderSize;
+        col.enabled = true;
     }
 
     private void Update()

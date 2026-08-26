@@ -52,9 +52,11 @@ public class BoardManager : MonoBehaviour
 
     public void InitializeLevel(int levelIndex)
     {
-        // Formats 1 into "level_001", 10 into "level_010", etc.
-        string fileName = $"level_{levelIndex:D3}";
-        LoadLevelData(fileName);
+        LevelData data = LevelLoader.LoadLevel(levelIndex);
+
+        if (data == null) return; // Avoid errors if the level does not exist
+
+        ApplyLevelData(data);
 
         GenerateBoard();
         AdjustCamera();
@@ -130,20 +132,8 @@ public class BoardManager : MonoBehaviour
     }
 
     // Loads the level data from a JSON file and populates the BoardManager's properties
-    private void LoadLevelData(string fileName)
+    private void ApplyLevelData(LevelData data)
     {
-        // Load the JSON file from the Resources folder
-        TextAsset jsonTextFile = Resources.Load<TextAsset>(fileName);
-
-        if (jsonTextFile == null)
-        {
-            Debug.LogError($"Cannot find {fileName}.json in the Resources folder!");
-            return;
-        }
-
-        // Parse the JSON text into our C# class 
-        LevelData data = JsonUtility.FromJson<LevelData>(jsonTextFile.text);
-
         // Apply the parsed data to the BoardManager
         currentLevelNumber = data.levelNumber;
         width = data.width;

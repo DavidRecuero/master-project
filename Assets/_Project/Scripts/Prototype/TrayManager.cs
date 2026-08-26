@@ -104,6 +104,7 @@ public class TrayManager : MonoBehaviour
 
         // To stop the tappeable animation
         item.inTray = true;
+        item.StopPulse();
 
         SpriteRenderer itemSr = item.GetComponent<SpriteRenderer>();
         if (itemSr != null) itemSr.sortingOrder = itemInTraySortingOrder;

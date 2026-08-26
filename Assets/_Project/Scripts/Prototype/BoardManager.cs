@@ -264,7 +264,7 @@ public class BoardManager : MonoBehaviour
             Vector2Int newPos = pipe.path[pathIndex];
 
             Item item = pipe.activeItems[i];
-            item.gridPosition = newPos;
+            item.UpdateGridPosition(newPos);
 
             Vector3 cellWorldPos = tilemap.CellToWorld(new Vector3Int(newPos.x, newPos.y, 0));
             Vector3 centerOffset = new Vector3(tilemap.cellSize.x / 2f, tilemap.cellSize.y / 2f, 0);

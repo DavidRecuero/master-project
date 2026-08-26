@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class Item : MonoBehaviour
@@ -18,6 +19,7 @@ public class Item : MonoBehaviour
     [HideInInspector] public bool inTray = false;
 
     private SpriteRenderer spriteRenderer;
+    private Coroutine pulseCoroutine;
 
     private void Awake()
     {
@@ -26,6 +28,18 @@ public class Item : MonoBehaviour
         {
             spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
         }
+    }
+
+    private void OnEnable()
+    {
+        // Evaluates the animation on enable the game object
+        CheckExitPulse();
+    }
+
+    private void OnDisable()
+    {
+        // Stops the courrotine if the GameObject is disabled
+        StopPulse();
     }
 
     public void Init(int id, Color color, Vector2Int pos, Pipe pipe, Sprite sprite)
@@ -52,23 +66,59 @@ public class Item : MonoBehaviour
         if (col == null) col = gameObject.AddComponent<BoxCollider2D>();
         col.size = colliderSize;
         col.enabled = true;
+
+        CheckExitPulse();
     }
 
-    private void Update()
+    public void UpdateGridPosition(Vector2Int newPos)
     {
-        // Check if this item is at the exit position of its pipe
-        Vector2Int exitPosition = parentPipe.path[parentPipe.path.Count - 1];
+        gridPosition = newPos;
+        CheckExitPulse();
+    }
 
-        if (gridPosition == exitPosition && !inTray)
+    public void CheckExitPulse()
+    {
+        if (inTray || parentPipe == null || parentPipe.path == null || parentPipe.path.Count == 0)
         {
-            // Calculate a smooth pulsing value using Sine wave
-            float currentPulse = defaultScale + Mathf.Sin(Time.time * pulseSpeed) * pulseAmount;
-            transform.localScale = new Vector3(currentPulse, currentPulse, 1f);
+            StopPulse();
+            return;
+        }
+
+        Vector2Int exitPosition = parentPipe.path[parentPipe.path.Count - 1];
+        if (gridPosition == exitPosition)
+        {
+            StartPulse();
         }
         else
         {
-            // Ensure the scale is reset if it's not at the exit
-            transform.localScale = new Vector3(defaultScale, defaultScale, 1f);
+            StopPulse();
         }
+    }
+
+    public void StartPulse()
+    {
+        if (pulseCoroutine != null || !gameObject.activeInHierarchy) return;
+        pulseCoroutine = StartCoroutine(PulseRoutine());
+    }
+
+    public void StopPulse()
+    {
+        if (pulseCoroutine != null)
+        {
+            StopCoroutine(pulseCoroutine);
+            pulseCoroutine = null;
+        }
+        transform.localScale = new Vector3(defaultScale, defaultScale, 1f);
+    }
+
+    private IEnumerator PulseRoutine()
+    {
+        while (!inTray)
+        {
+            float currentPulse = defaultScale + Mathf.Sin(Time.time * pulseSpeed) * pulseAmount;
+            transform.localScale = new Vector3(currentPulse, currentPulse, 1f);
+            yield return null;
+        }
+        StopPulse();
     }
 }

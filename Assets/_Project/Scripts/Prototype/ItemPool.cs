@@ -45,6 +45,7 @@ public class ItemPool : MonoBehaviour
 
     private void OnReleaseItem(Item item)
     {
+        item.StopPulse();
         item.inTray = false;
         if (item.TryGetComponent(out Collider2D col)) col.enabled = true;
         item.gameObject.SetActive(false);

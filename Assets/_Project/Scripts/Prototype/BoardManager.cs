@@ -46,10 +46,6 @@ public class BoardManager : MonoBehaviour
     public Sprite itemSprite;
     public Color[] possibleItemColors = new Color[] { Color.red, Color.blue, Color.yellow, Color.green };
 
-    [Header("Camera Settings")]
-    public float edgeMargin = 1f; // Extra space around the board
-    public float cameraZDepth = -10f;
-
     public void InitializeLevel(int levelIndex)
     {
         LevelData data = LevelLoader.LoadLevel(levelIndex);
@@ -63,7 +59,10 @@ public class BoardManager : MonoBehaviour
         ItemPool.Instance.PreparePool(totalItemsInLevel);
 
         GenerateBoard();
-        AdjustCamera();
+
+        if (Camera.main.TryGetComponent(out CameraController camController))
+            camController.AdjustToBoard(width, height, traySpace);
+
         trayManager.InitializeTray();
     }
 
@@ -177,23 +176,6 @@ public class BoardManager : MonoBehaviour
         float offsetX = -width / 2f;
         float offsetY = -height / 2f;
         tilemap.transform.position = new Vector3(offsetX, offsetY, 0);
-    }
-
-    // Adjusts the camera to ensure the entire board is visible with a margin
-    void AdjustCamera()
-    {
-        Camera cam = Camera.main;
-
-        // Extra space reserved at the bottom for the tray
-        float totalHeight = height + traySpace;
-
-        cam.transform.position = new Vector3(0, -traySpace / 2f, cameraZDepth);
-
-        float sizeForHeight = totalHeight / 2f;
-        float sizeForWidth = (width / 2f) / cam.aspect;
-
-        //Pick the larger size(so nothing gets cut off) and add the margin
-        cam.orthographicSize = Mathf.Max(sizeForHeight, sizeForWidth) + edgeMargin;
     }
 
     // Initializes the items on each pipe based on their queue and path

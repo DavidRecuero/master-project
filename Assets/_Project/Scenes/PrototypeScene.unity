@@ -425,6 +425,7 @@ GameObject:
   m_Component:
   - component: {fileID: 462780002}
   - component: {fileID: 462780001}
+  - component: {fileID: 462780003}
   m_Layer: 0
   m_Name: Board Manager
   m_TagString: Untagged
@@ -449,9 +450,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 16042a9f40fdc2e4693fa5993ca76202, type: 2}
   trayManager: {fileID: 307449189}
   traySpace: 2.5
-  alph: 0.4
-  lineWidth: 0.05
-  lineSortingOffset: 4
+  pipeLineRenderer: {fileID: 0}
   itemSprite: {fileID: -2413806693520163455, guid: 9f949e1d48d7f664fb214fc446472e13, type: 3}
   possibleItemColors:
   - {r: 1, g: 0, b: 0, a: 1}
@@ -459,8 +458,6 @@ MonoBehaviour:
   - {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   - {r: 0, g: 1, b: 0, a: 1}
   - {r: 1, g: 0, b: 0.75, a: 1}
-  edgeMargin: 1
-  cameraZDepth: -10
 --- !u!4 &462780002
 Transform:
   m_ObjectHideFlags: 0
@@ -476,6 +473,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &462780003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 462780000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5963a1dae71771f488cc16957a6f7d08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PipeLineRenderer
+  alpha: 0.4
+  lineWidth: 0.05
+  lineSortingOffset: 4
 --- !u!1 &484639299
 GameObject:
   m_ObjectHideFlags: 0
@@ -538,6 +550,7 @@ GameObject:
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
   - component: {fileID: 519420030}
+  - component: {fileID: 519420033}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -663,6 +676,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &519420033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9025ec0a2586cc943a8d3791d890db2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraController
+  edgeMargin: 1
+  cameraZDepth: -10
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
@@ -1439,7 +1466,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 47.05
+  m_fontSize: 23.6
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

@@ -14,7 +14,9 @@ public class CameraController : MonoBehaviour
         if (cam == null) cam = Camera.main;
     }
 
-    // Adjusts the camera to ensure the entire board is visible with a margin
+    /// <summary>
+    /// Adjusts the camera to ensure the entire board is visible with a margin
+    /// </summary>
     public void AdjustToBoard(int width, int height, float traySpace)
     {
         if (cam == null) cam = Camera.main;

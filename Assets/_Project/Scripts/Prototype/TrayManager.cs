@@ -6,11 +6,13 @@ public class TrayManager : MonoBehaviour
 {
     [Header("Settings")]
     public int maxCapacity = 7;
+    public int matchSize = 3;           //# of items to match them
     public float slotSpacing = 0.8f;
     public float moveSpeed = 15f;
     public float bottomPadding = 1.2f;
     public float snapDistance = 0.01f;
     public float matchDestroyDelay = 0.25f;
+    private Camera mainCam;
 
     [Header("Sorting Layers")]
     public int slotSortingOrder = -10;
@@ -27,6 +29,11 @@ public class TrayManager : MonoBehaviour
 
     [Header("References")]
     public BoardManager boardManager;
+
+    private void Awake()
+    {
+        mainCam = Camera.main;
+    }
 
     private void OnEnable()
     {
@@ -70,8 +77,7 @@ public class TrayManager : MonoBehaviour
     // Returns the center position of the tray based on the camera's view and bottom padding
     private Vector3 GetTrayCenterPosition()
     {
-        Camera cam = Camera.main;
-        float bottomY = cam.transform.position.y - cam.orthographicSize;
+        float bottomY = mainCam.transform.position.y - mainCam.orthographicSize;
         return new Vector3(0, bottomY + bottomPadding, 0);
     }
 
@@ -162,7 +168,7 @@ public class TrayManager : MonoBehaviour
     {
         List<Item> matchingItems = trayItems.FindAll(x => x.colorID == colorIDToCheck);
 
-        if (matchingItems.Count >= 3)
+        if (matchingItems.Count >= matchSize)
         {
             StartCoroutine(HandleMatch3Visuals(matchingItems));
         }

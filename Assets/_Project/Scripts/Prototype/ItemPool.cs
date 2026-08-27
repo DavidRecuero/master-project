@@ -54,7 +54,11 @@ public class ItemPool : MonoBehaviour
 
     private void OnDestroyItem(Item item)
     {
-        Destroy(item.gameObject);
+        // Only tries to destroy the object if it still exists to avoid NullReference errors
+        if (item != null && item.gameObject != null)
+        {
+            Destroy(item.gameObject);
+        }
     }
 
     // Instances in memory objects required before playing the level

@@ -100,7 +100,9 @@ public class TrayManager : MonoBehaviour
         }
     }
 
-    // Attempts to add an item to the tray. Returns true if successful, false if the tray is full.
+    /// <summary>
+    /// Attempts to add an item to the tray. Returns true if successful, false if the tray is full.
+    /// </summary>
     public bool TryAddItem(Item item)
     {
         if (IsFull) return false;

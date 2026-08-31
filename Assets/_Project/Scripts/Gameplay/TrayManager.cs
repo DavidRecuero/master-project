@@ -193,7 +193,8 @@ public class TrayManager : MonoBehaviour
         // After items dissolve, check if the board and tray are completely cleared
         if (boardManager.IsBoardCleared() && trayItems.Count == 0)
         {
-            GameEvents.TriggerLevelCleared();                                               // Won
+            //WON - we change the state to the victory one
+            GameManager.Instance.TrySetState(GameState.Victory);
         }
     }
 }

@@ -6,6 +6,8 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
+    public GameState CurrentState { get; private set; }
+
     [Header("Level Settings")]
     public int totalLevels = 5;
     private int playerLevel;
@@ -34,6 +36,8 @@ public class GameManager : MonoBehaviour
         board = FindFirstObjectByType<BoardManager>();
         if (board == null)
             Debug.LogWarning("BoardManager not found");
+
+        CurrentState = GameState.Playing;
     }
 
     private void Start()
@@ -76,5 +80,31 @@ public class GameManager : MonoBehaviour
         // Final level to load
         if (board != null)
             board.InitializeLevel(levelToLoad);
+    }
+
+    /// <summary>
+    /// Tries to change the state. True if it was succesfully
+    /// </summary>
+    public bool TrySetState(GameState newState)
+    {
+        // If we go out of playing we block any other change
+        if (CurrentState != GameState.Playing) return false;
+
+        CurrentState = newState;
+
+        switch (newState)
+        {
+            case GameState.Victory:
+                Debug.Log("[GAME STATE] VICTORY");
+                GameEvents.TriggerLevelCleared();
+                break;
+
+            case GameState.Defeat:
+                Debug.Log("[GAME STATE] DEFEAT");
+                GameEvents.TriggerLevelFailed();
+                break;
+        }
+
+        return true;
     }
 }

@@ -40,4 +40,14 @@ public class UserDataManager : MonoBehaviour
         _dataService.SaveProfile(Profile);
         Debug.Log($"Saved. CurrentLvl: {Profile.CurrentLevel}, Coins: {Profile.Coins}");
     }
+
+    public void ResetData()
+    {
+        // New profile applying default values
+        Profile = new UserProfile();
+
+        _dataService.SaveProfile(Profile);
+
+        Debug.Log($"[DataReset] CurrentLvl: {Profile.CurrentLevel}, Coins: {Profile.Coins}");
+    }
 }

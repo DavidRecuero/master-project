@@ -8,7 +8,7 @@ public class UserProfile
 
     public UserProfile()
     {
-        CurrentLevel = 1;
-        Coins = 0;
+        CurrentLevel = 1;       //starting values
+        Coins = 250;
     }
 }

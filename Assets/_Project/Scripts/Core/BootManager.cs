@@ -19,7 +19,7 @@ public class BootManager : MonoBehaviour
 
         Debug.Log("[BOOT] Everything ready, loading main menu...");
 
-        // TODO: To load the Main Menu scene once it exists
-        //SceneManager.LoadScene(1);
+        // Loads the Main Menu scene 
+        SceneManager.LoadScene(1);
     }
 }

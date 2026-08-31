@@ -40,7 +40,7 @@ public class UIManager : MonoBehaviour
 
         // Get the current level from GameManager
         if (levelIndicatorText != null)
-            levelIndicatorText.text = $"{levelPrefix}{GameManager.CurrentLevelIndex}";
+            levelIndicatorText.text = $"{levelPrefix}{GameManager.Instance.CurrentLevelIndex}";
     }
 
     private void ShowWinScreen()

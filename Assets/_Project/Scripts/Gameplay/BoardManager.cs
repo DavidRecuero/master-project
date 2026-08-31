@@ -52,7 +52,7 @@ public class BoardManager : MonoBehaviour
 
         ApplyLevelData(data);
 
-        // Notify the pool the amount of itmes to prepare
+        // Notify the pool the amount of items to prepare
         int totalItemsInLevel = pipes.Sum(p => p.itemsQueue.Count);
         ItemPool.Instance.PreparePool(totalItemsInLevel);
 

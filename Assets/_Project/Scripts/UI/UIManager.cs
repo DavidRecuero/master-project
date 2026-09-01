@@ -8,9 +8,9 @@ public class UIManager : MonoBehaviour
     public GameObject resultPanel;
     public TextMeshProUGUI resultText;
 
-    [Header("Action Button")]
-    public Button actionButton;
-    public TextMeshProUGUI actionButtonText;
+    [Header("Buttons")]
+    public Button playButton;
+    public TextMeshProUGUI playButtonText;
 
     [Header("Indicators")]
     public TextMeshProUGUI levelIndicatorText;
@@ -45,12 +45,12 @@ public class UIManager : MonoBehaviour
 
     private void ShowWinScreen()
     {
-        SetupResultScreen(winTitleText, nextLevelButtonLabel, GameManager.Instance.NextLevel);
+        SetupResultScreen(winTitleText, nextLevelButtonLabel, GameManager.Instance.PlayAgain);
     }
 
     private void ShowLoseScreen()
     {
-        SetupResultScreen(loseTitleText, retryButtonLabel, GameManager.Instance.RestartLevel);
+        SetupResultScreen(loseTitleText, retryButtonLabel, GameManager.Instance.PlayAgain);
     }
 
     /// <summary>
@@ -60,13 +60,13 @@ public class UIManager : MonoBehaviour
     {
         if (resultPanel != null) resultPanel.SetActive(true);
         if (resultText != null) resultText.text = title;
-        if (actionButtonText != null) actionButtonText.text = buttonLabel;
+        if (playButtonText != null) playButtonText.text = buttonLabel;
 
-        if (actionButton != null)
+        if (playButton != null)
         {
             // Cleans previous events to not accumulate calls and assings new behaviour
-            actionButton.onClick.RemoveAllListeners();
-            actionButton.onClick.AddListener(buttonAction);
+            playButton.onClick.RemoveAllListeners();
+            playButton.onClick.AddListener(buttonAction);
         }
     }
 }

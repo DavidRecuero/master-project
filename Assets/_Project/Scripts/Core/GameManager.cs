@@ -47,17 +47,20 @@ public class GameManager : MonoBehaviour
     }
 
     ///<summary> 
-    ///Called by "Next Level" button TODO:Unify with RestartLevel()
+    ///Called by "Next Level"/"Play Again" buttons
     ///</summary>
-    public void NextLevel()
+    public void PlayAgain()
     {
         ReloadScene();
     }
 
-    ///<summary> Called by "Retry" TODO:Unify with NextLevel() button</summary>
-    public void RestartLevel()
+    ///<summary>
+    ///Called by "Got to Menu" button 
+    ///</summary>
+    public void BackToMenu()
     {
-        ReloadScene();
+        //Back to Main Menu
+        SceneManager.LoadScene(1);
     }
 
     private void ReloadScene()

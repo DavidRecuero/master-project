@@ -14,10 +14,18 @@ public class PipeLineRenderer : MonoBehaviour
     /// </summary>
     public void DrawPipeLines(List<Pipe> pipes, Dictionary<Pipe, Color> pipeColors, Tilemap tilemap)
     {
-        // Clean previous lines if the level is regenerated
-        foreach (Transform child in transform)
+        // Clean previous lines if the level is regenerated (to allow testing code -PipeLinerendererTests.cs-)
+        for (int i = transform.childCount - 1; i >= 0; i--)
         {
-            Destroy(child.gameObject);
+            GameObject child = transform.GetChild(i).gameObject;
+            if (Application.isPlaying)
+            {
+                Destroy(child);
+            }
+            else
+            {
+                DestroyImmediate(child);
+            }
         }
 
         Vector3 centerOffset = new Vector3(tilemap.cellSize.x / 2f, tilemap.cellSize.y / 2f, 0);

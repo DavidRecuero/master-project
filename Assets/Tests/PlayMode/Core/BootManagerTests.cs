@@ -6,17 +6,27 @@ using UnityEngine.TestTools;
 public class BootManagerTests
 {
     [UnityTest]
-    public IEnumerator StartupSequence_ExecutesAndCompletes()
+    public IEnumerator StartupSequence_CompletesAndLoadsMainMenu()
     {
         GameObject bootGO = new GameObject();
         BootManager bootManager = bootGO.AddComponent<BootManager>();
+        FakeSceneLoader fakeSceneLoader = new FakeSceneLoader();
 
-        // Espera el tiempo de la corrutina (0.5s en StartupSequence)
+        bootManager.Initialize(fakeSceneLoader);
+
         yield return new WaitForSeconds(0.6f);
 
-        // Verificamos que el GameObject sigue respondiendo
-        Assert.IsNotNull(bootManager);
+        Assert.AreEqual(1, fakeSceneLoader.LoadedSceneIndex);
 
         Object.Destroy(bootGO);
     }
+}
+
+public class FakeSceneLoader : ISceneLoader
+{
+    public int LoadedSceneIndex { get; private set; } = -1;
+    public bool ReloadCalled { get; private set; }
+
+    public void LoadScene(int sceneIndex) => LoadedSceneIndex = sceneIndex;
+    public void ReloadCurrentScene() => ReloadCalled = true;
 }

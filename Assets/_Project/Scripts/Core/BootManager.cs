@@ -4,6 +4,18 @@ using UnityEngine.SceneManagement;
 
 public class BootManager : MonoBehaviour
 {
+    private ISceneLoader _sceneLoader;
+
+    public void Initialize(ISceneLoader sceneLoader)
+    {
+        _sceneLoader = sceneLoader;
+    }
+
+    private void Awake()
+    {
+        _sceneLoader ??= new UnitySceneLoader();
+    }
+
     private void Start()
     {
         // TODO: here we'll load UGS, login, privacity popup...
@@ -20,6 +32,6 @@ public class BootManager : MonoBehaviour
         Debug.Log("[BOOT] Everything ready, loading main menu...");
 
         // Loads the Main Menu scene 
-        SceneManager.LoadScene(1);
+        _sceneLoader.LoadScene(1);
     }
 }

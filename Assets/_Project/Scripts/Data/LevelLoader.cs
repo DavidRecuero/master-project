@@ -1,9 +1,9 @@
 using UnityEngine;
 
-public static class LevelLoader
+public class LevelLoader : ILevelLoader
 {
     // Loads and returns the data from the JSON's level
-    public static LevelData LoadLevel(int levelIndex)
+    public LevelData LoadLevel(int levelIndex)
     {
         // Formats 1 into "level_001", 10 into "level_010", etc.
         string fileName = $"level_{levelIndex:D3}";

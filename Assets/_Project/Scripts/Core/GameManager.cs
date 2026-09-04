@@ -11,16 +11,29 @@ public class GameManager : MonoBehaviour
     [Header("Level Settings")]
     public int totalLevels = 5;
     private int playerLevel;
-    public int CurrentLevelIndex;
+    public int CurrentLevelIndex { get; private set; }
     private BoardManager board;
+
+    private IUserDataProvider _userDataProvider;
+    private ISceneLoader _sceneLoader;
+
+    public void Initialize(IUserDataProvider userDataProvider, ISceneLoader sceneLoader)
+    {
+        _userDataProvider = userDataProvider;
+        _sceneLoader = sceneLoader;
+    }
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
 
+        // Assign default dependencies if not injected before
+        _userDataProvider ??= UserDataManager.Instance;
+        _sceneLoader ??= new UnitySceneLoader();
+
         // UserDataManager validator
-        if (UserDataManager.Instance == null)
+        if (_userDataProvider == null)
         {
             Debug.LogWarning("UserDataManager not found. Try playing from Boot scene. Loading level 1.");
             playerLevel = 1;
@@ -28,7 +41,7 @@ public class GameManager : MonoBehaviour
         else
         {
             // Reading player level
-            playerLevel = UserDataManager.Instance.Profile.CurrentLevel;
+            playerLevel = _userDataProvider.CurrentLevel;
         }
 
         CurrentLevelIndex = playerLevel;
@@ -51,7 +64,7 @@ public class GameManager : MonoBehaviour
     ///</summary>
     public void PlayAgain()
     {
-        ReloadScene();
+        _sceneLoader.ReloadCurrentScene();
     }
 
     ///<summary>
@@ -60,12 +73,7 @@ public class GameManager : MonoBehaviour
     public void BackToMenu()
     {
         //Back to Main Menu
-        SceneManager.LoadScene(1);
-    }
-
-    private void ReloadScene()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        _sceneLoader.LoadScene(1);
     }
 
     private void LoadCorrectLevel()

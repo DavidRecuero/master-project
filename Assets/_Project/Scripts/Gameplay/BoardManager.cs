@@ -44,9 +44,21 @@ public class BoardManager : MonoBehaviour
     public Sprite itemSprite;
     public Color[] possibleItemColors = new Color[] { Color.red, Color.blue, Color.yellow, Color.green };
 
+    private ILevelLoader _levelLoader;
+
+    public void Initialize(ILevelLoader levelLoader)
+    {
+        _levelLoader = levelLoader;
+    }
+
+    private void Awake()
+    {
+        _levelLoader ??= new LevelLoader();
+    }
+
     public void InitializeLevel(int levelIndex)
     {
-        LevelData data = LevelLoader.LoadLevel(levelIndex);
+        LevelData data = _levelLoader.LoadLevel(levelIndex);
 
         if (data == null) return; // Avoid errors if the level does not exist
 

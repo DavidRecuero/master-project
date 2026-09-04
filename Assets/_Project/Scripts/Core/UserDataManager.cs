@@ -1,11 +1,13 @@
 using UnityEngine;
 
-public class UserDataManager : MonoBehaviour
+public class UserDataManager : MonoBehaviour, IUserDataProvider
 {
     public static UserDataManager Instance { get; private set; }
 
     public UserProfile Profile { get; private set; }
     private IUserDataService _dataService;
+
+    public int CurrentLevel => Profile != null ? Profile.CurrentLevel : 1;
 
     private void Awake()
     {

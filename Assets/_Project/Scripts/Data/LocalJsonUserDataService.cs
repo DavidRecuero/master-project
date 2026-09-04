@@ -3,12 +3,18 @@ using UnityEngine;
 public class LocalJsonUserDataService : IUserDataService
 {
     private const string SaveKey = "UserProfileData";
+    private readonly IStorageProvider _storage;
+
+    public LocalJsonUserDataService(IStorageProvider storage = null)
+    {
+        _storage = storage ?? new PlayerPrefsStorageProvider();
+    }
 
     public void SaveProfile(UserProfile profile)
     {
         string json = JsonUtility.ToJson(profile);
-        PlayerPrefs.SetString(SaveKey, json);
-        PlayerPrefs.Save();
+        _storage.SetString(SaveKey, json);
+        _storage.Save();
     }
 
     public UserProfile LoadProfile()
@@ -20,12 +26,12 @@ public class LocalJsonUserDataService : IUserDataService
             return newProfile;
         }
 
-        string json = PlayerPrefs.GetString(SaveKey);
+        string json = _storage.GetString(SaveKey);
         return JsonUtility.FromJson<UserProfile>(json);
     }
 
     public bool HasProfile()
     {
-        return PlayerPrefs.HasKey(SaveKey);
+        return _storage.HasKey(SaveKey);
     }
 }

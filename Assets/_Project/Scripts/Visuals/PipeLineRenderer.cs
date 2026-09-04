@@ -36,7 +36,7 @@ public class PipeLineRenderer : MonoBehaviour
             lr.alignment = LineAlignment.TransformZ;
 
             // Soft colour based on the pipe's layer
-            Color lineColor = pipeColors.ContainsKey(pipe) ? pipeColors[pipe] : Color.white;
+            Color lineColor = pipeColors.TryGetValue(pipe, out var color) ? color : Color.white;
             lineColor.a = alpha;
             lr.startColor = lineColor;
             lr.endColor = lineColor;

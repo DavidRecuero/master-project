@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -22,6 +23,16 @@ public class UIManager : MonoBehaviour
     public string retryButtonLabel = "RETRY";
     public string levelPrefix = "LEVEL ";
 
+    private Action _onPlayAgainAction;
+    private int _currentLevelIndex = 1;
+
+    public void Initialize(int currentLevelIndex, Action onPlayAgainAction)
+    {
+        _currentLevelIndex = currentLevelIndex;
+        _onPlayAgainAction = onPlayAgainAction;
+        UpdateLevelIndicator();
+    }
+
     private void OnEnable()
     {
         GameEvents.OnLevelCleared += ShowWinScreen;
@@ -39,18 +50,29 @@ public class UIManager : MonoBehaviour
         if (resultPanel != null) resultPanel.SetActive(false);
 
         // Get the current level from GameManager
+        if (_onPlayAgainAction == null && GameManager.Instance != null)
+        {
+            _currentLevelIndex = GameManager.Instance.CurrentLevelIndex;
+            _onPlayAgainAction = GameManager.Instance.PlayAgain;
+        }
+
+        UpdateLevelIndicator();
+    }
+
+    private void UpdateLevelIndicator()
+    {
         if (levelIndicatorText != null)
-            levelIndicatorText.text = $"{levelPrefix}{GameManager.Instance.CurrentLevelIndex}";
+            levelIndicatorText.text = $"{levelPrefix}{_currentLevelIndex}";
     }
 
     private void ShowWinScreen()
     {
-        SetupResultScreen(winTitleText, nextLevelButtonLabel, GameManager.Instance.PlayAgain);
+        SetupResultScreen(winTitleText, nextLevelButtonLabel, () => _onPlayAgainAction?.Invoke());
     }
 
     private void ShowLoseScreen()
     {
-        SetupResultScreen(loseTitleText, retryButtonLabel, GameManager.Instance.PlayAgain);
+        SetupResultScreen(loseTitleText, retryButtonLabel, () => _onPlayAgainAction?.Invoke());
     }
 
     /// <summary>

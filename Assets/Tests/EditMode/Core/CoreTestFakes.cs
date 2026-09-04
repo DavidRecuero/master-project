@@ -1,12 +1,17 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 public class FakeUserDataProvider : IUserDataProvider
 {
     public int CurrentLevel { get; set; } = 1;
+    public int Coins { get; set; } = 100;
     public bool ResetDataCalled { get; private set; }
 
-    public void ResetData() => ResetDataCalled = true;
+    public void ResetData()
+    {
+        ResetDataCalled = true;
+        CurrentLevel = 1;
+        Coins = 0;
+    }
 }
 
 public class FakeSceneLoader : ISceneLoader

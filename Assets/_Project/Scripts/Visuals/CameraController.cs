@@ -10,8 +10,7 @@ public class CameraController : MonoBehaviour, ICameraController
 
     private void Awake()
     {
-        cam = GetComponent<Camera>();
-        if (cam == null) cam = Camera.main;
+        EnsureCameraReference();
     }
 
     /// <summary>
@@ -19,7 +18,7 @@ public class CameraController : MonoBehaviour, ICameraController
     /// </summary>
     public void AdjustToBoard(int width, int height, float traySpace)
     {
-        if (cam == null) cam = Camera.main;
+        EnsureCameraReference();
 
         // Extra space reserved at the bottom for the tray
         float totalHeight = height + traySpace;
@@ -35,7 +34,13 @@ public class CameraController : MonoBehaviour, ICameraController
 
     public float GetCameraBottomY()
     {
-        Camera cam = GetComponent<Camera>();
+        EnsureCameraReference();
         return cam.transform.position.y - cam.orthographicSize;
+    }
+
+    private void EnsureCameraReference()
+    {
+        if (cam == null) cam = GetComponent<Camera>();
+        if (cam == null) cam = Camera.main;
     }
 }

@@ -8,6 +8,22 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI coinsText;
     [SerializeField] private TextMeshProUGUI playButtonText;
 
+    private IUserDataProvider _userDataProvider;
+    private ISceneLoader _sceneLoader;
+
+    public void Initialize(IUserDataProvider userDataProvider, ISceneLoader sceneLoader)
+    {
+        _userDataProvider = userDataProvider;
+        _sceneLoader = sceneLoader;
+        UpdateUI();
+    }
+
+    private void Awake()
+    {
+        _userDataProvider ??= UserDataManager.Instance;
+        _sceneLoader ??= new UnitySceneLoader();
+    }
+
     private void Start()
     {
         UpdateUI();
@@ -16,27 +32,27 @@ public class MainMenuController : MonoBehaviour
     private void UpdateUI()
     {
         // UserDataManager validator
-        if (UserDataManager.Instance == null)
+        if (_userDataProvider == null)
         {
             Debug.LogWarning("UserDataManager not found. Start from Boot scene.");
             return;
         }
 
         // Coins indicator updater
-        int currentCoins = UserDataManager.Instance.Profile.Coins;
-        coinsText.text = currentCoins.ToString();
+        if (coinsText != null)
+            coinsText.text = _userDataProvider.Coins.ToString();
 
         // Current Level indicator
-        int currentLevel = UserDataManager.Instance.Profile.CurrentLevel;
-        playButtonText.text = $"Level {currentLevel}";
+        if (playButtonText != null)
+            playButtonText.text = $"Level {_userDataProvider.CurrentLevel}";
     }
 
     // Play button function
     public void OnPlayButtonClicked()
     {
         Debug.Log("Loading Gameplay...");
-        
+
         //Loading "Level" scene
-        SceneManager.LoadScene(2);
+        _sceneLoader?.LoadScene(2);
     }
 }

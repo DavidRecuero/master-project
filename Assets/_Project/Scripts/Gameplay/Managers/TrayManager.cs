@@ -27,7 +27,7 @@ public class TrayManager : MonoBehaviour
     public bool IsFull => trayItems.Count >= maxCapacity;
 
     [Header("References")]
-    public BoardManager boardManager;
+    [SerializeField] private BoardManager boardManager;
 
     // Injected dependencies
     private IItemPool _itemPool;
@@ -43,6 +43,7 @@ public class TrayManager : MonoBehaviour
 
     private void Awake()
     {
+        boardManager ??= FindFirstObjectByType<BoardManager>();
         _itemPool ??= ItemPool.Instance;
         _gameStateController ??= GameManager.Instance as IGameStateController;
 

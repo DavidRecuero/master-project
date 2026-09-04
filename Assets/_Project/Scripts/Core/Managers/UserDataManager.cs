@@ -8,6 +8,7 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider
     private IUserDataService _dataService;
 
     public int CurrentLevel => Profile != null ? Profile.CurrentLevel : 1;
+    public int Coins => Profile != null ? Profile.Coins : 0;
 
     private void Awake()
     {

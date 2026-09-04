@@ -25,7 +25,7 @@ public class BoardManager : MonoBehaviour
     [Header("References")]
     public Tilemap tilemap;
     public TileBase[] tiles; // Different possible tiles to use in the board
-    public TrayManager trayManager;
+    [SerializeField] private TrayManager trayManager;
 
     [Header("Level Data")]
     private int currentLevelNumber;
@@ -49,6 +49,10 @@ public class BoardManager : MonoBehaviour
     private IItemPool _itemPool;
     private ICameraController _cameraController;
 
+    private void Awake()
+    {
+        trayManager ??= FindFirstObjectByType<TrayManager>();
+    }
 
     public void Initialize(ILevelLoader levelLoader, IItemPool itemPool, ICameraController cameraController)
     {

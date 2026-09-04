@@ -1,8 +1,6 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using TMPro;
 
-public class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviour, IGameStateController
 {
     public static GameManager Instance { get; private set; }
 
@@ -12,7 +10,13 @@ public class GameManager : MonoBehaviour
     public int totalLevels = 5;
     private int playerLevel;
     public int CurrentLevelIndex { get; private set; }
-    private BoardManager board;
+
+    [Header("Scene References")]
+
+    [SerializeField] private BoardManager boardManager;
+    [SerializeField] private TrayManager trayManager;
+    [SerializeField] private ItemPool itemPool;
+
 
     private IUserDataProvider _userDataProvider;
     private ISceneLoader _sceneLoader;
@@ -26,7 +30,11 @@ public class GameManager : MonoBehaviour
     private void Awake()
     {
         if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
 
         // Assign default dependencies if not injected before
         _userDataProvider ??= UserDataManager.Instance;
@@ -45,16 +53,17 @@ public class GameManager : MonoBehaviour
         }
 
         CurrentLevelIndex = playerLevel;
-
-        board = FindFirstObjectByType<BoardManager>();
-        if (board == null)
-            Debug.LogWarning("BoardManager not found");
-
         CurrentState = GameState.Playing;
     }
 
     private void Start()
     {
+        ICameraController camController = Camera.main != null ? Camera.main.GetComponent<ICameraController>() : null;
+        ILevelLoader levelLoader = new LevelLoader();
+
+        if (trayManager != null) trayManager.Initialize(itemPool, this, camController);
+        if (boardManager != null) boardManager.Initialize(levelLoader, itemPool, camController);
+
         //Called on Start instead of Awake to wait for the BoardManager initialisation
         LoadCorrectLevel();
     }
@@ -89,8 +98,14 @@ public class GameManager : MonoBehaviour
         }
 
         // Final level to load
-        if (board != null)
-            board.InitializeLevel(levelToLoad);
+        if (boardManager != null)
+        {
+            boardManager.InitializeLevel(levelToLoad);
+        }
+        else
+        {
+            Debug.LogError("❌ [GameManager] No BoardManager assigned to editor.");
+        }
     }
 
     /// <summary>

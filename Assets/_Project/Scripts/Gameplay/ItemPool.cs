@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
-public class ItemPool : MonoBehaviour
+public class ItemPool : MonoBehaviour, IItemPool
 {
     public static ItemPool Instance { get; private set; }
 

@@ -1,75 +1,39 @@
 using NUnit.Framework;
-using UnityEngine;
 
 public class LocalJsonUserDataServiceTests
 {
-    private LocalJsonUserDataService _dataService;
+    private FakeStorageProvider _fakeStorage;
+    private LocalJsonUserDataService _service;
 
     [SetUp]
     public void SetUp()
     {
-        _dataService = new LocalJsonUserDataService();
-
-        // To start without saved data
-        PlayerPrefs.DeleteAll();
-    }
-
-    [TearDown] // Clean up after each test
-    public void TearDown()
-    {
-        PlayerPrefs.DeleteAll();
+        _fakeStorage = new FakeStorageProvider();
+        _service = new LocalJsonUserDataService(_fakeStorage);
     }
 
     [Test]
-    public void SaveAndLoadProfile_PreservesProfileData()
+    public void LoadProfile_WhenNoProfileExists_CreatesAndSavesDefaultProfile()
     {
-        // Arrange
-        UserProfile profile = new UserProfile();
-        profile.Coins = 500;
+        Assert.IsFalse(_service.HasProfile());
 
-        // Act
-        _dataService.SaveProfile(profile);
-        UserProfile loadedProfile = _dataService.LoadProfile();
+        UserProfile profile = _service.LoadProfile();
 
-        // Assert
-        Assert.AreEqual(500, loadedProfile.Coins);
-    }
-
-    [Test]
-    public void LoadProfile_WhenNoProfileExists_CreatesDefaultProfile()
-    {
-        // Arrange
-        Assert.IsFalse(_dataService.HasProfile());
-
-        // Act
-        UserProfile profile = _dataService.LoadProfile();
-
-        // Assert
+        Assert.IsNotNull(profile);
         Assert.AreEqual(1, profile.CurrentLevel);
         Assert.AreEqual(250, profile.Coins);
-        Assert.IsTrue(_dataService.HasProfile());
+        Assert.IsTrue(_service.HasProfile());
     }
 
     [Test]
-    public void HasProfile_WhenProfileDoesNotExist_ReturnsFalse()
+    public void SaveProfile_PersistsProfileInStorage()
     {
-        // Act
-        bool hasProfile = _dataService.HasProfile();
+        UserProfile profile = new UserProfile { CurrentLevel = 5, Coins = 1000 };
 
-        // Assert
-        Assert.IsFalse(hasProfile);
-    }
+        _service.SaveProfile(profile);
+        UserProfile loadedProfile = _service.LoadProfile();
 
-    [Test]
-    public void HasProfile_WhenProfileIsSaved_ReturnsTrue()
-    {
-        // Arrange
-        UserProfile profile = new UserProfile();
-
-        // Act
-        _dataService.SaveProfile(profile);
-
-        // Assert
-        Assert.IsTrue(_dataService.HasProfile());
+        Assert.AreEqual(5, loadedProfile.CurrentLevel);
+        Assert.AreEqual(1000, loadedProfile.Coins);
     }
 }

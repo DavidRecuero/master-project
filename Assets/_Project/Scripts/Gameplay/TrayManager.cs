@@ -12,7 +12,6 @@ public class TrayManager : MonoBehaviour
     public float bottomPadding = 1.2f;
     public float snapDistance = 0.01f;
     public float matchDestroyDelay = 0.25f;
-    private Camera mainCam;
 
     [Header("Sorting Layers")]
     public int slotSortingOrder = -10;
@@ -30,9 +29,27 @@ public class TrayManager : MonoBehaviour
     [Header("References")]
     public BoardManager boardManager;
 
+    // Injected dependencies
+    private IItemPool _itemPool;
+    private IGameStateController _gameStateController;
+    private ICameraController _cameraController;
+
+    public void Initialize(IItemPool itemPool, IGameStateController gameStateController, ICameraController cameraController)
+    {
+        _itemPool = itemPool;
+        _gameStateController = gameStateController;
+        _cameraController = cameraController;
+    }
+
     private void Awake()
     {
-        mainCam = Camera.main;
+        _itemPool ??= ItemPool.Instance;
+        _gameStateController ??= GameManager.Instance as IGameStateController;
+
+        if (_cameraController == null && Camera.main != null)
+        {
+            _cameraController = Camera.main.GetComponent<ICameraController>();
+        }
     }
 
     private void OnEnable()
@@ -77,7 +94,7 @@ public class TrayManager : MonoBehaviour
     // Returns the center position of the tray based on the camera's view and bottom padding
     private Vector3 GetTrayCenterPosition()
     {
-        float bottomY = mainCam.transform.position.y - mainCam.orthographicSize;
+        float bottomY = _cameraController != null ? _cameraController.GetCameraBottomY() : 0f; 
         return new Vector3(0, bottomY + bottomPadding, 0);
     }
 
@@ -185,7 +202,7 @@ public class TrayManager : MonoBehaviour
 
         foreach (Item item in matchedItems)
         {
-            ItemPool.Instance.ReleaseItem(item);
+            _itemPool.ReleaseItem(item);
         }
 
         UpdateTrayLayout();
@@ -194,7 +211,7 @@ public class TrayManager : MonoBehaviour
         if (boardManager.IsBoardCleared() && trayItems.Count == 0)
         {
             //WON - we change the state to the victory one
-            GameManager.Instance.TrySetState(GameState.Victory);
+            _gameStateController?.TrySetState(GameState.Victory);
         }
     }
 }

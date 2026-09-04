@@ -44,36 +44,43 @@ public class BoardManager : MonoBehaviour
     public Sprite itemSprite;
     public Color[] possibleItemColors = new Color[] { Color.red, Color.blue, Color.yellow, Color.green };
 
+    //Injected dependencies
     private ILevelLoader _levelLoader;
+    private IItemPool _itemPool;
+    private ICameraController _cameraController;
 
-    public void Initialize(ILevelLoader levelLoader)
+
+    public void Initialize(ILevelLoader levelLoader, IItemPool itemPool, ICameraController cameraController)
     {
         _levelLoader = levelLoader;
-    }
-
-    private void Awake()
-    {
-        _levelLoader ??= new LevelLoader();
+        _itemPool = itemPool;
+        _cameraController = cameraController;
     }
 
     public void InitializeLevel(int levelIndex)
     {
-        LevelData data = _levelLoader.LoadLevel(levelIndex);
+        _levelLoader ??= new LevelLoader();
+        _itemPool ??= ItemPool.Instance;
 
+        if (_itemPool == null)
+        {
+            Debug.LogError("❌ [BoardManager] Critical Error: No item pool in the scene.");
+            return;
+        }
+
+        LevelData data = _levelLoader.LoadLevel(levelIndex);
         if (data == null) return; // Avoid errors if the level does not exist
 
         ApplyLevelData(data);
 
         // Notify the pool the amount of items to prepare
         int totalItemsInLevel = pipes.Sum(p => p.itemsQueue.Count);
-        ItemPool.Instance.PreparePool(totalItemsInLevel);
+        _itemPool.PreparePool(totalItemsInLevel);
 
         GenerateBoard();
 
-        if (Camera.main.TryGetComponent(out CameraController camController))
-            camController.AdjustToBoard(width, height, traySpace);
-
-        trayManager.InitializeTray();
+        _cameraController?.AdjustToBoard(width, height, traySpace);
+        trayManager?.InitializeTray();
     }
 
     void GenerateBoard()
@@ -221,7 +228,7 @@ public class BoardManager : MonoBehaviour
     Item SpawnItemObject(Vector2Int pos, int idColor, Color color, Pipe pipe)
     {
         // Extract object from pool
-        Item itemComponent = ItemPool.Instance.GetItem();
+        Item itemComponent = _itemPool.GetItem();
         GameObject itemObj = itemComponent.gameObject;
 
         itemObj.name = $"Item_P{pipe.layer}_{pos.x}_{pos.y}";

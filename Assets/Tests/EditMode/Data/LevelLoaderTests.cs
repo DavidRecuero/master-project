@@ -4,11 +4,19 @@ using UnityEngine.TestTools;
 
 public class LevelLoaderTests
 {
+    private LevelLoader _levelLoader;
+
+    [SetUp]
+    public void SetUp()
+    {
+        _levelLoader = new LevelLoader();
+    }
+
     [Test]
     public void LoadLevel_ExistingLevel_ReturnsLevelData()
     {
         // Act
-        LevelData level = LevelLoader.LoadLevel(1);
+        LevelData level = _levelLoader.LoadLevel(1);
 
         // Assert
         Assert.IsNotNull(level);
@@ -25,7 +33,7 @@ public class LevelLoaderTests
         );
 
         // Act
-        LevelData level = LevelLoader.LoadLevel(999);
+        LevelData level = _levelLoader.LoadLevel(999);
 
         // Assert
         Assert.IsNull(level);

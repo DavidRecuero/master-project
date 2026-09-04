@@ -542,7 +542,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   totalLevels: 5
-  CurrentLevelIndex: 0
+  boardManager: {fileID: 462780001}
+  trayManager: {fileID: 307449189}
+  itemPool: {fileID: 922096506}
 --- !u!4 &484639301
 Transform:
   m_ObjectHideFlags: 0

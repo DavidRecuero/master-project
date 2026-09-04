@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class CameraController : MonoBehaviour
+public class CameraController : MonoBehaviour, ICameraController
 {
     [Header("Settings")]
     public float edgeMargin = 1f;   // Extra space around the board
@@ -31,5 +31,11 @@ public class CameraController : MonoBehaviour
 
         //Pick the larger size(so nothing gets cut off) and add the margin
         cam.orthographicSize = Mathf.Max(sizeForHeight, sizeForWidth) + edgeMargin;
+    }
+
+    public float GetCameraBottomY()
+    {
+        Camera cam = GetComponent<Camera>();
+        return cam.transform.position.y - cam.orthographicSize;
     }
 }

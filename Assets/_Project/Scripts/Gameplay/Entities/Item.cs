@@ -23,11 +23,7 @@ public class Item : MonoBehaviour
 
     private void Awake()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        if (spriteRenderer == null)
-        {
-            spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
-        }
+        EnsureSpriteRenderer();
     }
 
     private void OnEnable()
@@ -42,6 +38,14 @@ public class Item : MonoBehaviour
         StopPulse();
     }
 
+    private void EnsureSpriteRenderer()
+    {
+        if (spriteRenderer == null && !TryGetComponent(out spriteRenderer))
+        {
+            spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+        }
+    }
+
     public void Init(int id, Color color, Vector2Int pos, Pipe pipe, Sprite sprite)
     {
         colorID = id;
@@ -49,8 +53,7 @@ public class Item : MonoBehaviour
         gridPosition = pos;
         parentPipe = pipe;
 
-        if (spriteRenderer == null)
-            spriteRenderer = GetComponent<SpriteRenderer>();
+        EnsureSpriteRenderer();
 
         spriteRenderer.sprite = sprite;
         spriteRenderer.color = color;

@@ -79,6 +79,19 @@ public class Item : MonoBehaviour
         CheckExitPulse();
     }
 
+    /// <summary>
+    /// Recolors this item in place, without touching its position or parent pipe.
+    /// Used by the Shuffle booster to redistribute colors across the board.
+    /// </summary>
+    public void ApplyColor(int id, Color color)
+    {
+        colorID = id;
+        itemColor = color;
+
+        EnsureSpriteRenderer();
+        spriteRenderer.color = color;
+    }
+
     public void CheckExitPulse()
     {
         if (inTray || parentPipe == null || parentPipe.path == null || parentPipe.path.Count == 0)

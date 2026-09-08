@@ -306,4 +306,72 @@ public class BoardManager : MonoBehaviour
         }
         return true;
     }
+
+    /// <summary>
+    /// Returns the currently pickable item of every pipe (the one sitting at its exit).
+    /// Used by the Match booster to find auto-collectable items.
+    /// </summary>
+    public IEnumerable<Item> GetFrontItems()
+    {
+        return pipes.Where(p => p.activeItems.Count > 0).Select(p => p.activeItems[0]);
+    }
+
+    /// <summary>
+    /// Randomly reshuffles the colors of every item currently spawned across all pipes,
+    /// keeping their positions/paths untouched. Used by the Shuffle booster.
+    /// </summary>
+    public void ShuffleActiveItems()
+    {
+        // Every (pipe, index) slot that currently holds a spawned item
+        List<(Pipe pipe, int index, Item item)> slots = new List<(Pipe, int, Item)>();
+        foreach (Pipe pipe in pipes)
+        {
+            for (int i = 0; i < pipe.activeItems.Count; i++)
+                slots.Add((pipe, i, pipe.activeItems[i]));
+        }
+
+        if (slots.Count < 2) return;
+
+        // Fisher-Yates shuffle of the colors, then redistribute them across the same slots
+        List<int> colorIds = slots.Select(s => s.item.colorID).ToList();
+        for (int i = colorIds.Count - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            (colorIds[i], colorIds[j]) = (colorIds[j], colorIds[i]);
+        }
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            var (pipe, index, item) = slots[i];
+            int newColorId = colorIds[i];
+
+            item.ApplyColor(newColorId, possibleItemColors[newColorId]);
+            pipe.itemsQueue[index] = newColorId;
+        }
+    }
+
+    /// <summary>
+    /// Adds an item of the given color into a random pipe's queue, spawning it immediately
+    /// if that pipe has room to show it. Used by the TrayClearer booster to redistribute
+    /// items taken out of the tray back onto the board.
+    /// </summary>
+    public void AddItemToRandomPipe(int colorId)
+    {
+        List<Pipe> eligiblePipes = pipes.Where(p => p.path != null && p.path.Count > 0).ToList();
+        if (eligiblePipes.Count == 0) return;
+
+        Pipe targetPipe = eligiblePipes[Random.Range(0, eligiblePipes.Count)];
+        targetPipe.itemsQueue.Add(colorId);
+
+        // If the pipe still has a free spot on its path, spawn the item right away
+        if (targetPipe.activeItems.Count < targetPipe.path.Count)
+        {
+            int pathIndex = targetPipe.path.Count - 1 - targetPipe.activeItems.Count;
+            Vector2Int pos = targetPipe.path[pathIndex];
+            Color color = possibleItemColors[colorId];
+
+            Item newItem = SpawnItemObject(pos, colorId, color, targetPipe);
+            targetPipe.activeItems.Add(newItem);
+        }
+    }
 }

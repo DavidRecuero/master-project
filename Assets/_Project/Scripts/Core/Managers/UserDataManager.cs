@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class UserDataManager : MonoBehaviour, IUserDataProvider
+public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInventory
 {
     public static UserDataManager Instance { get; private set; }
 
@@ -42,6 +42,42 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider
 
         _dataService.SaveProfile(Profile);
         Debug.Log($"Saved. CurrentLvl: {Profile.CurrentLevel}, Coins: {Profile.Coins}");
+    }
+
+    // --- IBoosterInventory ---
+
+    public int GetCount(BoosterType type)
+    {
+        return Profile != null ? Profile.GetBoosterCount(type) : 0;
+    }
+
+    public bool TryConsume(BoosterType type)
+    {
+        int current = GetCount(type);
+        if (current <= 0) return false;
+
+        Profile.SetBoosterCount(type, current - 1);
+        _dataService.SaveProfile(Profile);
+        return true;
+    }
+
+    public void Add(BoosterType type, int amount)
+    {
+        if (amount <= 0 || Profile == null) return;
+
+        Profile.SetBoosterCount(type, GetCount(type) + amount);
+        _dataService.SaveProfile(Profile);
+    }
+
+    // --- Currency spending (used to buy boosters once free stock runs out) ---
+
+    public bool TrySpendCoins(int amount)
+    {
+        if (Profile == null || Profile.Coins < amount) return false;
+
+        Profile.Coins -= amount;
+        _dataService.SaveProfile(Profile);
+        return true;
     }
 
     public void ResetData()

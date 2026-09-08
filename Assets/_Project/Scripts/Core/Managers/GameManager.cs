@@ -17,6 +17,7 @@ public class GameManager : MonoBehaviour, IGameStateController
     [SerializeField] private TrayManager trayManager;
     [SerializeField] private ItemPool itemPool;
     [SerializeField] private UIManager uiManager;
+    [SerializeField] private BoosterManager boosterManager;
 
 
     private IUserDataProvider _userDataProvider;
@@ -65,6 +66,7 @@ public class GameManager : MonoBehaviour, IGameStateController
         if (trayManager != null) trayManager.Initialize(itemPool, this, camController);
         if (boardManager != null) boardManager.Initialize(levelLoader, itemPool, camController);
         if (uiManager != null) uiManager.Initialize(CurrentLevelIndex, PlayAgain);
+        if (boosterManager != null) boosterManager.Initialize(_userDataProvider as IBoosterInventory ?? UserDataManager.Instance, _userDataProvider);
 
         //Called on Start instead of Awake to wait for the BoardManager initialisation
         LoadCorrectLevel();

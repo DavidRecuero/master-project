@@ -25,6 +25,7 @@ public class TrayManager : MonoBehaviour
     private List<Item> trayItems = new List<Item>();
 
     public bool IsFull => trayItems.Count >= maxCapacity;
+    public IReadOnlyList<Item> TrayItems => trayItems;
 
     [Header("References")]
     [SerializeField] private BoardManager boardManager;
@@ -92,6 +93,21 @@ public class TrayManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Removes a specific item currently sitting in the tray (without matching it),
+    /// releasing it back to the pool and re-laying out the remaining items.
+    /// Used by the TrayClearer booster.
+    /// </summary>
+    public void RemoveItemFromTray(Item item)
+    {
+        if (item == null || !trayItems.Remove(item)) return;
+
+        item.StopAllCoroutines();
+        _itemPool.ReleaseItem(item);
+
+        UpdateTrayLayout();
+    }
+
     // Returns the center position of the tray based on the camera's view and bottom padding
     private Vector3 GetTrayCenterPosition()
     {
@@ -102,20 +118,28 @@ public class TrayManager : MonoBehaviour
     // Manages the clicks on items
     private void HandleItemClicked(Item item)
     {
-        // Avoids processing touches on times already travelling or inside the tray
-        if (item.inTray) return;
+        CollectItem(item);
+    }
+
+    /// <summary>
+    /// Attempts to send a pipe item into the tray, exactly as if the player had tapped it.
+    /// Returns false if the item isn't currently pickable (not at its pipe's exit) or the tray is full.
+    /// Reused by the Match booster to auto-collect items.
+    /// </summary>
+    public bool CollectItem(Item item)
+    {
+        if (item == null || item.inTray) return false;
 
         Pipe parentPipe = item.parentPipe;
         Vector2Int exitPosition = parentPipe.path[parentPipe.path.Count - 1];
 
-        // Checking if the item is in the last position of the pipe
-        if (item.gridPosition == exitPosition)
-        {
-            if (TryAddItem(item))
-            {
-                boardManager.AdvancePipe(parentPipe);
-            }
-        }
+        // Only items sitting at the last position of the pipe (the exit) can be picked
+        if (item.gridPosition != exitPosition) return false;
+
+        if (!TryAddItem(item)) return false;
+
+        boardManager.AdvancePipe(parentPipe);
+        return true;
     }
 
     /// <summary>

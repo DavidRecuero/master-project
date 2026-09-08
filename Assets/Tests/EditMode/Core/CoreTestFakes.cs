@@ -6,6 +6,13 @@ public class FakeUserDataProvider : IUserDataProvider
     public int Coins { get; set; } = 100;
     public bool ResetDataCalled { get; private set; }
 
+    public bool TrySpendCoins(int amount)
+    {
+        if (Coins < amount) return false;
+        Coins -= amount;
+        return true;
+    }
+
     public void ResetData()
     {
         ResetDataCalled = true;

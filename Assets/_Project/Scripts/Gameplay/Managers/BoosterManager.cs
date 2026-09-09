@@ -60,6 +60,11 @@ public class BoosterManager : MonoBehaviour
         return price != null ? price.coinCost : 0;
     }
 
+    public bool CanUseBooster(BoosterType type)
+    {
+        return _boosters.TryGetValue(type, out IBooster booster) && booster.CanExecute();
+    }
+
     /// <summary>
     /// Attempts to use a booster. Consumes free inventory first; if there's none left,
     /// falls back to charging the player in coins. Returns true only if the booster

@@ -95,7 +95,7 @@ public class BoardManager : MonoBehaviour
         // --- PRECALCULATE PIPE COLORS ---
 
         // Sort all pipes from lowest layer to highest layer to precalculate their colors
-        List< Pipe > sortedPipes = pipes.OrderBy(p => p.layer).ToList();
+        List<Pipe> sortedPipes = pipes.OrderBy(p => p.layer).ToList();
         Dictionary<Pipe, Color> pipeColors = new Dictionary<Pipe, Color>();
 
         int count = sortedPipes.Count;
@@ -308,12 +308,69 @@ public class BoardManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Returns the currently pickable item of every pipe (the one sitting at its exit).
-    /// Used by the Match booster to find auto-collectable items.
+    /// Returns the distinct colors currently present among the active items on the board.
+    /// Used by the Match booster to pick a random target color when the tray is empty.
     /// </summary>
-    public IEnumerable<Item> GetFrontItems()
+    public List<int> GetActiveColors()
     {
-        return pipes.Where(p => p.activeItems.Count > 0).Select(p => p.activeItems[0]);
+        return pipes.SelectMany(p => p.activeItems).Select(i => i.colorID).Distinct().ToList();
+    }
+
+    /// <summary>
+    /// Finds and removes the first active item of the given color from anywhere in any
+    /// pipe (not just its exit), collapsing the gap it leaves and spawning a replacement
+    /// from that pipe's queue if one is waiting. Returns null if no such item exists.
+    /// Used by the Match booster, which can reach into any pipe.
+    /// </summary>
+    public Item ExtractAnyItemOfColor(int colorId)
+    {
+        foreach (Pipe pipe in pipes)
+        {
+            int index = pipe.activeItems.FindIndex(i => i.colorID == colorId);
+            if (index == -1) continue;
+
+            Item extractedItem = pipe.activeItems[index];
+            pipe.activeItems.RemoveAt(index);
+            if (index < pipe.itemsQueue.Count) pipe.itemsQueue.RemoveAt(index);
+
+            // It might have been hidden under a higher-layer pipe at this position;
+            // it's leaving the board now, so it must be visible to animate into the tray.
+            extractedItem.gameObject.SetActive(true);
+
+            int pathLen = pipe.path.Count;
+
+            // Shift every item that was behind the removed one forward by one step,
+            // exactly like AdvancePipe does when the front item is collected.
+            for (int i = index; i < pipe.activeItems.Count; i++)
+            {
+                int pathIndex = pathLen - 1 - i;
+                Vector2Int newPos = pipe.path[pathIndex];
+
+                Item item = pipe.activeItems[i];
+                item.UpdateGridPosition(newPos);
+
+                Vector3 cellWorldPos = tilemap.CellToWorld(new Vector3Int(newPos.x, newPos.y, 0));
+                Vector3 centerOffset = new Vector3(tilemap.cellSize.x / 2f, tilemap.cellSize.y / 2f, 0);
+                item.transform.position = cellWorldPos + centerOffset;
+
+                Pipe topPipe = GetHighestLayerPipeAt(newPos);
+                item.gameObject.SetActive(topPipe == pipe);
+            }
+
+            // Spawn a replacement from the queue if there's one waiting
+            if (pipe.itemsQueue.Count >= pathLen)
+            {
+                int newColorId = pipe.itemsQueue[pathLen - 1];
+                Vector2Int originPos = pipe.path[0];
+
+                Item newItem = SpawnItemObject(originPos, newColorId, possibleItemColors[newColorId], pipe);
+                pipe.activeItems.Add(newItem);
+            }
+
+            return extractedItem;
+        }
+
+        return null;
     }
 
     /// <summary>

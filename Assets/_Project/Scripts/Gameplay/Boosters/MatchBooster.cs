@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 /// <summary>
-/// Instantly completes a match of 3, without the player tapping anything.
-/// Priority order:
-///   1) If the tray already holds 1 or 2 items of some color, auto-collect the missing
-///      amount from pipe exits to complete the match. Colors closer to completion
-///      (a pair over a single) are preferred, since they need fewer pipe items.
-///   2) Otherwise, look for a color that currently has enough items available at the
-///      exit of different pipes to form a full match of 3 by itself.
+/// Simplified "instant match" booster:
+///  - Usable as long as any item remains in play, in the tray or the board.
+///  - Target color = the most abundant color currently in the tray, or (if the tray is
+///    empty) a random color among whatever is still active on the board.
+///  - Pulls items of that color from anywhere on the board (not just pipe exits) until
+///    the match completes, the tray fills up, or the board runs out of that color.
 /// </summary>
 public class MatchBooster : IBooster
 {
@@ -23,47 +23,45 @@ public class MatchBooster : IBooster
         _boardManager = boardManager;
     }
 
-    public bool CanExecute() => FindMatchPlan() != null;
+    public bool CanExecute()
+    {
+        if (_trayManager == null || _boardManager == null) return false;
+        return _trayManager.TrayItems.Count > 0 || !_boardManager.IsBoardCleared();
+    }
 
     public void Execute()
     {
-        List<Item> plan = FindMatchPlan();
-        if (plan == null) return;
+        if (!CanExecute()) return;
 
-        foreach (Item item in plan)
+        int? targetColor = GetTargetColor();
+        if (targetColor == null) return;
+
+        int alreadyInTray = _trayManager.TrayItems.Count(item => item.colorID == targetColor);
+        int needed = Mathf.Max(0, _trayManager.matchSize - alreadyInTray);
+
+        for (int i = 0; i < needed; i++)
         {
-            _trayManager.CollectItem(item);
+            if (_trayManager.IsFull) break;
+
+            Item item = _boardManager.ExtractAnyItemOfColor(targetColor.Value);
+            if (item == null) break; // no more of that color left on the board
+
+            _trayManager.TryAddItem(item);
         }
     }
 
-    // Returns the pipe-front items that need to be auto-collected to complete a match,
-    // or null if no match is currently achievable.
-    private List<Item> FindMatchPlan()
+    private int? GetTargetColor()
     {
-        if (_trayManager == null || _boardManager == null) return null;
+        // Priority 1: the most abundant color already waiting in the tray
+        var trayGroup = _trayManager.TrayItems
+            .GroupBy(item => item.colorID)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
 
-        List<Item> frontItems = _boardManager.GetFrontItems().Where(i => !i.inTray).ToList();
+        if (trayGroup != null) return trayGroup.Key;
 
-        // Priority 1: complete a color already waiting in the tray (1 or 2 items),
-        // checking the most-complete groups first so a pair beats a single leftover.
-        var trayGroupsByCount = _trayManager.TrayItems
-            .GroupBy(i => i.colorID)
-            .OrderByDescending(g => g.Count());
-
-        foreach (var group in trayGroupsByCount)
-        {
-            int needed = _trayManager.matchSize - group.Count();
-            if (needed <= 0) continue; // shouldn't happen (would've already matched), just a safety guard
-
-            List<Item> candidates = frontItems.Where(i => i.colorID == group.Key).Take(needed).ToList();
-            if (candidates.Count == needed) return candidates;
-        }
-
-        // Priority 2: 3 same-color items already available at the front of different pipes
-        var boardGroup = frontItems
-            .GroupBy(i => i.colorID)
-            .FirstOrDefault(g => g.Count() >= _trayManager.matchSize);
-
-        return boardGroup?.Take(_trayManager.matchSize).ToList();
+        // Priority 2: a random color among whatever is still active on the board
+        List<int> boardColors = _boardManager.GetActiveColors();
+        return boardColors.Count > 0 ? boardColors[Random.Range(0, boardColors.Count)] : (int?)null;
     }
 }

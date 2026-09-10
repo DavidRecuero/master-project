@@ -69,6 +69,14 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
         _dataService.SaveProfile(Profile);
     }
 
+    public void EnsureStarterStock(BoosterType type, int amount)
+    {
+        if (Profile == null || Profile.HasBoosterEntry(type)) return; // already seeded before
+
+        Profile.SetBoosterCount(type, amount);
+        _dataService.SaveProfile(Profile);
+    }
+
     // --- Currency spending (used to buy boosters once free stock runs out) ---
 
     public bool TrySpendCoins(int amount)

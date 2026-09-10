@@ -106,12 +106,13 @@ public class TrayManager : MonoBehaviour
         _itemPool.ReleaseItem(item);
 
         UpdateTrayLayout();
+        GameEvents.TriggerTrayChanged();
     }
 
     // Returns the center position of the tray based on the camera's view and bottom padding
     private Vector3 GetTrayCenterPosition()
     {
-        float bottomY = _cameraController != null ? _cameraController.GetCameraBottomY() : 0f; 
+        float bottomY = _cameraController != null ? _cameraController.GetCameraBottomY() : 0f;
         return new Vector3(0, bottomY + bottomPadding, 0);
     }
 
@@ -168,6 +169,8 @@ public class TrayManager : MonoBehaviour
 
         UpdateTrayLayout();
         CheckForMatches(item.colorID);
+
+        GameEvents.TriggerTrayChanged();
 
         // Check for Game Over (Tray is full after inserting and matching)
         if (IsFull)

@@ -21,16 +21,19 @@ public class UserProfile
         CurrentLevel = 1;       //starting values
         Coins = 250;
 
-        // Starter boosters so new players can try them out for free
-        Boosters.Add(new BoosterEntry { type = BoosterType.Match, count = 15 });
-        Boosters.Add(new BoosterEntry { type = BoosterType.Shuffle, count = 15 });
-        Boosters.Add(new BoosterEntry { type = BoosterType.TrayClearer, count = 15 });
+        // Booster starter stock is no longer hardcoded here - BoosterManager grants it
+        // from BoosterDefinition assets the first time it initializes (see EnsureStarterStock).
     }
 
     public int GetBoosterCount(BoosterType type)
     {
         BoosterEntry entry = Boosters.Find(b => b.type == type);
         return entry?.count ?? 0;
+    }
+
+    public bool HasBoosterEntry(BoosterType type)
+    {
+        return Boosters.Exists(b => b.type == type);
     }
 
     public void SetBoosterCount(BoosterType type, int newCount)

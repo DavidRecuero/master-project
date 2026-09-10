@@ -6,79 +6,39 @@ using UnityEngine.UI;
 public class BoosterButtonView : MonoBehaviour
 {
     [SerializeField] private BoosterType boosterType;
-    [SerializeField] private BoosterManager boosterManager;
     [SerializeField] private TMP_Text priceText;
     [SerializeField] private GameObject coinsIcon;
 
-    [Header("Locked state")]
+    [Header("Locked state (only for CanExecute() == false, never for price)")]
     [SerializeField] private float lockedAlpha = 0.4f;
-    [SerializeField] private float lockCheckInterval = 0.25f;
+
+    public BoosterType BoosterType => boosterType;
 
     private CanvasGroup _canvasGroup;
     private Button _button;
-    private float _lockCheckTimer;
 
     private void Awake()
     {
-        boosterManager ??= FindFirstObjectByType<BoosterManager>();
         _canvasGroup = GetComponent<CanvasGroup>();
         _button = GetComponent<Button>();
     }
 
-    private void OnEnable()
+    public void SetState(int freeCount, int coinPrice, bool canExecute)
     {
-        GameEvents.OnBoosterUsed += HandleBoosterUsed;
-    }
-
-    private void OnDisable()
-    {
-        GameEvents.OnBoosterUsed -= HandleBoosterUsed;
-    }
-
-    private void Start()
-    {
-        Refresh();
-        RefreshLockState();
-    }
-
-    private void Update()
-    {
-        _lockCheckTimer += Time.deltaTime;
-        if (_lockCheckTimer >= lockCheckInterval)
-        {
-            _lockCheckTimer = 0f;
-            RefreshLockState();
-        }
-    }
-
-    private void HandleBoosterUsed(BoosterType usedType)
-    {
-        if (usedType == boosterType) Refresh();
-        RefreshLockState();
-    }
-
-    public void Refresh()
-    {
-        if (boosterManager == null || priceText == null || coinsIcon == null) return;
-
-        int freeCount = boosterManager.GetRemainingFreeUses(boosterType);
         bool hasFreeStock = freeCount > 0;
 
-        priceText.text = hasFreeStock
-            ? freeCount.ToString()
-            : boosterManager.GetCoinPrice(boosterType).ToString();
+        if (priceText != null)
+        {
+            priceText.text = hasFreeStock ? freeCount.ToString() : coinPrice.ToString();
+        }
 
-        coinsIcon.SetActive(!hasFreeStock);
-    }
+        if (coinsIcon != null) coinsIcon.SetActive(!hasFreeStock);
 
-    private void RefreshLockState()
-    {
-        if (boosterManager == null || _canvasGroup == null) return;
-
-        bool canExecute = boosterManager.CanUseBooster(boosterType);
-
-        _canvasGroup.alpha = canExecute ? 1f : lockedAlpha;
-        _canvasGroup.interactable = canExecute;
+        if (_canvasGroup != null)
+        {
+            _canvasGroup.alpha = canExecute ? 1f : lockedAlpha;
+            _canvasGroup.interactable = canExecute;
+        }
 
         if (_button != null) _button.interactable = canExecute;
     }

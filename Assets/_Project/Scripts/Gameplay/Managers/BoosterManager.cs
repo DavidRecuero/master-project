@@ -1,12 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-
-[System.Serializable]
-public class BoosterPrice
-{
-    public BoosterType type;
-    public int coinCost = 50;
-}
 
 public class BoosterManager : MonoBehaviour
 {
@@ -14,14 +8,8 @@ public class BoosterManager : MonoBehaviour
     [SerializeField] private TrayManager trayManager;
     [SerializeField] private BoardManager boardManager;
 
-    [Header("Coin cost once free stock runs out")]
-    [SerializeField]
-    private List<BoosterPrice> prices = new List<BoosterPrice>
-    {
-        new BoosterPrice { type = BoosterType.Match, coinCost = 50 },
-        new BoosterPrice { type = BoosterType.Shuffle, coinCost = 40 },
-        new BoosterPrice { type = BoosterType.TrayClearer, coinCost = 75 },
-    };
+    [Header("Config")]
+    [SerializeField] private BoosterDefinition[] boosterDefinitions;
 
     private IBoosterInventory _inventory;
     private IUserDataProvider _currency;
@@ -47,6 +35,26 @@ public class BoosterManager : MonoBehaviour
             { BoosterType.Shuffle, new ShuffleBooster(boardManager) },
             { BoosterType.TrayClearer, new TrayClearerBooster(trayManager, boardManager) }
         };
+
+        GrantStarterStockFromDefinitions();
+    }
+
+    // Only actually grants stock the first time it's called for each type (see
+    // IBoosterInventory.EnsureStarterStock) - safe to call every time this wakes up.
+    private void GrantStarterStockFromDefinitions()
+    {
+        if (_inventory == null || boosterDefinitions == null) return;
+
+        foreach (BoosterDefinition definition in boosterDefinitions)
+        {
+            if (definition == null) continue;
+            _inventory.EnsureStarterStock(definition.type, definition.freeStarterCount);
+        }
+    }
+
+    private BoosterDefinition GetDefinition(BoosterType type)
+    {
+        return boosterDefinitions?.FirstOrDefault(d => d != null && d.type == type);
     }
 
     public int GetRemainingFreeUses(BoosterType type)
@@ -56,10 +64,14 @@ public class BoosterManager : MonoBehaviour
 
     public int GetCoinPrice(BoosterType type)
     {
-        BoosterPrice price = prices.Find(p => p.type == type);
-        return price != null ? price.coinCost : 0;
+        BoosterDefinition definition = GetDefinition(type);
+        return definition != null ? definition.coinPrice : 0;
     }
 
+    /// <summary>
+    /// Checks if the booster could be applied to the current game state (e.g. tray not
+    /// empty for TrayClearer), WITHOUT looking at inventory or coins.
+    /// </summary>
     public bool CanUseBooster(BoosterType type)
     {
         return _boosters.TryGetValue(type, out IBooster booster) && booster.CanExecute();
@@ -101,9 +113,4 @@ public class BoosterManager : MonoBehaviour
         GameEvents.TriggerBoosterUsed(type);
         return true;
     }
-
-    // Convenience wrappers so UI Buttons can call them directly without params
-    public void UseMatch() => UseBooster(BoosterType.Match);
-    public void UseShuffle() => UseBooster(BoosterType.Shuffle);
-    public void UseTrayClearer() => UseBooster(BoosterType.TrayClearer);
 }

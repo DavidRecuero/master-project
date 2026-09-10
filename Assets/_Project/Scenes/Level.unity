@@ -1720,8 +1720,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1347774937}
-        m_TargetAssemblyTypeName: BoosterManager, GameScripts
+      - m_Target: {fileID: 1347774938}
+        m_TargetAssemblyTypeName: BoosterBarController, GameScripts
         m_MethodName: UseShuffle
         m_Mode: 1
         m_Arguments:
@@ -1783,11 +1783,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GameScripts::BoosterButtonView
   boosterType: 1
-  boosterManager: {fileID: 1347774937}
   priceText: {fileID: 1849311111}
   coinsIcon: {fileID: 203782309}
   lockedAlpha: 0.4
-  lockCheckInterval: 0.25
 --- !u!225 &1100390917
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -2007,8 +2005,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1347774937}
-        m_TargetAssemblyTypeName: BoosterManager, GameScripts
+      - m_Target: {fileID: 1347774938}
+        m_TargetAssemblyTypeName: BoosterBarController, GameScripts
         m_MethodName: UseTrayClearer
         m_Mode: 1
         m_Arguments:
@@ -2070,11 +2068,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GameScripts::BoosterButtonView
   boosterType: 2
-  boosterManager: {fileID: 1347774937}
   priceText: {fileID: 101043025}
   coinsIcon: {fileID: 1818346399}
   lockedAlpha: 0.4
-  lockCheckInterval: 0.25
 --- !u!225 &1215059397
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -2097,6 +2093,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1347774936}
   - component: {fileID: 1347774937}
+  - component: {fileID: 1347774938}
   m_Layer: 0
   m_Name: BoosterManager
   m_TagString: Untagged
@@ -2133,13 +2130,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: GameScripts::BoosterManager
   trayManager: {fileID: 307449189}
   boardManager: {fileID: 462780001}
-  prices:
+  boosterDefinitions:
+  - {fileID: 11400000, guid: aaff11c547cc0d44dad5c1e872ef1f95, type: 2}
+  - {fileID: 11400000, guid: 439d43ef6b5454e43aaf64a8eb59ec53, type: 2}
+  - {fileID: 11400000, guid: c0c4f9fa296fa76458cef6072c1ea8bc, type: 2}
+--- !u!114 &1347774938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1347774935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9034ef6b549564f46b9c16faea23d9c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameScripts::BoosterBarController
+  boosterManager: {fileID: 1347774937}
+  buttons:
   - type: 0
-    coinCost: 50
+    view: {fileID: 1981909234}
   - type: 1
-    coinCost: 40
+    view: {fileID: 1100390916}
   - type: 2
-    coinCost: 75
+    view: {fileID: 1215059396}
 --- !u!1 &1548418934
 GameObject:
   m_ObjectHideFlags: 0
@@ -2361,7 +2375,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 21.1
+  m_fontSize: 47.05
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -3398,8 +3412,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1347774937}
-        m_TargetAssemblyTypeName: BoosterManager, GameScripts
+      - m_Target: {fileID: 1347774938}
+        m_TargetAssemblyTypeName: BoosterBarController, GameScripts
         m_MethodName: UseMatch
         m_Mode: 1
         m_Arguments:
@@ -3461,11 +3475,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GameScripts::BoosterButtonView
   boosterType: 0
-  boosterManager: {fileID: 1347774937}
   priceText: {fileID: 540482229}
   coinsIcon: {fileID: 1931445562}
   lockedAlpha: 0.4
-  lockCheckInterval: 0.25
 --- !u!225 &1981909235
 CanvasGroup:
   m_ObjectHideFlags: 0

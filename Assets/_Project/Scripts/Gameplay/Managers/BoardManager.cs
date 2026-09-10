@@ -294,6 +294,8 @@ public class BoardManager : MonoBehaviour
             Item newItem = SpawnItemObject(originPos, idColor, color, pipe);
             pipe.activeItems.Add(newItem);
         }
+
+        GameEvents.TriggerBoardChanged();
     }
 
     // Checks if all items on all pipes have been collected
@@ -367,6 +369,7 @@ public class BoardManager : MonoBehaviour
                 pipe.activeItems.Add(newItem);
             }
 
+            GameEvents.TriggerBoardChanged();
             return extractedItem;
         }
 
@@ -405,6 +408,8 @@ public class BoardManager : MonoBehaviour
             item.ApplyColor(newColorId, possibleItemColors[newColorId]);
             pipe.itemsQueue[index] = newColorId;
         }
+
+        GameEvents.TriggerBoardChanged();
     }
 
     /// <summary>
@@ -430,5 +435,7 @@ public class BoardManager : MonoBehaviour
             Item newItem = SpawnItemObject(pos, colorId, color, targetPipe);
             targetPipe.activeItems.Add(newItem);
         }
+
+        GameEvents.TriggerBoardChanged();
     }
 }

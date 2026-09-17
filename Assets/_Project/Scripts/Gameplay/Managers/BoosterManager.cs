@@ -23,6 +23,13 @@ public class BoosterManager : MonoBehaviour
 
     private void Awake()
     {
+        EnsureInitialized();
+    }
+
+    private void EnsureInitialized()
+    {
+        if (_boosters != null) return;
+
         trayManager ??= FindFirstObjectByType<TrayManager>();
         boardManager ??= FindFirstObjectByType<BoardManager>();
 
@@ -39,8 +46,6 @@ public class BoosterManager : MonoBehaviour
         GrantStarterStockFromDefinitions();
     }
 
-    // Only actually grants stock the first time it's called for each type (see
-    // IBoosterInventory.EnsureStarterStock) - safe to call every time this wakes up.
     private void GrantStarterStockFromDefinitions()
     {
         if (_inventory == null || boosterDefinitions == null) return;
@@ -74,6 +79,7 @@ public class BoosterManager : MonoBehaviour
     /// </summary>
     public bool CanUseBooster(BoosterType type)
     {
+        EnsureInitialized();
         return _boosters.TryGetValue(type, out IBooster booster) && booster.CanExecute();
     }
 
@@ -84,6 +90,8 @@ public class BoosterManager : MonoBehaviour
     /// </summary>
     public bool UseBooster(BoosterType type)
     {
+        EnsureInitialized();
+
         if (_inventory == null || _currency == null)
         {
             Debug.LogError("❌ [BoosterManager] Missing inventory/currency dependencies.");
@@ -104,7 +112,7 @@ public class BoosterManager : MonoBehaviour
             if (!_currency.TrySpendCoins(price))
             {
                 Debug.Log($"[BoosterManager] No free {type} left and not enough coins (needs {price}).");
-                // TODO: hook here to open the coin store / rewarded ad flow
+                // TODO: here to open the coin store/rewarded ad flow
                 return false;
             }
         }

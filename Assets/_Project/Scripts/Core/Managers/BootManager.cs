@@ -5,20 +5,22 @@ using UnityEngine.SceneManagement;
 public class BootManager : MonoBehaviour
 {
     private ISceneLoader _sceneLoader;
+    private IAuthProvider _authProvider;
 
-    public void Initialize(ISceneLoader sceneLoader)
+    public void Initialize(ISceneLoader sceneLoader, IAuthProvider authProvider)
     {
         _sceneLoader = sceneLoader;
+        _authProvider = authProvider;
     }
 
     private void Awake()
     {
         _sceneLoader ??= new UnitySceneLoader();
+        _authProvider ??= new GuestAuthProvider();
     }
 
     private void Start()
     {
-        // TODO: here we'll load UGS, login, privacity popup...
         StartCoroutine(StartupSequence());
     }
 
@@ -26,8 +28,23 @@ public class BootManager : MonoBehaviour
     {
         Debug.Log("[BOOT] Init services...");
 
-        // TODO: Baas Conection simulator
-        yield return new WaitForSeconds(0.5f);
+        bool signInComplete = false;
+        AuthResult signInResult = AuthResult.Error;
+
+        _authProvider.SignIn(result =>
+        {
+            signInResult = result;
+            signInComplete = true;
+        });
+
+        yield return new WaitUntil(() => signInComplete);
+
+        Debug.Log($"[BOOT] Sign-in result: {signInResult} (PlayerId: {_authProvider.PlayerId})");
+
+        if (_authProvider.IsSignedIn && UserDataManager.Instance != null)
+        {
+            UserDataManager.Instance.SetUserId(_authProvider.PlayerId);
+        }
 
         Debug.Log("[BOOT] Everything ready, loading main menu...");
 

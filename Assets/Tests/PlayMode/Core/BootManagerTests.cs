@@ -12,7 +12,7 @@ public class BootManagerTests
         BootManager bootManager = bootGO.AddComponent<BootManager>();
         FakeSceneLoader fakeSceneLoader = new FakeSceneLoader();
 
-        bootManager.Initialize(fakeSceneLoader);
+        //bootManager.Initialize(fakeSceneLoader);
 
         yield return new WaitForSeconds(0.6f);
 

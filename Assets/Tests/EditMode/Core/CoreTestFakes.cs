@@ -40,3 +40,19 @@ public class FakeStorageProvider : IStorageProvider
     public bool HasKey(string key) => _store.ContainsKey(key);
     public void Save() { }
 }
+
+public class FakeAuthProvider : IAuthProvider
+{
+    public bool IsSignedIn { get; set; }
+    public string PlayerId { get; set; } = "fake-player-id";
+    public string DisplayName { get; set; } = "Fake Player";
+    public AuthResult ResultToReturn { get; set; } = AuthResult.Success;
+    public bool SignInCalled { get; private set; }
+
+    public void SignIn(System.Action<AuthResult> onComplete)
+    {
+        SignInCalled = true;
+        IsSignedIn = ResultToReturn == AuthResult.Success;
+        onComplete?.Invoke(ResultToReturn);
+    }
+}

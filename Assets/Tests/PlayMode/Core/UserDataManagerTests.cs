@@ -59,5 +59,27 @@ public class UserDataManagerTests
         Assert.AreEqual(250, _dataManager.Profile.Coins);
     }
 
+    [UnityTest]
+    public IEnumerator SetUserId_FillsItIn_WhenEmpty()
+    {
+        yield return null;
+
+        Assert.IsTrue(string.IsNullOrEmpty(_dataManager.Profile.UserId));
+
+        _dataManager.SetUserId("guest-abc-123");
+
+        Assert.AreEqual("guest-abc-123", _dataManager.Profile.UserId);
+    }
+
+    [UnityTest]
+    public IEnumerator SetUserId_NeverOverwrites_AnExistingId()
+    {
+        yield return null;
+
+        _dataManager.SetUserId("first-id");
+        _dataManager.SetUserId("second-id");
+
+        Assert.AreEqual("first-id", _dataManager.Profile.UserId, "An existing UserId must never be overwritten by a later call.");
+    }
 
 }

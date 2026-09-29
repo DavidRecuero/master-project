@@ -4,6 +4,7 @@ public class FakeUserDataProvider : IUserDataProvider
 {
     public int CurrentLevel { get; set; } = 1;
     public int Coins { get; set; } = 100;
+    public string UserId { get; set; } = "";
     public bool ResetDataCalled { get; private set; }
 
     public bool TrySpendCoins(int amount)

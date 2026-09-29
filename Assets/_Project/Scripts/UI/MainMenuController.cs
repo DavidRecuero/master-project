@@ -7,6 +7,7 @@ public class MainMenuController : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI coinsText;
     [SerializeField] private TextMeshProUGUI playButtonText;
+    [SerializeField] private TextMeshProUGUI playerIdText;
 
     private IUserDataProvider _userDataProvider;
     private ISceneLoader _sceneLoader;
@@ -45,6 +46,19 @@ public class MainMenuController : MonoBehaviour
         // Current Level indicator
         if (playButtonText != null)
             playButtonText.text = $"Level {_userDataProvider.CurrentLevel}";
+
+        // Player identity indicator (guest id today, real Google name later)
+        if (playerIdText != null)
+            playerIdText.text = FormatPlayerLabel(_userDataProvider.UserId);
+    }
+
+    // TODO - update after real google sign in
+    private static string FormatPlayerLabel(string userId)
+    {
+        if (string.IsNullOrEmpty(userId)) return "Guest";
+
+        string shortId = userId.Length > 8 ? userId.Substring(0, 8) : userId;
+        return $"Guest: {shortId}";
     }
 
     // Play button function

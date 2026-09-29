@@ -3,6 +3,7 @@ public interface IUserDataProvider
 {
     int CurrentLevel { get; }
     int Coins { get; }
+    string UserId { get; }
     bool TrySpendCoins(int amount);
     void ResetData();
 }

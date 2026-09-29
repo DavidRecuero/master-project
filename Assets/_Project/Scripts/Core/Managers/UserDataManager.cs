@@ -9,6 +9,7 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
 
     public int CurrentLevel => Profile != null ? Profile.CurrentLevel : 1;
     public int Coins => Profile != null ? Profile.Coins : 0;
+    public string UserId => Profile != null ? Profile.UserId : "";
 
     private void Awake()
     {
@@ -71,7 +72,7 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
 
     public void EnsureStarterStock(BoosterType type, int amount)
     {
-        if (Profile == null || Profile.HasBoosterEntry(type)) return; // already seeded before
+        if (Profile == null || Profile.HasBoosterEntry(type)) return;
 
         Profile.SetBoosterCount(type, amount);
         _dataService.SaveProfile(Profile);
@@ -88,6 +89,15 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
         return true;
     }
 
+    // Only sets it if empty  so signing in later never relinks a players existing local progress
+    public void SetUserId(string userId)
+    {
+        if (Profile == null || string.IsNullOrEmpty(userId) || !string.IsNullOrEmpty(Profile.UserId)) return;
+
+        Profile.UserId = userId;
+        _dataService.SaveProfile(Profile);
+    }
+
     public void ResetData()
     {
         // New profile applying default values
@@ -96,14 +106,5 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
         _dataService.SaveProfile(Profile);
 
         Debug.Log($"[DataReset] CurrentLvl: {Profile.CurrentLevel}, Coins: {Profile.Coins}");
-    }
-
-    // Only sets it if empty - never overwrites an existing UserId, so signing in later never relinks a player's existing local progress
-    public void SetUserId(string userId)
-    {
-        if (Profile == null || string.IsNullOrEmpty(userId) || !string.IsNullOrEmpty(Profile.UserId)) return;
-
-        Profile.UserId = userId;
-        _dataService.SaveProfile(Profile);
     }
 }

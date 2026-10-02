@@ -16,7 +16,12 @@ public class BootManager : MonoBehaviour
     private void Awake()
     {
         _sceneLoader ??= new UnitySceneLoader();
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+        _authProvider ??= new GooglePlayGamesAuthProvider();
+#else
         _authProvider ??= new GuestAuthProvider();
+#endif
     }
 
     private void Start()

@@ -1,5 +1,19 @@
 {
   "dependencies": {
+    "com.google.external-dependency-manager": {
+      "version": "https://github.com/googlesamples/unity-jar-resolver.git?path=upm",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "020980ab8f389c00ef0913c6f8f5c6a7311bf093"
+    },
+    "com.google.play.games": {
+      "version": "https://github.com/AlexZonov/play-games-plugin-for-unity.git?path=/Assets/Public/GooglePlayGames/com.google.play.games#v2.3.0-no-auto-init",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "4e5e0bc7c5440c93466e499301eb1d00e946d28b"
+    },
     "com.unity.2d.animation": {
       "version": "13.0.5",
       "depth": 0,

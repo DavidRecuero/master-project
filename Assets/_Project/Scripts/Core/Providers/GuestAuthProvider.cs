@@ -13,7 +13,8 @@ public class GuestAuthProvider : IAuthProvider
 
     public bool IsSignedIn { get; private set; }
     public string PlayerId { get; private set; }
-    public string DisplayName => "Guest";
+    public string DisplayName => "";   // empty -> UI falls back to "Guest: <id>"
+    public string AvatarUrl => "";
 
     public GuestAuthProvider(IStorageProvider storage = null)
     {

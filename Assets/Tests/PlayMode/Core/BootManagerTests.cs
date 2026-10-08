@@ -57,6 +57,7 @@ public class FakeAuthProvider : IAuthProvider
     public string DisplayName { get; set; } = "Fake Player";
     public AuthResult ResultToReturn { get; set; } = AuthResult.Success;
     public bool SignInCalled { get; private set; }
+    public string AvatarUrl { get; set; } = "";
 
     public void SignIn(System.Action<AuthResult> onComplete)
     {

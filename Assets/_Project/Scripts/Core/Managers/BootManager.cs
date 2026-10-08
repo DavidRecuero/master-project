@@ -46,6 +46,9 @@ public class BootManager : MonoBehaviour
 
         Debug.Log($"[BOOT] Sign-in result: {signInResult} (PlayerId: {_authProvider.PlayerId})");
 
+        if (_authProvider.IsSignedIn)
+            PlayerSession.Set(_authProvider.DisplayName, _authProvider.AvatarUrl);
+
         if (_authProvider.IsSignedIn && UserDataManager.Instance != null)
         {
             UserDataManager.Instance.SetUserId(_authProvider.PlayerId);

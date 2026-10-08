@@ -5,6 +5,53 @@ using UnityEngine.TestTools;
 
 public class BootManagerTests
 {
+    [SetUp]
+    public void SetUp() => PlayerSession.Reset();
+
+    [TearDown]
+    public void TearDown() => PlayerSession.Reset();
+
+    [UnityTest]
+    public IEnumerator StartupSequence_PublishesNameAndAvatar_WhenSignedIn()
+    {
+        GameObject bootGO = new GameObject();
+        BootManager bootManager = bootGO.AddComponent<BootManager>();
+        var fakeAuthProvider = new FakeAuthProvider
+        {
+            DisplayName = "Ana",
+            AvatarUrl = "https://example.com/a.png"
+        };
+
+        bootManager.Initialize(new FakeSceneLoader(), fakeAuthProvider);
+
+        yield return new WaitForSeconds(0.2f);
+
+        Assert.AreEqual("Ana", PlayerSession.DisplayName);
+        Assert.AreEqual("https://example.com/a.png", PlayerSession.AvatarUrl);
+
+        Object.Destroy(bootGO);
+    }
+
+    [UnityTest]
+    public IEnumerator StartupSequence_LeavesSessionEmpty_WhenSignInFails()
+    {
+        GameObject bootGO = new GameObject();
+        BootManager bootManager = bootGO.AddComponent<BootManager>();
+        var fakeAuthProvider = new FakeAuthProvider
+        {
+            DisplayName = "Ana",
+            ResultToReturn = AuthResult.NoNetwork
+        };
+
+        bootManager.Initialize(new FakeSceneLoader(), fakeAuthProvider);
+
+        yield return new WaitForSeconds(0.2f);
+
+        Assert.AreEqual("", PlayerSession.DisplayName);
+
+        Object.Destroy(bootGO);
+    }
+
     [UnityTest]
     public IEnumerator StartupSequence_CompletesAndLoadsMainMenu()
     {

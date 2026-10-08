@@ -42,4 +42,15 @@ public class GuestAuthProviderTests
 
         Assert.AreEqual(firstId, secondSession.PlayerId, "A new session should reuse the persisted guest id, not generate a new one.");
     }
+
+    [Test]
+    public void Guest_HasNoDisplayNameOrAvatar_SoTheUiShowsTheGuestLabel()
+    {
+        var provider = new GuestAuthProvider(new FakeStorageProvider());
+
+        provider.SignIn(_ => { });
+
+        Assert.IsEmpty(provider.DisplayName);
+        Assert.IsEmpty(provider.AvatarUrl);
+    }
 }

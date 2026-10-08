@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MainMenuControllerTests
 {
@@ -12,6 +13,8 @@ public class MainMenuControllerTests
     [SetUp]
     public void SetUp()
     {
+        PlayerSession.Reset();
+
         _gameObject = new GameObject("MainMenuController");
         _controller = _gameObject.AddComponent<MainMenuController>();
 
@@ -39,6 +42,8 @@ public class MainMenuControllerTests
     [TearDown]
     public void TearDown()
     {
+        PlayerSession.Reset();
+
         Object.DestroyImmediate(_gameObject);
     }
 
@@ -70,5 +75,82 @@ public class MainMenuControllerTests
         _controller.OnPlayButtonClicked();
 
         Assert.AreEqual(2, _sceneLoader.LoadedSceneIndex);
+    }
+
+    private void SetField(string name, object value)
+    {
+        typeof(MainMenuController)
+            .GetField(name, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            ?.SetValue(_controller, value);
+    }
+
+    [TestCase("Ana", "abc", "Ana")]
+    [TestCase("", "1234567890", "Guest: 12345678")]
+    [TestCase("", "short", "Guest: short")]
+    [TestCase("", "", "Guest")]
+    [TestCase(null, null, "Guest")]
+    public void FormatPlayerLabel_ReturnsExpectedText(string displayName, string userId, string expected)
+    {
+        Assert.AreEqual(expected, MainMenuController.FormatPlayerLabel(displayName, userId));
+    }
+
+    [Test]
+    public void Initialize_ShowsDisplayName_WhenSignedIn()
+    {
+        var go = new GameObject("PlayerIdText");
+        go.transform.SetParent(_gameObject.transform);
+        var text = go.AddComponent<TextMeshProUGUI>();
+        SetField("playerIdText", text);
+        PlayerSession.Set("Ana", "");
+        _userDataProvider.UserId = "a_8473080197345671757";
+
+        _controller.Initialize(_userDataProvider, _sceneLoader);
+
+        Assert.AreEqual("Ana", text.text);
+    }
+
+    [Test]
+    public void Initialize_ShowsGuestLabel_WhenThereIsNoDisplayName()
+    {
+        var go = new GameObject("PlayerIdText");
+        go.transform.SetParent(_gameObject.transform);
+        var text = go.AddComponent<TextMeshProUGUI>();
+        SetField("playerIdText", text);
+        _userDataProvider.UserId = "abcdefghijk";
+
+        _controller.Initialize(_userDataProvider, _sceneLoader);
+
+        Assert.AreEqual("Guest: abcdefgh", text.text);
+    }
+
+    [Test]
+    public void Initialize_ShowsCachedAvatar_WhenAvailable()
+    {
+        var go = new GameObject("Avatar");
+        go.transform.SetParent(_gameObject.transform);
+        var image = go.AddComponent<RawImage>();
+        go.SetActive(false);
+        SetField("avatarImage", image);
+        var texture = new Texture2D(2, 2);
+        PlayerSession.Avatar = texture;
+
+        _controller.Initialize(_userDataProvider, _sceneLoader);
+
+        Assert.IsTrue(go.activeSelf);
+        Assert.AreSame(texture, image.texture);
+        Object.DestroyImmediate(texture);
+    }
+
+    [Test]
+    public void Initialize_HidesAvatar_WhenThereIsNothingToShow()
+    {
+        var go = new GameObject("Avatar");
+        go.transform.SetParent(_gameObject.transform);
+        var image = go.AddComponent<RawImage>();
+        SetField("avatarImage", image);
+
+        _controller.Initialize(_userDataProvider, _sceneLoader);
+
+        Assert.IsFalse(go.activeSelf);
     }
 }

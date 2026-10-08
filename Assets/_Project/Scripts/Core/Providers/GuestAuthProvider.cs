@@ -4,7 +4,6 @@ using System;
 /// Local-only fallback identity: generates a GUID once and persists it via IStorageProvider,
 /// so the player has a stable PlayerId even without signing into any external service.
 /// This always succeeds - it's not a network call, just local generation/lookup.
-/// Swap this for GooglePlayGamesAuthProvider later - same IAuthProvider contract. (wating for the google play account purchase)
 /// </summary>
 public class GuestAuthProvider : IAuthProvider
 {

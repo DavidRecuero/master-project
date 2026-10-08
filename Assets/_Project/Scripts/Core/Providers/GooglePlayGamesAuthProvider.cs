@@ -21,12 +21,23 @@ public class GooglePlayGamesAuthProvider : IAuthProvider
     {
         PlayGamesPlatform.Instance.Authenticate(status =>
         {
-            IsSignedIn = status == SignInStatus.Success;
-            PlayerId = IsSignedIn ? PlayGamesPlatform.Instance.GetUserId() : "";
-            DisplayName = IsSignedIn ? PlayGamesPlatform.Instance.GetUserDisplayName() : "";
+            if (status == SignInStatus.Success)
+            {
+                Finish(status, onComplete);
+                return;
+            }
 
-            onComplete?.Invoke(MapStatus(status));
+            PlayGamesPlatform.Instance.ManuallyAuthenticate(status2 =>
+                Finish(status2, onComplete));
         });
+    }
+
+    private void Finish(SignInStatus status, Action<AuthResult> onComplete)
+    {
+        IsSignedIn = status == SignInStatus.Success;
+        PlayerId = IsSignedIn ? PlayGamesPlatform.Instance.GetUserId() : "";
+        DisplayName = IsSignedIn ? PlayGamesPlatform.Instance.GetUserDisplayName() : "";
+        onComplete?.Invoke(MapStatus(status));
     }
 
     private static AuthResult MapStatus(SignInStatus status)

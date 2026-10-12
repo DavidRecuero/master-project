@@ -61,13 +61,13 @@ public class ShuffleBoosterTests
         var pipe1 = new Pipe
         {
             path = new List<Vector2Int>(),
-            itemsQueue = new List<int> { 0, 0, 1 },
+            itemsQueue = TestQueues.Of(0, 0, 1),
             activeItems = new List<Item> { MakeItem(0), MakeItem(0), MakeItem(1) }
         };
         var pipe2 = new Pipe
         {
             path = new List<Vector2Int>(),
-            itemsQueue = new List<int> { 2, 3 },
+            itemsQueue = TestQueues.Of(2, 3),
             activeItems = new List<Item> { MakeItem(2), MakeItem(3) }
         };
         SetBoardPipes(new List<Pipe> { pipe1, pipe2 });
@@ -80,8 +80,8 @@ public class ShuffleBoosterTests
             "Shuffling must redistribute the same multiset of colors, never add/remove/change the total counts.");
 
         // itemsQueue must stay in sync with the (possibly reshuffled) activeItems colors
-        CollectionAssert.AreEqual(pipe1.activeItems.Select(i => i.colorID).ToList(), pipe1.itemsQueue);
-        CollectionAssert.AreEqual(pipe2.activeItems.Select(i => i.colorID).ToList(), pipe2.itemsQueue);
+        CollectionAssert.AreEqual(pipe1.activeItems.Select(i => i.colorID).ToList(), TestQueues.Colors(pipe1.itemsQueue));
+        CollectionAssert.AreEqual(pipe2.activeItems.Select(i => i.colorID).ToList(), TestQueues.Colors(pipe2.itemsQueue));
     }
 
     [Test]
@@ -91,7 +91,7 @@ public class ShuffleBoosterTests
         var pipe = new Pipe
         {
             path = new List<Vector2Int>(),
-            itemsQueue = new List<int> { 1 },
+            itemsQueue = TestQueues.Of(1),
             activeItems = new List<Item> { onlyItem }
         };
         SetBoardPipes(new List<Pipe> { pipe });

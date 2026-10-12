@@ -63,7 +63,7 @@ public class TrayClearerBoosterTests
         return new Pipe
         {
             path = new List<Vector2Int> { new Vector2Int(0, 0) },
-            itemsQueue = new List<int> { existingColorId },
+            itemsQueue = TestQueues.Of(existingColorId),
             activeItems = new List<Item> { MakeItem(existingColorId) }
         };
     }
@@ -96,8 +96,7 @@ public class TrayClearerBoosterTests
         _booster.Execute();
 
         Assert.AreEqual(0, GetTrayItemsField().Count, "Tray should be completely emptied.");
-        CollectionAssert.AreEqual(new List<int> { 9, 5, 6 }, onlyPipe.itemsQueue,
-            "Both cleared items should have been appended to the only pipe's queue, in tray order.");
+        CollectionAssert.AreEqual(new List<int> { 9, 5, 6 }, TestQueues.Colors(onlyPipe.itemsQueue), "Both cleared items should have been appended to the only pipe's queue, in tray order.");
         Assert.AreEqual(1, onlyPipe.activeItems.Count, "The pipe was already full, so no new item should spawn immediately.");
         Assert.AreEqual(2, _fakePool.ReleasedItemsCount, "Each tray item should be released back to the pool.");
     }

@@ -50,7 +50,7 @@ public class MatchBoosterTests
         return new Pipe
         {
             path = new List<Vector2Int> { new Vector2Int(0, 0), new Vector2Int(0, 1), new Vector2Int(0, 2) },
-            itemsQueue = new List<int> { colorId },
+            itemsQueue = TestQueues.Of(colorId),
             activeItems = new List<Item> { item }
         };
     }

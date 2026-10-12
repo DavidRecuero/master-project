@@ -53,3 +53,21 @@ public class FakeGameStateController : IGameStateController
         return true;
     }
 }
+
+/// <summary>Test helper to build pipe spawn queues from plain color ids.</summary>
+public static class TestQueues
+{
+    public static System.Collections.Generic.List<ItemSpawnData> Of(params int[] colorIds)
+    {
+        var queue = new System.Collections.Generic.List<ItemSpawnData>();
+        foreach (int colorId in colorIds) queue.Add(ItemSpawnData.Normal(colorId));
+        return queue;
+    }
+
+    public static System.Collections.Generic.List<int> Colors(System.Collections.Generic.IEnumerable<ItemSpawnData> queue)
+    {
+        var colors = new System.Collections.Generic.List<int>();
+        foreach (ItemSpawnData data in queue) colors.Add(data.colorId);
+        return colors;
+    }
+}

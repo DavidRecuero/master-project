@@ -7,10 +7,12 @@ public static class GameEvents
     public static event Action<BoosterType> OnBoosterUsed;
     public static event Action OnTrayChanged;
     public static event Action OnBoardChanged;
+    public static event Action<Item, Pipe> OnItemCollectedByPlayer;
 
     public static void TriggerLevelCleared() => OnLevelCleared?.Invoke();
     public static void TriggerLevelFailed() => OnLevelFailed?.Invoke();
     public static void TriggerBoosterUsed(BoosterType type) => OnBoosterUsed?.Invoke(type);
     public static void TriggerTrayChanged() => OnTrayChanged?.Invoke();
     public static void TriggerBoardChanged() => OnBoardChanged?.Invoke();
+    public static void TriggerItemCollectedByPlayer(Item item, Pipe pipe) => OnItemCollectedByPlayer?.Invoke(item, pipe);
 }

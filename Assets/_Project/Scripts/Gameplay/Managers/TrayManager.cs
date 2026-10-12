@@ -119,7 +119,14 @@ public class TrayManager : MonoBehaviour
     // Manages the clicks on items
     private void HandleItemClicked(Item item)
     {
-        CollectItem(item);
+        // Capture the pipe before collecting, the item leaves it during CollectItem
+        Pipe sourcePipe = item != null ? item.parentPipe : null;
+
+        if (CollectItem(item))
+        {
+            // Only player taps notify obstacles (fog movement, barrel damage)
+            GameEvents.TriggerItemCollectedByPlayer(item, sourcePipe);
+        }
     }
 
     /// <summary>
@@ -129,13 +136,9 @@ public class TrayManager : MonoBehaviour
     /// </summary>
     public bool CollectItem(Item item)
     {
-        if (item == null || item.inTray) return false;
+        if (item == null || !item.CanBeCollected) return false;
 
         Pipe parentPipe = item.parentPipe;
-        Vector2Int exitPosition = parentPipe.path[parentPipe.path.Count - 1];
-
-        // Only items sitting at the last position of the pipe (the exit) can be picked
-        if (item.gridPosition != exitPosition) return false;
 
         if (!TryAddItem(item)) return false;
 

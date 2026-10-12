@@ -3,23 +3,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-[System.Serializable]
-public class Pipe
-{
-    [Tooltip("Higher layer value will be drawn on top of lower layer pipes")]
-    public int layer;
-
-    [Tooltip("List of positions. Index 0 is the origin, the last index is the destination")]
-    public List<Vector2Int> path;
-
-    [Tooltip("Queue of items IDs (0, 1, 2...). Must match possibleItemColors indices.")]
-    public List<int> itemsQueue = new List<int>();
-
-    // Runtime list tracking the active GameObjects sitting on the path
-    [HideInInspector]
-    public List<Item> activeItems = new List<Item>();
-}
-
 public class BoardManager : MonoBehaviour
 {
     [Header("References")]
@@ -36,6 +19,10 @@ public class BoardManager : MonoBehaviour
     private int height;
     private List<Pipe> pipes = new List<Pipe>();
     public float traySpace = 2.5f;  // Extra space reserved at the bottom for the tray
+
+    public int Width => width;
+    public int Height => height;
+    public IReadOnlyList<Pipe> Pipes => pipes;
 
     [Header("Pipes Lines Data")]
     public PipeLineRenderer pipeLineRenderer;
@@ -172,7 +159,7 @@ public class BoardManager : MonoBehaviour
             Pipe newPipe = new Pipe
             {
                 layer = pd.layer,
-                itemsQueue = new List<int>(pd.itemsQueue),
+                itemsQueue = pd.BuildSpawnQueue(),
                 path = new List<Vector2Int>()
             };
 
@@ -186,11 +173,19 @@ public class BoardManager : MonoBehaviour
     }
 
     // Helper function to find the highest layer pipe at a specific coordinate
-    private Pipe GetHighestLayerPipeAt(Vector2Int pos)
+    public Pipe GetHighestLayerPipeAt(Vector2Int pos)
     {
         return pipes.Where(p => p.path != null && p.path.Contains(pos))
                     .OrderByDescending(p => p.layer)
                     .FirstOrDefault();
+    }
+
+    /// <summary>World position of the center of a grid cell.</summary>
+    public Vector3 GridToWorld(Vector2Int pos)
+    {
+        Vector3 cellWorldPos = tilemap.CellToWorld(new Vector3Int(pos.x, pos.y, 0));
+        Vector3 centerOffset = new Vector3(tilemap.cellSize.x / 2f, tilemap.cellSize.y / 2f, 0);
+        return cellWorldPos + centerOffset;
     }
 
     // Moves the tilemap to center it in the scene based on its width and height
@@ -206,30 +201,15 @@ public class BoardManager : MonoBehaviour
     {
         foreach (Pipe pipe in pipes)
         {
-            if (pipe.path == null || pipe.path.Count == 0) continue;
+            if (!pipe.HasPath) continue;
 
             pipe.activeItems.Clear();
-
-            int pathLen = pipe.path.Count;
-            int queueLen = pipe.itemsQueue.Count;
-            int itemsToSpawn = Mathf.Min(pathLen, queueLen);
-
-            for (int i = 0; i < itemsToSpawn; i++)
-            {
-                int pathIndex = pathLen - 1 - i;
-                Vector2Int pos = pipe.path[pathIndex];
-
-                int idColor = pipe.itemsQueue[i];
-                Color color = possibleItemColors[idColor];
-
-                Item item = SpawnItemObject(pos, idColor, color, pipe);
-                pipe.activeItems.Add(item);
-            }
+            FillPipe(pipe);
         }
     }
 
     // Spawns an item GameObject at the specified grid position, initializes it, and returns the Item component
-    Item SpawnItemObject(Vector2Int pos, int idColor, Color color, Pipe pipe)
+    Item SpawnItemObject(Vector2Int pos, ItemSpawnData data, Pipe pipe)
     {
         // Extract object from pool
         Item itemComponent = _itemPool.GetItem();
@@ -237,12 +217,9 @@ public class BoardManager : MonoBehaviour
 
         itemObj.name = $"Item_P{pipe.layer}_{pos.x}_{pos.y}";
         itemObj.transform.SetParent(this.transform);
+        itemObj.transform.position = GridToWorld(pos);
 
-        Vector3 cellWorldPos = tilemap.CellToWorld(new Vector3Int(pos.x, pos.y, 0));
-        Vector3 centerOffset = new Vector3(tilemap.cellSize.x / 2f, tilemap.cellSize.y / 2f, 0);
-        itemObj.transform.position = cellWorldPos + centerOffset;
-
-        itemComponent.Init(idColor, color, pos, pipe, itemSprite);
+        itemComponent.Init(data, possibleItemColors[data.colorId], pos, pipe, itemSprite);
 
         // Visibility Check
         Pipe topPipe = GetHighestLayerPipeAt(pos);
@@ -251,50 +228,65 @@ public class BoardManager : MonoBehaviour
         return itemComponent;
     }
 
+    // Moves an already spawned item to a new cell of its pipe, updating its visibility
+    private void PlaceItem(Item item, Pipe pipe, Vector2Int pos)
+    {
+        item.UpdateGridPosition(pos);
+        item.transform.position = GridToWorld(pos);
+
+        // Only visible if no higher layer pipe covers this cell
+        Pipe topPipe = GetHighestLayerPipeAt(pos);
+        item.gameObject.SetActive(topPipe == pipe);
+    }
+
+    /// <summary>
+    /// Spawns queued elements into the free cells of the pipe until the path is full
+    /// or the queue runs out. activeItems[i] always sits at path[pathLen - 1 - i].
+    /// </summary>
+    private void FillPipe(Pipe pipe)
+    {
+        if (!pipe.HasPath) return;
+
+        int pathLen = pipe.path.Count;
+        while (pipe.activeItems.Count < pathLen && pipe.activeItems.Count < pipe.itemsQueue.Count)
+        {
+            int index = pipe.activeItems.Count;
+            Vector2Int pos = pipe.path[pathLen - 1 - index];
+
+            Item newItem = SpawnItemObject(pos, pipe.itemsQueue[index], pipe);
+            pipe.activeItems.Add(newItem);
+        }
+    }
+
+    /// <summary>
+    /// Removes the element at 'index' from the pipe (both the GameObject list and the queue),
+    /// shifts every element behind it one step forward and refills the pipe from its queue.
+    /// Returns the removed item (still alive, the caller decides what to do with it).
+    /// </summary>
+    private Item RemoveItemAt(Pipe pipe, int index)
+    {
+        Item removedItem = pipe.activeItems[index];
+        pipe.activeItems.RemoveAt(index);
+        if (index < pipe.itemsQueue.Count) pipe.itemsQueue.RemoveAt(index);
+
+        int pathLen = pipe.path.Count;
+
+        // Shift every item that was behind the removed one forward by one step
+        for (int i = index; i < pipe.activeItems.Count; i++)
+        {
+            PlaceItem(pipe.activeItems[i], pipe, pipe.path[pathLen - 1 - i]);
+        }
+
+        FillPipe(pipe);
+        return removedItem;
+    }
+
     // Call this method when a candy is picked at the end of the pipe
     public void AdvancePipe(Pipe pipe)
     {
         if (pipe.activeItems.Count == 0) return;
 
-        // Remove the first item from the active list and the queue
-        pipe.activeItems.RemoveAt(0);
-        if (pipe.itemsQueue.Count > 0) pipe.itemsQueue.RemoveAt(0);
-
-        int pathLen = pipe.path.Count;
-
-        // Move all remaining active items one step forward along the path
-        for (int i = 0; i < pipe.activeItems.Count; i++)
-        {
-            int pathIndex = pathLen - 1 - i;
-            Vector2Int newPos = pipe.path[pathIndex];
-
-            Item item = pipe.activeItems[i];
-            item.UpdateGridPosition(newPos);
-
-            Vector3 cellWorldPos = tilemap.CellToWorld(new Vector3Int(newPos.x, newPos.y, 0));
-            Vector3 centerOffset = new Vector3(tilemap.cellSize.x / 2f, tilemap.cellSize.y / 2f, 0);
-            item.transform.position = cellWorldPos + centerOffset;
-
-            // Update visibility based on the highest layer pipe at the new position
-            Pipe topPipe = GetHighestLayerPipeAt(newPos);
-            item.gameObject.SetActive(topPipe == pipe);
-        }
-
-        // If there are still items in the queue, spawn a new item at the origin of the pipe
-        if (pipe.itemsQueue.Count >= pathLen)
-        {
-            // The item that enters is the one at the index equivalent to the path size minus 1
-            int newCandyIndex = pathLen - 1;
-            int idColor = pipe.itemsQueue[newCandyIndex];
-            Color color = possibleItemColors[idColor];
-
-            // The origin is always the index 0 of the path
-            Vector2Int originPos = pipe.path[0];
-
-            Item newItem = SpawnItemObject(originPos, idColor, color, pipe);
-            pipe.activeItems.Add(newItem);
-        }
-
+        RemoveItemAt(pipe, 0);
         GameEvents.TriggerBoardChanged();
     }
 
@@ -303,8 +295,7 @@ public class BoardManager : MonoBehaviour
     {
         foreach (Pipe pipe in pipes)
         {
-            if (pipe.activeItems.Count > 0 || pipe.itemsQueue.Count > 0)
-                return false;
+            if (!pipe.IsEmpty) return false;
         }
         return true;
     }
@@ -331,43 +322,11 @@ public class BoardManager : MonoBehaviour
             int index = pipe.activeItems.FindIndex(i => i.colorID == colorId);
             if (index == -1) continue;
 
-            Item extractedItem = pipe.activeItems[index];
-            pipe.activeItems.RemoveAt(index);
-            if (index < pipe.itemsQueue.Count) pipe.itemsQueue.RemoveAt(index);
-
             // It might have been hidden under a higher-layer pipe at this position;
             // it's leaving the board now, so it must be visible to animate into the tray.
-            extractedItem.gameObject.SetActive(true);
+            pipe.activeItems[index].gameObject.SetActive(true);
 
-            int pathLen = pipe.path.Count;
-
-            // Shift every item that was behind the removed one forward by one step,
-            // exactly like AdvancePipe does when the front item is collected.
-            for (int i = index; i < pipe.activeItems.Count; i++)
-            {
-                int pathIndex = pathLen - 1 - i;
-                Vector2Int newPos = pipe.path[pathIndex];
-
-                Item item = pipe.activeItems[i];
-                item.UpdateGridPosition(newPos);
-
-                Vector3 cellWorldPos = tilemap.CellToWorld(new Vector3Int(newPos.x, newPos.y, 0));
-                Vector3 centerOffset = new Vector3(tilemap.cellSize.x / 2f, tilemap.cellSize.y / 2f, 0);
-                item.transform.position = cellWorldPos + centerOffset;
-
-                Pipe topPipe = GetHighestLayerPipeAt(newPos);
-                item.gameObject.SetActive(topPipe == pipe);
-            }
-
-            // Spawn a replacement from the queue if there's one waiting
-            if (pipe.itemsQueue.Count >= pathLen)
-            {
-                int newColorId = pipe.itemsQueue[pathLen - 1];
-                Vector2Int originPos = pipe.path[0];
-
-                Item newItem = SpawnItemObject(originPos, newColorId, possibleItemColors[newColorId], pipe);
-                pipe.activeItems.Add(newItem);
-            }
+            Item extractedItem = RemoveItemAt(pipe, index);
 
             GameEvents.TriggerBoardChanged();
             return extractedItem;
@@ -406,7 +365,7 @@ public class BoardManager : MonoBehaviour
             int newColorId = colorIds[i];
 
             item.ApplyColor(newColorId, possibleItemColors[newColorId]);
-            pipe.itemsQueue[index] = newColorId;
+            pipe.itemsQueue[index].colorId = newColorId;
         }
 
         GameEvents.TriggerBoardChanged();
@@ -419,22 +378,14 @@ public class BoardManager : MonoBehaviour
     /// </summary>
     public void AddItemToRandomPipe(int colorId)
     {
-        List<Pipe> eligiblePipes = pipes.Where(p => p.path != null && p.path.Count > 0).ToList();
+        List<Pipe> eligiblePipes = pipes.Where(p => p.HasPath).ToList();
         if (eligiblePipes.Count == 0) return;
 
         Pipe targetPipe = eligiblePipes[Random.Range(0, eligiblePipes.Count)];
-        targetPipe.itemsQueue.Add(colorId);
+        targetPipe.itemsQueue.Add(ItemSpawnData.Normal(colorId));
 
-        // If the pipe still has a free spot on its path, spawn the item right away
-        if (targetPipe.activeItems.Count < targetPipe.path.Count)
-        {
-            int pathIndex = targetPipe.path.Count - 1 - targetPipe.activeItems.Count;
-            Vector2Int pos = targetPipe.path[pathIndex];
-            Color color = possibleItemColors[colorId];
-
-            Item newItem = SpawnItemObject(pos, colorId, color, targetPipe);
-            targetPipe.activeItems.Add(newItem);
-        }
+        // If the pipe still has a free spot on its path, the new item appears right away
+        FillPipe(targetPipe);
 
         GameEvents.TriggerBoardChanged();
     }

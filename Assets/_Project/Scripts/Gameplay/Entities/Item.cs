@@ -5,6 +5,7 @@ public class Item : MonoBehaviour
 {
     public int colorID;
     public Color itemColor;
+    public ItemType itemType = ItemType.Normal;
     public Vector2Int gridPosition;
     public Pipe parentPipe;
 
@@ -20,6 +21,16 @@ public class Item : MonoBehaviour
 
     private SpriteRenderer spriteRenderer;
     private Coroutine pulseCoroutine;
+
+    /// <summary>True when this item sits on the last cell of its pipe.</summary>
+    public bool IsAtExit =>
+        parentPipe != null && parentPipe.HasPath && gridPosition == parentPipe.ExitPosition;
+
+    /// <summary>
+    /// Single source of truth for "can the player send this to the tray right now?".
+    /// Obstacles (e.g. a barrel with lives left) will extend this rule.
+    /// </summary>
+    public bool CanBeCollected => !inTray && IsAtExit;
 
     private void Awake()
     {
@@ -46,9 +57,16 @@ public class Item : MonoBehaviour
         }
     }
 
+    /// <summary>Convenience overload for plain colored items.</summary>
     public void Init(int id, Color color, Vector2Int pos, Pipe pipe, Sprite sprite)
     {
-        colorID = id;
+        Init(ItemSpawnData.Normal(id), color, pos, pipe, sprite);
+    }
+
+    public void Init(ItemSpawnData data, Color color, Vector2Int pos, Pipe pipe, Sprite sprite)
+    {
+        colorID = data.colorId;
+        itemType = data.type;
         itemColor = color;
         gridPosition = pos;
         parentPipe = pipe;
@@ -73,6 +91,19 @@ public class Item : MonoBehaviour
         CheckExitPulse();
     }
 
+    /// <summary>
+    /// Puts the item back into a neutral state before returning it to the pool,
+    /// so no obstacle state leaks into the next element that reuses this GameObject.
+    /// </summary>
+    public void ResetForPool()
+    {
+        StopPulse();
+        inTray = false;
+        itemType = ItemType.Normal;
+        parentPipe = null;
+        if (TryGetComponent(out Collider2D col)) col.enabled = true;
+    }
+
     public void UpdateGridPosition(Vector2Int newPos)
     {
         gridPosition = newPos;
@@ -94,14 +125,7 @@ public class Item : MonoBehaviour
 
     public void CheckExitPulse()
     {
-        if (inTray || parentPipe == null || parentPipe.path == null || parentPipe.path.Count == 0)
-        {
-            StopPulse();
-            return;
-        }
-
-        Vector2Int exitPosition = parentPipe.path[parentPipe.path.Count - 1];
-        if (gridPosition == exitPosition)
+        if (CanBeCollected)
         {
             StartPulse();
         }

@@ -26,7 +26,7 @@ public class MatchBooster : IBooster
     public bool CanExecute()
     {
         if (_trayManager == null || _boardManager == null) return false;
-        return _trayManager.TrayItems.Count > 0 || !_boardManager.IsBoardCleared();
+        return _trayManager.TrayItems.Count > 0 || _boardManager.GetActiveColors().Count > 0;
     }
 
     public void Execute()

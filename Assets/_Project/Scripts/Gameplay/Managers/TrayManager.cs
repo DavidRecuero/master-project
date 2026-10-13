@@ -153,6 +153,9 @@ public class TrayManager : MonoBehaviour
     {
         if (IsFull) return false;
 
+        // Hidden items show their real color as soon as they land in the tray, before grouping and matching (both rely on colorID)
+        item.Reveal();
+
         Collider2D col = item.GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 

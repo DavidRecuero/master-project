@@ -31,6 +31,10 @@ public class BoardManager : MonoBehaviour
     public Sprite itemSprite;
     public Color[] possibleItemColors = new Color[] { Color.red, Color.blue, Color.yellow, Color.green };
 
+    [Header("Hidden Item Settings")]
+    public Color hiddenItemColor = new Color(0.45f, 0.45f, 0.5f, 1f);
+    public Sprite hiddenItemIcon;
+
     //Injected dependencies
     private ILevelLoader _levelLoader;
     private IItemPool _itemPool;
@@ -221,6 +225,9 @@ public class BoardManager : MonoBehaviour
 
         itemComponent.Init(data, possibleItemColors[data.colorId], pos, pipe, itemSprite);
 
+        //Hides hidden items
+        itemComponent.ApplyHiddenLook(hiddenItemColor, hiddenItemIcon);
+
         // Visibility Check
         Pipe topPipe = GetHighestLayerPipeAt(pos);
         itemObj.SetActive(topPipe == pipe);
@@ -306,7 +313,11 @@ public class BoardManager : MonoBehaviour
     /// </summary>
     public List<int> GetActiveColors()
     {
-        return pipes.SelectMany(p => p.activeItems).Select(i => i.colorID).Distinct().ToList();
+        return pipes.SelectMany(p => p.activeItems)
+            .Where(i => i.HasKnownColor)
+            .Select(i => i.colorID)
+            .Distinct()
+            .ToList();
     }
 
     /// <summary>
@@ -319,7 +330,7 @@ public class BoardManager : MonoBehaviour
     {
         foreach (Pipe pipe in pipes)
         {
-            int index = pipe.activeItems.FindIndex(i => i.colorID == colorId);
+            int index = pipe.activeItems.FindIndex(i => i.HasKnownColor && i.colorID == colorId);
             if (index == -1) continue;
 
             // It might have been hidden under a higher-layer pipe at this position;
@@ -346,7 +357,10 @@ public class BoardManager : MonoBehaviour
         foreach (Pipe pipe in pipes)
         {
             for (int i = 0; i < pipe.activeItems.Count; i++)
-                slots.Add((pipe, i, pipe.activeItems[i]));
+            {
+                if (pipe.activeItems[i].HasKnownColor)
+                    slots.Add((pipe, i, pipe.activeItems[i]));
+            }
         }
 
         if (slots.Count < 2) return;

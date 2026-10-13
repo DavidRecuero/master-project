@@ -887,6 +887,8 @@ MonoBehaviour:
   - {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   - {r: 0, g: 1, b: 0, a: 1}
   - {r: 1, g: 0, b: 0.75, a: 1}
+  hiddenItemColor: {r: 0.45, g: 0.45, b: 0.5, a: 1}
+  hiddenItemIcon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &462780002
 Transform:
   m_ObjectHideFlags: 0
@@ -946,7 +948,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aff6cd35067dcaa4681fe5219bef0380, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  totalLevels: 5
+  totalLevels: 6
   boardManager: {fileID: 462780001}
   trayManager: {fileID: 307449189}
   itemPool: {fileID: 922096506}
@@ -2375,7 +2377,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 47.05
+  m_fontSize: 21.7
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

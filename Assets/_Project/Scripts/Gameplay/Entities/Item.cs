@@ -20,6 +20,7 @@ public class Item : MonoBehaviour
     [HideInInspector] public bool inTray = false;
 
     private SpriteRenderer spriteRenderer;
+    private SpriteRenderer overlayRenderer; // Extra icon drawn on top of the item (e.g. "?" for hidden items)
     private Coroutine pulseCoroutine;
 
     /// <summary>True when this item sits on the last cell of its pipe.</summary>
@@ -31,6 +32,15 @@ public class Item : MonoBehaviour
     /// Obstacles (e.g. a barrel with lives left) will extend this rule.
     /// </summary>
     public bool CanBeCollected => !inTray && IsAtExit;
+
+    /// <summary>The player can't see this item's color yet.</summary>
+    public bool IsHidden => itemType == ItemType.Hidden;
+
+    /// <summary>
+    /// A plain item whose color is visible. Boosters that work with colors (Match, Shuffle)
+    /// only touch these, so they never reveal or move obstacles.
+    /// </summary>
+    public bool HasKnownColor => itemType == ItemType.Normal;
 
     private void Awake()
     {
@@ -55,6 +65,20 @@ public class Item : MonoBehaviour
         {
             spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
         }
+    }
+
+    // Lazily creates a child SpriteRenderer used to draw an icon on top of the item
+    private void EnsureOverlayRenderer()
+    {
+        if (overlayRenderer != null) return;
+
+        GameObject overlayObj = new GameObject("Overlay");
+        overlayObj.transform.SetParent(transform, false);
+        overlayObj.transform.localPosition = Vector3.zero;
+        overlayObj.transform.localScale = Vector3.one;
+
+        overlayRenderer = overlayObj.AddComponent<SpriteRenderer>();
+        overlayRenderer.enabled = false;
     }
 
     /// <summary>Convenience overload for plain colored items.</summary>
@@ -82,6 +106,9 @@ public class Item : MonoBehaviour
         // Draw above the tilemap (Tilemap is usually layer 0)
         spriteRenderer.sortingOrder = baseSortingOrder + pipe.layer;
 
+        // A reused pooled object might still have an icon from its previous life
+        HideOverlay();
+
         // Collider to detect clicks or interactions
         BoxCollider2D col = gameObject.GetComponent<BoxCollider2D>();
         if (col == null) col = gameObject.AddComponent<BoxCollider2D>();
@@ -89,6 +116,48 @@ public class Item : MonoBehaviour
         col.enabled = true;
 
         CheckExitPulse();
+    }
+
+    /// <summary>
+    /// Covers the real color of a Hidden item with a neutral color and an optional icon.
+    /// The real color is kept in itemColor/colorID and shown again on Reveal().
+    /// </summary>
+    public void ApplyHiddenLook(Color hiddenColor, Sprite hiddenIcon)
+    {
+        if (!IsHidden) return;
+
+        EnsureSpriteRenderer();
+        spriteRenderer.color = hiddenColor;
+
+        if (hiddenIcon != null) ShowOverlay(hiddenIcon);
+    }
+
+    /// <summary>
+    /// Turns a Hidden item into a normal one showing its real color.
+    /// Called by the tray right before the item is placed, so matching works as usual.
+    /// </summary>
+    public void Reveal()
+    {
+        if (!IsHidden) return;
+
+        itemType = ItemType.Normal;
+
+        EnsureSpriteRenderer();
+        spriteRenderer.color = itemColor;
+        HideOverlay();
+    }
+
+    private void ShowOverlay(Sprite icon)
+    {
+        EnsureOverlayRenderer();
+        overlayRenderer.sprite = icon;
+        overlayRenderer.sortingOrder = spriteRenderer.sortingOrder + 1;
+        overlayRenderer.enabled = true;
+    }
+
+    private void HideOverlay()
+    {
+        if (overlayRenderer != null) overlayRenderer.enabled = false;
     }
 
     /// <summary>
@@ -101,6 +170,7 @@ public class Item : MonoBehaviour
         inTray = false;
         itemType = ItemType.Normal;
         parentPipe = null;
+        HideOverlay();
         if (TryGetComponent(out Collider2D col)) col.enabled = true;
     }
 
@@ -113,11 +183,14 @@ public class Item : MonoBehaviour
     /// <summary>
     /// Recolors this item in place, without touching its position or parent pipe.
     /// Used by the Shuffle booster to redistribute colors across the board.
+    /// A hidden item stores the new color but keeps showing its hidden look.
     /// </summary>
     public void ApplyColor(int id, Color color)
     {
         colorID = id;
         itemColor = color;
+
+        if (IsHidden) return;
 
         EnsureSpriteRenderer();
         spriteRenderer.color = color;

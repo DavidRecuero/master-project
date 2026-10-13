@@ -1,0 +1,175 @@
+{
+  "levelNumber": 6,
+  "width": 5,
+  "height": 5,
+  "pipes": [
+    {
+      "layer": 0,
+      "path": [
+        {
+          "x": 1,
+          "y": 4
+        },
+        {
+          "x": 1,
+          "y": 3
+        },
+        {
+          "x": 1,
+          "y": 2
+        },
+        {
+          "x": 1,
+          "y": 1
+        },
+        {
+          "x": 1,
+          "y": 0
+        }
+      ],
+      "items": [
+        {
+          "colorId": 0
+        },
+        {
+          "colorId": 1
+        },
+        {
+          "colorId": 2,
+          "type": 1
+        },
+        {
+          "colorId": 0
+        },
+        {
+          "colorId": 3
+        },
+        {
+          "colorId": 1,
+          "type": 1
+        },
+        {
+          "colorId": 2
+        },
+        {
+          "colorId": 0
+        },
+        {
+          "colorId": 3
+        }
+      ]
+    },
+    {
+      "layer": 1,
+      "path": [
+        {
+          "x": 2,
+          "y": 4
+        },
+        {
+          "x": 2,
+          "y": 3
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 2,
+          "y": 1
+        },
+        {
+          "x": 2,
+          "y": 0
+        }
+      ],
+      "items": [
+        {
+          "colorId": 1
+        },
+        {
+          "colorId": 0
+        },
+        {
+          "colorId": 2
+        },
+        {
+          "colorId": 3,
+          "type": 1
+        },
+        {
+          "colorId": 0
+        },
+        {
+          "colorId": 0,
+          "type": 1
+        },
+        {
+          "colorId": 1
+        },
+        {
+          "colorId": 3
+        },
+        {
+          "colorId": 2
+        }
+      ]
+    },
+    {
+      "layer": 2,
+      "path": [
+        {
+          "x": 3,
+          "y": 4
+        },
+        {
+          "x": 3,
+          "y": 3
+        },
+        {
+          "x": 3,
+          "y": 2
+        },
+        {
+          "x": 3,
+          "y": 1
+        },
+        {
+          "x": 3,
+          "y": 0
+        }
+      ],
+      "items": [
+        {
+          "colorId": 3
+        },
+        {
+          "colorId": 2
+        },
+        {
+          "colorId": 0,
+          "type": 1
+        },
+        {
+          "colorId": 1
+        },
+        {
+          "colorId": 0
+        },
+        {
+          "colorId": 2
+        },
+        {
+          "colorId": 3,
+          "type": 1
+        },
+        {
+          "colorId": 1
+        },
+        {
+          "colorId": 0
+        }
+      ]
+    }
+  ]
+}

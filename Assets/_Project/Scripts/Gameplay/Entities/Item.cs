@@ -196,6 +196,17 @@ public class Item : MonoBehaviour
         spriteRenderer.color = color;
     }
 
+    public void SetIdentity(int id, Color color, ItemType type)
+    {
+        colorID = id;
+        itemColor = color;
+        itemType = type;
+
+        EnsureSpriteRenderer();
+        spriteRenderer.color = color;
+        HideOverlay();
+    }
+
     public void CheckExitPulse()
     {
         if (CanBeCollected)

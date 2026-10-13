@@ -137,4 +137,42 @@ public class MatchBoosterTests
 
         Assert.AreEqual(0, GetTrayItemsField().Count);
     }
+
+    // ---------- Hidden items ----------
+
+    private static Pipe CreateSingleHiddenItemPipe(int colorId)
+    {
+        Pipe pipe = CreateSingleItemPipe(colorId);
+        pipe.activeItems[0].itemType = ItemType.Hidden;
+        pipe.itemsQueue[0].type = ItemType.Hidden;
+        return pipe;
+    }
+
+    [Test]
+    public void CanExecute_ReturnsFalse_WhenOnlyHiddenItemsRemain_AndTrayIsEmpty()
+    {
+        SetBoardPipes(new List<Pipe> { CreateSingleHiddenItemPipe(colorId: 1) });
+
+        Assert.IsFalse(_booster.CanExecute(), "The player can't see any color, so Match has nothing to target.");
+    }
+
+    [Test]
+    public void Execute_NeverExtractsHiddenItems()
+    {
+        var trayRed = new GameObject("TrayRed").AddComponent<Item>();
+        trayRed.colorID = 0;
+        GetTrayItemsField().Add(trayRed);
+
+        var pipes = new List<Pipe>
+        {
+            CreateSingleHiddenItemPipe(colorId: 0), // red but hidden - must stay
+            CreateSingleItemPipe(colorId: 0)        // visible red - can be taken
+        };
+        SetBoardPipes(pipes);
+
+        _booster.Execute();
+
+        Assert.AreEqual(1, pipes[0].activeItems.Count, "The hidden red item must stay on the board.");
+        Assert.AreEqual(0, pipes[1].activeItems.Count, "The visible red item should have been pulled.");
+    }
 }

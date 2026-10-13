@@ -113,4 +113,67 @@ public class ItemTests
         Assert.IsFalse(_item.inTray);
         Assert.IsNull(_item.parentPipe);
     }
+
+    // ---------- Hidden items ----------
+
+    private Pipe MakeSingleCellPipe()
+    {
+        return new Pipe
+        {
+            layer = 0,
+            path = new System.Collections.Generic.List<Vector2Int> { new Vector2Int(0, 0) }
+        };
+    }
+
+    [Test]
+    public void HiddenItem_ShowsHiddenColor_UntilRevealed()
+    {
+        _item.Init(new ItemSpawnData { colorId = 2, type = ItemType.Hidden }, Color.red, new Vector2Int(0, 0), MakeSingleCellPipe(), null);
+        _item.ApplyHiddenLook(Color.gray, null);
+
+        var sr = _gameObject.GetComponent<SpriteRenderer>();
+        Assert.AreEqual(Color.gray, sr.color, "A hidden item must not show its real color.");
+        Assert.IsTrue(_item.IsHidden);
+        Assert.IsFalse(_item.HasKnownColor);
+
+        _item.Reveal();
+
+        Assert.AreEqual(Color.red, sr.color, "Once revealed, the real color is shown.");
+        Assert.AreEqual(ItemType.Normal, _item.itemType);
+        Assert.AreEqual(2, _item.colorID, "Revealing must keep the original color id.");
+        Assert.IsTrue(_item.HasKnownColor);
+    }
+
+    [Test]
+    public void ApplyHiddenLook_DoesNothing_OnNormalItems()
+    {
+        _item.Init(2, Color.red, new Vector2Int(0, 0), MakeSingleCellPipe(), null);
+
+        _item.ApplyHiddenLook(Color.gray, null);
+
+        Assert.AreEqual(Color.red, _gameObject.GetComponent<SpriteRenderer>().color);
+    }
+
+    [Test]
+    public void ApplyColor_OnHiddenItem_StoresColor_ButKeepsItHidden()
+    {
+        _item.Init(new ItemSpawnData { colorId = 2, type = ItemType.Hidden }, Color.red, new Vector2Int(0, 0), MakeSingleCellPipe(), null);
+        _item.ApplyHiddenLook(Color.gray, null);
+
+        _item.ApplyColor(1, Color.blue);
+
+        Assert.AreEqual(1, _item.colorID);
+        Assert.AreEqual(Color.gray, _gameObject.GetComponent<SpriteRenderer>().color);
+
+        _item.Reveal();
+        Assert.AreEqual(Color.blue, _gameObject.GetComponent<SpriteRenderer>().color);
+    }
+
+    [Test]
+    public void HiddenItem_CanBeCollected_AtTheExit_LikeANormalItem()
+    {
+        _item.Init(new ItemSpawnData { colorId = 2, type = ItemType.Hidden }, Color.red, new Vector2Int(0, 0), MakeSingleCellPipe(), null);
+
+        Assert.IsTrue(_item.CanBeCollected);
+    }
 }

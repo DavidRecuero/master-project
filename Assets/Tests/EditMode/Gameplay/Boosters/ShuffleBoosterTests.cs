@@ -101,4 +101,26 @@ public class ShuffleBoosterTests
         Assert.DoesNotThrow(() => booster.Execute());
         Assert.AreEqual(1, onlyItem.colorID, "With only 1 item in play there's nothing to shuffle against.");
     }
+
+    [Test]
+    public void Execute_LeavesHiddenItemsUntouched()
+    {
+        var hidden = MakeItem(3);
+        hidden.itemType = ItemType.Hidden;
+
+        var pipe = new Pipe
+        {
+            path = new List<Vector2Int>(),
+            itemsQueue = TestQueues.Of(3, 0, 1, 2),
+            activeItems = new List<Item> { hidden, MakeItem(0), MakeItem(1), MakeItem(2) }
+        };
+        pipe.itemsQueue[0].type = ItemType.Hidden;
+        SetBoardPipes(new List<Pipe> { pipe });
+
+        new ShuffleBooster(_boardManager).Execute();
+
+        Assert.AreEqual(3, hidden.colorID, "Hidden items must keep their color.");
+        Assert.AreEqual(ItemType.Hidden, hidden.itemType);
+        Assert.AreEqual(3, pipe.itemsQueue[0].colorId);
+    }
 }

@@ -311,13 +311,13 @@ public class BoardManager : MonoBehaviour
     /// Returns the distinct colors currently present among the active items on the board.
     /// Used by the Match booster to pick a random target color when the tray is empty.
     /// </summary>
-    public List<int> GetActiveColors()
+    public List<int> GetActiveColors(bool includeHidden = false)
     {
         return pipes.SelectMany(p => p.activeItems)
-            .Where(i => i.HasKnownColor)
-            .Select(i => i.colorID)
-            .Distinct()
-            .ToList();
+                    .Where(i => i.HasKnownColor || (includeHidden && i.IsHidden))
+                    .Select(i => i.colorID)
+                    .Distinct()
+                    .ToList();
     }
 
     /// <summary>
@@ -328,13 +328,19 @@ public class BoardManager : MonoBehaviour
     /// </summary>
     public Item ExtractAnyItemOfColor(int colorId)
     {
+        Item extracted = TryExtractFirst(i => i.HasKnownColor && i.colorID == colorId);
+        if (extracted == null) extracted = TryExtractFirst(i => i.IsHidden && i.colorID == colorId);
+        return extracted;
+    }
+
+    // Removes the first active item (searching pipe by pipe) that matches the condition
+    private Item TryExtractFirst(System.Predicate<Item> condition)
+    {
         foreach (Pipe pipe in pipes)
         {
-            int index = pipe.activeItems.FindIndex(i => i.HasKnownColor && i.colorID == colorId);
+            int index = pipe.activeItems.FindIndex(condition);
             if (index == -1) continue;
 
-            // It might have been hidden under a higher-layer pipe at this position;
-            // it's leaving the board now, so it must be visible to animate into the tray.
             pipe.activeItems[index].gameObject.SetActive(true);
 
             Item extractedItem = RemoveItemAt(pipe, index);
@@ -352,34 +358,39 @@ public class BoardManager : MonoBehaviour
     /// </summary>
     public void ShuffleActiveItems()
     {
-        // Every (pipe, index) slot that currently holds a spawned item
+        // Every (pipe, index) slot that currently holds a shuffleable item
         List<(Pipe pipe, int index, Item item)> slots = new List<(Pipe, int, Item)>();
         foreach (Pipe pipe in pipes)
         {
             for (int i = 0; i < pipe.activeItems.Count; i++)
             {
-                if (pipe.activeItems[i].HasKnownColor)
-                    slots.Add((pipe, i, pipe.activeItems[i]));
+                Item item = pipe.activeItems[i];
+                if (item.HasKnownColor || item.IsHidden)
+                    slots.Add((pipe, i, item));
             }
         }
 
         if (slots.Count < 2) return;
 
-        // Fisher-Yates shuffle of the colors, then redistribute them across the same slots
-        List<int> colorIds = slots.Select(s => s.item.colorID).ToList();
-        for (int i = colorIds.Count - 1; i > 0; i--)
+        // Fisher-Yates shuffle of the (color, type) pairs, then redistribute them across the same slots
+        List<(int colorId, ItemType type)> identities = slots.Select(s => (colorId: s.item.colorID, type: s.item.itemType)).ToList();
+        for (int i = identities.Count - 1; i > 0; i--)
         {
             int j = Random.Range(0, i + 1);
-            (colorIds[i], colorIds[j]) = (colorIds[j], colorIds[i]);
+            (identities[i], identities[j]) = (identities[j], identities[i]);
         }
 
         for (int i = 0; i < slots.Count; i++)
         {
             var (pipe, index, item) = slots[i];
-            int newColorId = colorIds[i];
+            var (newColorId, newType) = identities[i];
 
-            item.ApplyColor(newColorId, possibleItemColors[newColorId]);
+            item.SetIdentity(newColorId, possibleItemColors[newColorId], newType);
+            item.ApplyHiddenLook(hiddenItemColor, hiddenItemIcon); // Does nothing if it ended up as a normal item
+
+            // Keep the queue in sync with what's on the board
             pipe.itemsQueue[index].colorId = newColorId;
+            pipe.itemsQueue[index].type = newType;
         }
 
         GameEvents.TriggerBoardChanged();

@@ -79,4 +79,29 @@ public class TrayManagerTests
         Assert.AreEqual(1, trayItems[1].colorID);
         Assert.AreEqual(2, trayItems[2].colorID);
     }
+
+    [Test]
+    public void TryAddItem_RevealsHiddenItem_AndGroupsItByItsRealColor()
+    {
+        _trayManager.maxCapacity = 7;
+
+        var red = new GameObject("Red").AddComponent<Item>();
+        red.colorID = 1;
+        var blue = new GameObject("Blue").AddComponent<Item>();
+        blue.colorID = 2;
+        var hiddenRed = new GameObject("HiddenRed").AddComponent<Item>();
+        hiddenRed.colorID = 1;
+        hiddenRed.itemType = ItemType.Hidden;
+
+        _trayManager.TryAddItem(red);
+        _trayManager.TryAddItem(blue);
+        _trayManager.TryAddItem(hiddenRed);
+
+        var trayItems = (List<Item>)typeof(TrayManager)
+            .GetField("trayItems", BindingFlags.NonPublic | BindingFlags.Instance)
+            .GetValue(_trayManager);
+
+        Assert.AreEqual(ItemType.Normal, hiddenRed.itemType, "The hidden item must be revealed when it reaches the tray.");
+        Assert.AreSame(hiddenRed, trayItems[1], "Once revealed it must be grouped next to the other red item.");
+    }
 }

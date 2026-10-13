@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour, IGameStateController
     [Header("Level Settings")]
     public int totalLevels = 5;
     private int playerLevel;
+    private bool isDebugOverride; // True when Tools > Level Loader forced the level (editor only)
     public int CurrentLevelIndex { get; private set; }
 
     [Header("Scene References")]
@@ -54,6 +55,16 @@ public class GameManager : MonoBehaviour, IGameStateController
             playerLevel = _userDataProvider.CurrentLevel;
         }
 
+#if UNITY_EDITOR
+        // Tools > Level Loader can force a specific level while testing in the editor
+        if (DebugLevelOverride.IsActive)
+        {
+            playerLevel = DebugLevelOverride.Level;
+            isDebugOverride = true;
+            Debug.Log($"🔧 [GameManager] Level Loader override: loading level {playerLevel}");
+        }
+#endif
+
         CurrentLevelIndex = playerLevel;
         CurrentState = GameState.Playing;
     }
@@ -92,10 +103,10 @@ public class GameManager : MonoBehaviour, IGameStateController
     private void LoadCorrectLevel()
     {
         //Will be different in case of choosing a random level (if user has gone beyond last designed level)
-        int levelToLoad = playerLevel;      
+        int levelToLoad = playerLevel;
 
         // Check if the player has gone beyond the last designed level
-        if (playerLevel > totalLevels)
+        if (!isDebugOverride && playerLevel > totalLevels)
         {
             levelToLoad = Random.Range(1, totalLevels + 1);
             Debug.Log($"Level {playerLevel} dont exist. Loading random level: {levelToLoad}");

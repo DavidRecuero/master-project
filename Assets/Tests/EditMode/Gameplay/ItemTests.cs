@@ -176,4 +176,30 @@ public class ItemTests
 
         Assert.IsTrue(_item.CanBeCollected);
     }
+
+    [Test]
+    public void SetIdentity_ChangesColorAndType_AndShowsItAsVisible()
+    {
+        _item.Init(new ItemSpawnData { colorId = 2, type = ItemType.Hidden }, Color.red, new Vector2Int(0, 0), MakeSingleCellPipe(), null);
+        _item.ApplyHiddenLook(Color.gray, null);
+
+        _item.SetIdentity(1, Color.blue, ItemType.Normal);
+
+        Assert.AreEqual(1, _item.colorID);
+        Assert.AreEqual(ItemType.Normal, _item.itemType);
+        Assert.AreEqual(Color.blue, _gameObject.GetComponent<SpriteRenderer>().color);
+    }
+
+    [Test]
+    public void SetIdentity_ToHidden_ThenApplyHiddenLook_CoversTheNewColor()
+    {
+        _item.Init(1, Color.blue, new Vector2Int(0, 0), MakeSingleCellPipe(), null);
+
+        _item.SetIdentity(3, Color.green, ItemType.Hidden);
+        _item.ApplyHiddenLook(Color.gray, null);
+
+        Assert.IsTrue(_item.IsHidden);
+        Assert.AreEqual(3, _item.colorID);
+        Assert.AreEqual(Color.gray, _gameObject.GetComponent<SpriteRenderer>().color);
+    }
 }

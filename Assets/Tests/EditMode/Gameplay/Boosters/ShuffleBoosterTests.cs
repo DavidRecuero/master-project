@@ -103,24 +103,37 @@ public class ShuffleBoosterTests
     }
 
     [Test]
-    public void Execute_LeavesHiddenItemsUntouched()
+    public void Execute_ShufflesHiddenItemsToo_KeepingHowManyOfEachThereAre()
     {
-        var hidden = MakeItem(3);
-        hidden.itemType = ItemType.Hidden;
+        var hiddenA = MakeItem(3);
+        hiddenA.itemType = ItemType.Hidden;
+        var hiddenB = MakeItem(0);
+        hiddenB.itemType = ItemType.Hidden;
 
         var pipe = new Pipe
         {
             path = new List<Vector2Int>(),
-            itemsQueue = TestQueues.Of(3, 0, 1, 2),
-            activeItems = new List<Item> { hidden, MakeItem(0), MakeItem(1), MakeItem(2) }
+            itemsQueue = TestQueues.Of(3, 0, 1, 2, 0),
+            activeItems = new List<Item> { hiddenA, hiddenB, MakeItem(1), MakeItem(2), MakeItem(0) }
         };
         pipe.itemsQueue[0].type = ItemType.Hidden;
+        pipe.itemsQueue[1].type = ItemType.Hidden;
         SetBoardPipes(new List<Pipe> { pipe });
 
         new ShuffleBooster(_boardManager).Execute();
 
-        Assert.AreEqual(3, hidden.colorID, "Hidden items must keep their color.");
-        Assert.AreEqual(ItemType.Hidden, hidden.itemType);
-        Assert.AreEqual(3, pipe.itemsQueue[0].colorId);
+        // Same multiset of (color, type) before and after
+        List<string> after = pipe.activeItems.Select(i => $"{i.colorID}-{i.itemType}").OrderBy(x => x).ToList();
+        CollectionAssert.AreEqual(
+            new List<string> { "0-Hidden", "0-Normal", "1-Normal", "2-Normal", "3-Hidden" },
+            after,
+            "Shuffle must move hidden items around without creating or removing any.");
+
+        // The queue must mirror the board, type included
+        for (int i = 0; i < pipe.activeItems.Count; i++)
+        {
+            Assert.AreEqual(pipe.activeItems[i].colorID, pipe.itemsQueue[i].colorId);
+            Assert.AreEqual(pipe.activeItems[i].itemType, pipe.itemsQueue[i].type);
+        }
     }
 }

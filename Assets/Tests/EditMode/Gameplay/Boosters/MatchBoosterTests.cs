@@ -149,15 +149,38 @@ public class MatchBoosterTests
     }
 
     [Test]
-    public void CanExecute_ReturnsFalse_WhenOnlyHiddenItemsRemain_AndTrayIsEmpty()
+    public void CanExecute_ReturnsTrue_WhenOnlyHiddenItemsRemain()
     {
         SetBoardPipes(new List<Pipe> { CreateSingleHiddenItemPipe(colorId: 1) });
 
-        Assert.IsFalse(_booster.CanExecute(), "The player can't see any color, so Match has nothing to target.");
+        Assert.IsTrue(_booster.CanExecute(), "Match can fall back to hidden items.");
     }
 
     [Test]
-    public void Execute_NeverExtractsHiddenItems()
+    public void Execute_PrefersVisibleItems_OverHiddenOnes()
+    {
+        var trayRed = new GameObject("TrayRed").AddComponent<Item>();
+        trayRed.colorID = 0;
+        GetTrayItemsField().Add(trayRed);
+
+        // Needs 2 more reds. The hidden one comes first in pipe order, but 2 visible reds exist.
+        var pipes = new List<Pipe>
+        {
+            CreateSingleHiddenItemPipe(colorId: 0),
+            CreateSingleItemPipe(colorId: 0),
+            CreateSingleItemPipe(colorId: 0)
+        };
+        SetBoardPipes(pipes);
+
+        _booster.Execute();
+
+        Assert.AreEqual(1, pipes[0].activeItems.Count, "The hidden red must stay: there were enough visible reds.");
+        Assert.AreEqual(0, pipes[1].activeItems.Count);
+        Assert.AreEqual(0, pipes[2].activeItems.Count);
+    }
+
+    [Test]
+    public void Execute_FallsBackToHiddenItems_WhenNotEnoughVisibleOnes()
     {
         var trayRed = new GameObject("TrayRed").AddComponent<Item>();
         trayRed.colorID = 0;
@@ -165,14 +188,32 @@ public class MatchBoosterTests
 
         var pipes = new List<Pipe>
         {
-            CreateSingleHiddenItemPipe(colorId: 0), // red but hidden - must stay
-            CreateSingleItemPipe(colorId: 0)        // visible red - can be taken
+            CreateSingleHiddenItemPipe(colorId: 0),
+            CreateSingleItemPipe(colorId: 0)
+        };
+        SetBoardPipes(pipes);
+        Item hiddenRed = pipes[0].activeItems[0];
+
+        _booster.Execute();
+
+        Assert.IsTrue(pipes.All(p => p.activeItems.Count == 0), "Both reds should have been pulled.");
+        Assert.IsTrue(hiddenRed.inTray, "The hidden red should have been sent to the tray.");
+        Assert.AreEqual(ItemType.Normal, hiddenRed.itemType, "A hidden item pulled into the tray gets revealed.");
+    }
+
+    [Test]
+    public void Execute_PicksAHiddenColor_WhenTrayIsEmpty_AndNothingIsVisible()
+    {
+        var pipes = new List<Pipe>
+        {
+            CreateSingleHiddenItemPipe(colorId: 2),
+            CreateSingleHiddenItemPipe(colorId: 2)
         };
         SetBoardPipes(pipes);
 
         _booster.Execute();
 
-        Assert.AreEqual(1, pipes[0].activeItems.Count, "The hidden red item must stay on the board.");
-        Assert.AreEqual(0, pipes[1].activeItems.Count, "The visible red item should have been pulled.");
+        Assert.AreEqual(2, GetTrayItemsField().Count);
+        Assert.IsTrue(GetTrayItemsField().All(i => i.colorID == 2));
     }
 }

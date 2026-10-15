@@ -23,6 +23,12 @@ public class Item : MonoBehaviour
     private SpriteRenderer overlayRenderer; // Extra icon drawn on top of the item (e.g. "?" for hidden items)
     private Coroutine pulseCoroutine;
 
+    // ---- Barrel state
+    private int barrelLives;
+    private Sprite[] barrelDamageSprites;   // [0] = intact, [last] = most damaged
+    private Color barrelFallbackColor = Color.white;
+    private bool barrelContentHidden;       // The element inside comes out as Hidden
+
     /// <summary>True when this item sits on the last cell of its pipe.</summary>
     public bool IsAtExit =>
         parentPipe != null && parentPipe.HasPath && gridPosition == parentPipe.ExitPosition;
@@ -31,15 +37,18 @@ public class Item : MonoBehaviour
     /// Single source of truth for "can the player send this to the tray right now?".
     /// Obstacles (e.g. a barrel with lives left) will extend this rule.
     /// </summary>
-    public bool CanBeCollected => !inTray && IsAtExit;
+    public bool CanBeCollected => !inTray && IsAtExit && !IsBarrel;
 
     /// <summary>The player can't see this item's color yet.</summary>
     public bool IsHidden => itemType == ItemType.Hidden;
 
-    /// <summary>
-    /// A plain item whose color is visible. Boosters that work with colors (Match, Shuffle)
-    /// only touch these, so they never reveal or move obstacles.
-    /// </summary>
+    /// <summary>Can't be tapped until it breaks and releases the element inside.</summary>
+    public bool IsBarrel => itemType == ItemType.Barrel;
+
+    /// <summary>Lives left (only for barrels).</summary>
+    public int BarrelLives => barrelLives;
+
+    /// <summary> A plain item whose color is visible. Boosters that work with colors (Match, Shuffle) only touch these, so they never reveal or move obstacles. </summary>
     public bool HasKnownColor => itemType == ItemType.Normal;
 
     private void Awake()
@@ -91,6 +100,9 @@ public class Item : MonoBehaviour
     {
         colorID = data.colorId;
         itemType = data.type;
+        barrelContentHidden = data.contentHidden;
+        barrelLives = 0;
+        barrelDamageSprites = null;
         itemColor = color;
         gridPosition = pos;
         parentPipe = pipe;
@@ -147,6 +159,69 @@ public class Item : MonoBehaviour
         HideOverlay();
     }
 
+    // ---------- Barrel ----------
+
+    /// <summary>
+    /// Sets up the barrel look and lives. damageSprites[0] is the intact barrel and each next sprite is more damaged. If no sprites are given, the item sprite is tinted with fallbackColor.
+    /// </summary>
+    public void ApplyBarrelLook(int lives, Sprite[] damageSprites, Color fallbackColor)
+    {
+        if (!IsBarrel) return;
+
+        barrelLives = Mathf.Max(1, lives);
+        barrelDamageSprites = damageSprites;
+        barrelFallbackColor = fallbackColor;
+
+        HideOverlay();
+        UpdateBarrelSprite();
+        CheckExitPulse();
+    }
+
+    /// <summary>Removes lives from the barrel. Returns true when it has no lives left.</summary>
+    public bool TakeBarrelDamage(int amount = 1)
+    {
+        if (!IsBarrel) return false;
+
+        barrelLives = Mathf.Max(0, barrelLives - amount);
+        UpdateBarrelSprite();
+        return barrelLives == 0;
+    }
+
+    /// <summary>
+    /// Turns the barrel into the element it was holding (normal or hidden), keeping its color id, position and pipe. Call ApplyHiddenLook afterwards to cover a hidden content.
+    /// </summary>
+    public void BreakOpen(Sprite itemSprite)
+    {
+        if (!IsBarrel) return;
+
+        itemType = barrelContentHidden ? ItemType.Hidden : ItemType.Normal;
+        barrelLives = 0;
+        barrelDamageSprites = null;
+
+        EnsureSpriteRenderer();
+        spriteRenderer.sprite = itemSprite;
+        spriteRenderer.color = itemColor;
+
+        CheckExitPulse();
+    }
+
+    // Shows the sprite that matches the damage taken so far
+    private void UpdateBarrelSprite()
+    {
+        EnsureSpriteRenderer();
+
+        if (barrelDamageSprites == null || barrelDamageSprites.Length == 0)
+        {
+            spriteRenderer.color = barrelFallbackColor;
+            return;
+        }
+
+        int index = Mathf.Clamp(barrelDamageSprites.Length - barrelLives, 0, barrelDamageSprites.Length - 1);
+
+        spriteRenderer.sprite = barrelDamageSprites[index];
+        spriteRenderer.color = Color.white; // Show the barrel art untinted
+    }
+
     private void ShowOverlay(Sprite icon)
     {
         EnsureOverlayRenderer();
@@ -170,6 +245,9 @@ public class Item : MonoBehaviour
         inTray = false;
         itemType = ItemType.Normal;
         parentPipe = null;
+        barrelLives = 0;
+        barrelDamageSprites = null;
+        barrelContentHidden = false;
         HideOverlay();
         if (TryGetComponent(out Collider2D col)) col.enabled = true;
     }

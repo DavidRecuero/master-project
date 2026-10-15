@@ -35,6 +35,11 @@ public class BoardManager : MonoBehaviour
     public Color hiddenItemColor = new Color(0.45f, 0.45f, 0.5f, 1f);
     public Sprite hiddenItemIcon;
 
+    [Header("Barrel Settings")]
+    public int defaultBarrelLives = 3;
+    public Sprite[] barrelDamageSprites;
+    public Color barrelFallbackColor = new Color(0.55f, 0.35f, 0.2f, 1f);
+
     //Injected dependencies
     private ILevelLoader _levelLoader;
     private IItemPool _itemPool;
@@ -76,6 +81,9 @@ public class BoardManager : MonoBehaviour
 
         _cameraController?.AdjustToBoard(width, height, traySpace);
         trayManager?.InitializeTray();
+
+        // Lets obstacles evaluate the starting board
+        GameEvents.TriggerBoardChanged();
     }
 
     void GenerateBoard()
@@ -228,6 +236,12 @@ public class BoardManager : MonoBehaviour
         //Hides hidden items
         itemComponent.ApplyHiddenLook(hiddenItemColor, hiddenItemIcon);
 
+        if (data.type == ItemType.Barrel)
+        {
+            int lives = data.lives > 0 ? data.lives : defaultBarrelLives;
+            itemComponent.ApplyBarrelLook(lives, barrelDamageSprites, barrelFallbackColor);
+        }
+
         // Visibility Check
         Pipe topPipe = GetHighestLayerPipeAt(pos);
         itemObj.SetActive(topPipe == pipe);
@@ -266,13 +280,13 @@ public class BoardManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Removes the element at 'index' from the pipe (both the GameObject list and the queue),
-    /// shifts every element behind it one step forward and refills the pipe from its queue.
+    /// Removes the element at 'index' from the pipe (both the GameObject list and the queue), shifts every element behind it one step forward and refills the pipe from its queue.
     /// Returns the removed item (still alive, the caller decides what to do with it).
     /// </summary>
     private Item RemoveItemAt(Pipe pipe, int index)
     {
         Item removedItem = pipe.activeItems[index];
+        Vector2Int removedCell = removedItem.gridPosition; // Where it was before leaving the board
         pipe.activeItems.RemoveAt(index);
         if (index < pipe.itemsQueue.Count) pipe.itemsQueue.RemoveAt(index);
 
@@ -285,6 +299,10 @@ public class BoardManager : MonoBehaviour
         }
 
         FillPipe(pipe);
+
+        // Every item that leaves the board (tap or Match booster) can damage neighbor barrels
+        GameEvents.TriggerItemRemovedFromBoard(removedItem, pipe, removedCell);
+
         return removedItem;
     }
 
@@ -295,6 +313,49 @@ public class BoardManager : MonoBehaviour
 
         RemoveItemAt(pipe, 0);
         GameEvents.TriggerBoardChanged();
+    }
+
+    // ------- Barrels --------
+
+    /// <summary>Removes lives from a barrel and breaks it when it runs out of them. Called by the BarrelManager when an item leaves the board next to it.</summary>
+    public void DamageBarrel(Item barrel, int amount = 1)
+    {
+        if (barrel == null || !barrel.IsBarrel) return;
+
+        bool destroyed = barrel.TakeBarrelDamage(amount);
+
+        ItemSpawnData queueEntry = FindQueueEntry(barrel);
+        if (queueEntry != null) queueEntry.lives = barrel.BarrelLives;
+
+        if (destroyed) BreakBarrel(barrel);
+    }
+
+    /// <summary> Breaks a barrel, leaving in its place the element it was holding (normal or hidden).</summary>
+    public void BreakBarrel(Item barrel)
+    {
+        if (barrel == null || !barrel.IsBarrel) return;
+
+        barrel.BreakOpen(itemSprite);
+        barrel.ApplyHiddenLook(hiddenItemColor, hiddenItemIcon); // Only if the content was hidden
+
+        // Keep the queue in sync with what's on the board
+        ItemSpawnData queueEntry = FindQueueEntry(barrel);
+        if (queueEntry != null)
+        {
+            queueEntry.type = barrel.itemType;
+            queueEntry.lives = 0;
+        }
+
+        GameEvents.TriggerBoardChanged();
+    }
+
+    // The queue entry that describes an item currently on the board (same index as in activeItems)
+    private ItemSpawnData FindQueueEntry(Item item)
+    {
+        if (item.parentPipe == null) return null;
+
+        int index = item.parentPipe.activeItems.IndexOf(item);
+        return index >= 0 && index < item.parentPipe.itemsQueue.Count ? item.parentPipe.itemsQueue[index] : null;
     }
 
     // Checks if all items on all pipes have been collected

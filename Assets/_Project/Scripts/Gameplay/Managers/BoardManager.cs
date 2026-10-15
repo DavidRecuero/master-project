@@ -79,6 +79,9 @@ public class BoardManager : MonoBehaviour
 
         GenerateBoard();
 
+        // Lets obstacles that aren't pipe items (the fog) build from the level data
+        GameEvents.TriggerLevelLoaded(data);
+
         _cameraController?.AdjustToBoard(width, height, traySpace);
         trayManager?.InitializeTray();
 

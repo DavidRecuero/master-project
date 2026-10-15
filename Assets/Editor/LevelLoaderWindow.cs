@@ -86,6 +86,7 @@ public class LevelLoaderWindow : EditorWindow
         string summary = $"{data.width}x{data.height} · {data.pipes.Count} pipes · {allItems.Count} items";
         if (hidden > 0) summary += $" · {hidden} hidden";
         if (barrels > 0) summary += $" · {barrels} barrels";
+        if (data.fog != null && data.fog.Count > 0) summary += $" · fog x{data.fog.Count}";
         return summary;
     }
 

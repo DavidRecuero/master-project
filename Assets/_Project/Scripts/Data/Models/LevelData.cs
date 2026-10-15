@@ -7,6 +7,7 @@ public class LevelData
     public int width;
     public int height;
     public List<PipeData> pipes;
+    public List<Vector2IntData> fog;
 }
 
 [System.Serializable]

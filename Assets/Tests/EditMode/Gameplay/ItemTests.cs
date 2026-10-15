@@ -202,4 +202,91 @@ public class ItemTests
         Assert.AreEqual(3, _item.colorID);
         Assert.AreEqual(Color.gray, _gameObject.GetComponent<SpriteRenderer>().color);
     }
+
+    // ---------- Barrel ----------
+
+    private Sprite MakeSprite()
+    {
+        var tex = new Texture2D(2, 2);
+        return Sprite.Create(tex, new Rect(0, 0, 2, 2), Vector2.zero);
+    }
+
+    [Test]
+    public void Barrel_ShowsTheNextDamageSprite_EachTimeItLosesALife()
+    {
+        Sprite intact = MakeSprite(), damaged = MakeSprite(), almostBroken = MakeSprite();
+        _item.Init(new ItemSpawnData { colorId = 1, type = ItemType.Barrel }, Color.red, new Vector2Int(0, 0), MakeSingleCellPipe(), null);
+        _item.ApplyBarrelLook(3, new[] { intact, damaged, almostBroken }, Color.gray);
+
+        var sr = _gameObject.GetComponent<SpriteRenderer>();
+        Assert.AreSame(intact, sr.sprite);
+
+        Assert.IsFalse(_item.TakeBarrelDamage());
+        Assert.AreSame(damaged, sr.sprite);
+
+        Assert.IsFalse(_item.TakeBarrelDamage());
+        Assert.AreSame(almostBroken, sr.sprite);
+
+        Assert.IsTrue(_item.TakeBarrelDamage(), "The third hit leaves it with 0 lives.");
+    }
+
+    [Test]
+    public void BreakOpen_RestoresTheItemSpriteAndColor()
+    {
+        Sprite itemSprite = MakeSprite();
+        _item.Init(new ItemSpawnData { colorId = 1, type = ItemType.Barrel }, Color.red, new Vector2Int(0, 0), MakeSingleCellPipe(), itemSprite);
+        _item.ApplyBarrelLook(1, new[] { MakeSprite() }, Color.gray);
+
+        _item.BreakOpen(itemSprite);
+
+        var sr = _gameObject.GetComponent<SpriteRenderer>();
+        Assert.AreSame(itemSprite, sr.sprite);
+        Assert.AreEqual(Color.red, sr.color);
+        Assert.AreEqual(ItemType.Normal, _item.itemType);
+    }
+
+    [Test]
+    public void ResetForPool_ClearsBarrelLives()
+    {
+        _item.Init(new ItemSpawnData { colorId = 1, type = ItemType.Barrel }, Color.red, new Vector2Int(0, 0), MakeSingleCellPipe(), null);
+        _item.ApplyBarrelLook(3, null, Color.gray);
+
+        _item.ResetForPool();
+
+        Assert.AreEqual(0, _item.BarrelLives);
+        Assert.IsFalse(_item.IsBarrel);
+    }
+
+    [Test]
+    public void Barrel_StartingWithFewerLivesThanSprites_ShowsTheMatchingDamagedSprite()
+    {
+        Sprite intact = MakeSprite(), damaged = MakeSprite(), almostBroken = MakeSprite();
+        _item.Init(new ItemSpawnData { colorId = 1, type = ItemType.Barrel }, Color.red, new Vector2Int(0, 0), MakeSingleCellPipe(), null);
+
+        _item.ApplyBarrelLook(2, new[] { intact, damaged, almostBroken }, Color.gray);
+
+        var sr = _gameObject.GetComponent<SpriteRenderer>();
+        Assert.AreSame(damaged, sr.sprite, "2 lives left -> second sprite.");
+
+        _item.TakeBarrelDamage();
+        Assert.AreSame(almostBroken, sr.sprite, "1 life left -> last sprite.");
+    }
+
+    [Test]
+    public void Barrel_WithMoreLivesThanSprites_StaysIntactUntilItCatchesUp()
+    {
+        Sprite intact = MakeSprite(), damaged = MakeSprite(), almostBroken = MakeSprite();
+        _item.Init(new ItemSpawnData { colorId = 1, type = ItemType.Barrel }, Color.red, new Vector2Int(0, 0), MakeSingleCellPipe(), null);
+
+        _item.ApplyBarrelLook(5, new[] { intact, damaged, almostBroken }, Color.gray);
+        var sr = _gameObject.GetComponent<SpriteRenderer>();
+
+        Assert.AreSame(intact, sr.sprite, "5 lives");
+        _item.TakeBarrelDamage();
+        Assert.AreSame(intact, sr.sprite, "4 lives");
+        _item.TakeBarrelDamage();
+        Assert.AreSame(intact, sr.sprite, "3 lives");
+        _item.TakeBarrelDamage();
+        Assert.AreSame(damaged, sr.sprite, "2 lives");
+    }
 }

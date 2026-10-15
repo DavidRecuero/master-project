@@ -249,15 +249,16 @@ public class BarrelManagerTests
     {
         Pipe left = MakePipe(1);
         Pipe barrelPipe = MakePipe(2);
+        Pipe right = MakePipe(3);
         AddItemAtExit(left, ItemSpawnData.Normal(0));
         Item barrel = AddItemAtExit(barrelPipe, Barrel(colorId: 1, lives: 3));
-        SetBoardPipes(new List<Pipe> { left, barrelPipe });
 
-        // Subscribe to GameEvents like in Play mode (EditMode doesn't call OnEnable by itself)
+        AddItemAtExit(right, ItemSpawnData.Normal(2));
+        SetBoardPipes(new List<Pipe> { left, barrelPipe, right });
+
         InvokePrivate(_barrelManager, "OnEnable");
         try
         {
-            // This is the path the Match booster uses to take items from the board
             Item pulled = _boardManager.ExtractAnyItemOfColor(0);
             Assert.IsNotNull(pulled);
         }

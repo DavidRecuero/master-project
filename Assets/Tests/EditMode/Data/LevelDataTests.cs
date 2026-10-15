@@ -114,4 +114,19 @@ public class LevelDataTests
         Assert.AreEqual(ItemType.Barrel, queue[1].type);
         Assert.AreEqual(4, queue[1].lives);
     }
+
+    [Test]
+    public void Fog_CanBeParsedFromJson_AndIsOptional()
+    {
+        string withFog = "{\"levelNumber\":8,\"width\":3,\"height\":3,\"pipes\":[]," +
+                         "\"fog\":[{\"x\":1,\"y\":1},{\"x\":1,\"y\":2}]}";
+        string withoutFog = "{\"levelNumber\":1,\"width\":3,\"height\":3,\"pipes\":[]}";
+
+        LevelData fogLevel = JsonUtility.FromJson<LevelData>(withFog);
+        LevelData plainLevel = JsonUtility.FromJson<LevelData>(withoutFog);
+
+        Assert.AreEqual(2, fogLevel.fog.Count);
+        Assert.AreEqual(2, fogLevel.fog[1].y);
+        Assert.IsTrue(plainLevel.fog == null || plainLevel.fog.Count == 0, "Levels without fog keep working.");
+    }
 }

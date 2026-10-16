@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="272" viewBox="0 0 256 272">
+  <defs><pattern id="hz" patternUnits="userSpaceOnUse" width="56.89" height="56.89" patternTransform="rotate(45)">
+    <rect width="56.89" height="56.89" fill="#FFD23F"/><rect width="28.44" height="56.89" fill="#22304A"/></pattern></defs>
+  <rect x="9.48" y="29.70" width="237.04" height="237.04" rx="47.41" fill="#22304A" fill-opacity="0.45"/>
+  <rect x="9.48" y="6.00" width="237.04" height="237.04" rx="47.41" fill="url(#hz)"/>
+  <rect x="33.19" y="29.70" width="189.63" height="189.63" rx="23.70" fill="#FFFFFF"/>
+</svg>

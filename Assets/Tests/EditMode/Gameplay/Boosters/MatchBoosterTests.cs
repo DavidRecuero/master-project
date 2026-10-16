@@ -216,4 +216,40 @@ public class MatchBoosterTests
         Assert.AreEqual(2, GetTrayItemsField().Count);
         Assert.IsTrue(GetTrayItemsField().All(i => i.colorID == 2));
     }
+
+    // ---------- Barrels ----------
+
+    private static Pipe CreateSingleBarrelPipe(int colorId)
+    {
+        Pipe pipe = CreateSingleItemPipe(colorId);
+        pipe.activeItems[0].itemType = ItemType.Barrel;
+        pipe.itemsQueue[0].type = ItemType.Barrel;
+        return pipe;
+    }
+
+    [Test]
+    public void CanExecute_ReturnsTrue_WhenOnlyBarrelsRemain()
+    {
+        SetBoardPipes(new List<Pipe> { CreateSingleBarrelPipe(colorId: 2) });
+
+        Assert.IsTrue(_booster.CanExecute());
+    }
+
+    [Test]
+    public void Execute_FallsBackToBarrelContent_WhenNothingElseHasThatColor()
+    {
+        var trayRed = new GameObject("TrayRed").AddComponent<Item>();
+        trayRed.colorID = 0;
+        GetTrayItemsField().Add(trayRed);
+
+        var pipes = new List<Pipe> { CreateSingleBarrelPipe(colorId: 0) };
+        SetBoardPipes(pipes);
+        Item barrel = pipes[0].activeItems[0];
+
+        _booster.Execute();
+
+        Assert.AreEqual(0, pipes[0].activeItems.Count, "The barrel's content should have been pulled.");
+        Assert.IsTrue(barrel.inTray);
+        Assert.IsFalse(barrel.IsBarrel, "It arrives at the tray as a normal item, not as a barrel.");
+    }
 }

@@ -375,10 +375,10 @@ public class BoardManager : MonoBehaviour
     /// Returns the distinct colors currently present among the active items on the board.
     /// Used by the Match booster to pick a random target color when the tray is empty.
     /// </summary>
-    public List<int> GetActiveColors(bool includeHidden = false)
+    public List<int> GetActiveColors(bool includeHidden = false, bool includeBarrels = false)
     {
         return pipes.SelectMany(p => p.activeItems)
-                    .Where(i => i.HasKnownColor || (includeHidden && i.IsHidden))
+                    .Where(i => i.HasKnownColor || (includeHidden && i.IsHidden) || (includeBarrels && i.IsBarrel))
                     .Select(i => i.colorID)
                     .Distinct()
                     .ToList();
@@ -394,6 +394,7 @@ public class BoardManager : MonoBehaviour
     {
         Item extracted = TryExtractFirst(i => i.HasKnownColor && i.colorID == colorId);
         if (extracted == null) extracted = TryExtractFirst(i => i.IsHidden && i.colorID == colorId);
+        if (extracted == null) extracted = TryExtractFirst(i => i.IsBarrel && i.colorID == colorId);
         return extracted;
     }
 
@@ -405,7 +406,10 @@ public class BoardManager : MonoBehaviour
             int index = pipe.activeItems.FindIndex(condition);
             if (index == -1) continue;
 
-            pipe.activeItems[index].gameObject.SetActive(true);
+            Item target = pipe.activeItems[index];
+            target.gameObject.SetActive(true);
+
+            if (target.IsBarrel) target.BreakOpen(itemSprite);
 
             Item extractedItem = RemoveItemAt(pipe, index);
 

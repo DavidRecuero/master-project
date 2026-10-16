@@ -232,14 +232,54 @@ public class BarrelManagerTests
     // ---------- Boosters ignore barrels ----------
 
     [Test]
-    public void Boosters_IgnoreBarrels()
+    public void Match_CanPullTheContentOfABarrel_AsALastResort()
     {
         Pipe barrelPipe = MakePipe(2);
-        AddItemAtExit(barrelPipe, Barrel(colorId: 1, lives: 3));
+        Item barrel = AddItemAtExit(barrelPipe, Barrel(colorId: 1, lives: 3));
         SetBoardPipes(new List<Pipe> { barrelPipe });
 
-        Assert.AreEqual(0, _boardManager.GetActiveColors(includeHidden: true).Count, "Match can't target a barrel's color.");
-        Assert.IsNull(_boardManager.ExtractAnyItemOfColor(1), "Match can't pull a barrel out of its pipe.");
+        Assert.AreEqual(0, _boardManager.GetActiveColors().Count, "A barrel's color is not a visible color.");
+        CollectionAssert.Contains(_boardManager.GetActiveColors(includeHidden: true, includeBarrels: true), 1);
+
+        Item pulled = _boardManager.ExtractAnyItemOfColor(1);
+
+        Assert.AreSame(barrel, pulled);
+        Assert.IsFalse(pulled.IsBarrel, "The barrel opens: what goes to the tray is its content.");
+        Assert.AreEqual(1, pulled.colorID);
+        Assert.AreEqual(0, barrelPipe.activeItems.Count);
+    }
+
+    [Test]
+    public void Match_PrefersVisibleItems_OverBarrelContent()
+    {
+        Pipe far = MakePipe(0); // Not a neighbor, so pulling from it doesn't damage the barrel
+        Pipe barrelPipe = MakePipe(2);
+        Item visible = AddItemAtExit(far, ItemSpawnData.Normal(1));
+        Item barrel = AddItemAtExit(barrelPipe, Barrel(colorId: 1, lives: 3));
+        SetBoardPipes(new List<Pipe> { far, barrelPipe });
+
+        Item pulled = _boardManager.ExtractAnyItemOfColor(1);
+
+        Assert.AreSame(visible, pulled);
+        Assert.IsTrue(barrel.IsBarrel, "The barrel is only opened when there's no other item of that color.");
+        Assert.AreEqual(1, barrelPipe.activeItems.Count);
+    }
+
+    [Test]
+    public void Shuffle_LeavesBarrelsUntouched()
+    {
+        Pipe left = MakePipe(1);
+        Pipe barrelPipe = MakePipe(2);
+        Pipe right = MakePipe(3);
+        AddItemAtExit(left, ItemSpawnData.Normal(0));
+        Item barrel = AddItemAtExit(barrelPipe, Barrel(colorId: 1, lives: 3));
+        AddItemAtExit(right, ItemSpawnData.Normal(3));
+        SetBoardPipes(new List<Pipe> { left, barrelPipe, right });
+
+        _boardManager.ShuffleActiveItems();
+
+        Assert.IsTrue(barrel.IsBarrel);
+        Assert.AreEqual(1, barrel.colorID);
     }
 
     // ---------- Match booster ----------

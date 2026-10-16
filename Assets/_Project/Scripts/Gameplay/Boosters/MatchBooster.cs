@@ -26,7 +26,7 @@ public class MatchBooster : IBooster
     public bool CanExecute()
     {
         if (_trayManager == null || _boardManager == null) return false;
-        return _trayManager.TrayItems.Count > 0 || _boardManager.GetActiveColors(includeHidden: true).Count > 0;
+        return _trayManager.TrayItems.Count > 0 || _boardManager.GetActiveColors(includeHidden: true, includeBarrels: true).Count > 0;
     }
 
     public void Execute()
@@ -65,6 +65,9 @@ public class MatchBooster : IBooster
 
         // Priority 3: nothing visible left, so pick among the hidden ones
         if (boardColors.Count == 0) boardColors = _boardManager.GetActiveColors(includeHidden: true);
+
+        // Priority 4: only barrels left, so pick among their contents
+        if (boardColors.Count == 0) boardColors = _boardManager.GetActiveColors(includeHidden: true, includeBarrels: true);
 
         return boardColors.Count > 0 ? boardColors[Random.Range(0, boardColors.Count)] : (int?)null;
     }

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16930fcdb8085cabb93ddfea211c3540, type: 3}
+  m_Name: ItemPalette
+  m_EditorClassIdentifier: GameScripts::ItemPalette
+  entries:
+  - name: Red
+    color: {r: 0.949020, g: 0.274510, b: 0.227451, a: 1}
+    sprite: {fileID: 21300000, guid: ddb4806604f85a3cac640041c45bc9d5, type: 3}
+  - name: Blue
+    color: {r: 0.117647, g: 0.435294, b: 0.878431, a: 1}
+    sprite: {fileID: 21300000, guid: b91626bb1b3a546d8b5eef5a6a52ef2b, type: 3}
+  - name: Yellow
+    color: {r: 1.000000, g: 0.788235, b: 0.156863, a: 1}
+    sprite: {fileID: 21300000, guid: b7c7ec29722e548cbdcabc27ea8d4e98, type: 3}
+  - name: Green
+    color: {r: 0.121569, g: 0.701961, b: 0.431373, a: 1}
+    sprite: {fileID: 21300000, guid: aa4b8717403f5d12837bb22077a636d9, type: 3}
+  - name: Purple
+    color: {r: 0.549020, g: 0.356863, b: 0.878431, a: 1}
+    sprite: {fileID: 21300000, guid: 88e795ce9f6350f7bb291e027926e113, type: 3}
+  hiddenSprite: {fileID: 21300000, guid: d5cdd38da4e55eea98619a9f9ddbf0c9, type: 3}

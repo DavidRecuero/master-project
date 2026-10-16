@@ -10,7 +10,9 @@ public class Item : MonoBehaviour
     public Pipe parentPipe;
 
     [Header("Item Settings")]
-    public float defaultScale = 0.7f;
+    // Item sprites are drawn inside the tube a bit smaller, and full size once they reach the exit
+    public float defaultScale = 0.86f;
+    public float exitScaleMultiplier = 1.17f;
     public int baseSortingOrder = 10;
     public Vector2 colliderSize = new Vector2(1f, 1f);
 
@@ -20,8 +22,11 @@ public class Item : MonoBehaviour
     [HideInInspector] public bool inTray = false;
 
     private SpriteRenderer spriteRenderer;
-    private SpriteRenderer overlayRenderer; // Extra icon drawn on top of the item (e.g. "?" for hidden items)
+    private SpriteRenderer overlayRenderer; // Extra icon drawn on top of the item (legacy "?" for hidden items)
     private Coroutine pulseCoroutine;
+
+    // Finished sprite per color. When null, the item falls back to tinting its base sprite (legacy look).
+    private ItemPalette palette;
 
     // ---- Barrel state
     private int barrelLives;
@@ -50,6 +55,12 @@ public class Item : MonoBehaviour
 
     /// <summary> A plain item whose color is visible. Boosters that work with colors (Match, Shuffle) only touch these, so they never reveal or move obstacles. </summary>
     public bool HasKnownColor => itemType == ItemType.Normal;
+
+    /// <summary>Resting scale: full size on the exit platform, smaller inside the tube and in the tray</summary>
+    public float BaseScale => (!inTray && IsAtExit) ? defaultScale * exitScaleMultiplier : defaultScale;
+
+    /// <summary>The palette this item uses to pick its sprite. Set it before Init</summary>
+    public ItemPalette Palette => palette;
 
     private void Awake()
     {
@@ -90,6 +101,14 @@ public class Item : MonoBehaviour
         overlayRenderer.enabled = false;
     }
 
+    /// <summary>
+    /// Assigns the palette used to draw this item. With a palette every color has its own finished sprite. Without one, the base sprite passed to Init is tinted with the item color.
+    /// </summary>
+    public void SetPalette(ItemPalette itemPalette)
+    {
+        palette = itemPalette;
+    }
+
     /// <summary>Convenience overload for plain colored items.</summary>
     public void Init(int id, Color color, Vector2Int pos, Pipe pipe, Sprite sprite)
     {
@@ -110,10 +129,10 @@ public class Item : MonoBehaviour
         EnsureSpriteRenderer();
 
         spriteRenderer.sprite = sprite;
-        spriteRenderer.color = color;
+        ShowColorLook();
 
-        // Slightly scale down the item so it fits nicely inside the pipe
-        transform.localScale = new Vector3(defaultScale, defaultScale, 1f);
+        // Smaller inside the tube, full size on the exit platform
+        SetScale(BaseScale);
 
         // Draw above the tilemap (Tilemap is usually layer 0)
         spriteRenderer.sortingOrder = baseSortingOrder + pipe.layer;
@@ -131,7 +150,7 @@ public class Item : MonoBehaviour
     }
 
     /// <summary>
-    /// Covers the real color of a Hidden item with a neutral color and an optional icon.
+    /// Covers the real color of a Hidden item. Uses the palette's hidden sprite (grey drop with "?") when there is one; otherwise tints the base sprite with hiddenColor and draws hiddenIcon on top (legacy look).
     /// The real color is kept in itemColor/colorID and shown again on Reveal().
     /// </summary>
     public void ApplyHiddenLook(Color hiddenColor, Sprite hiddenIcon)
@@ -139,8 +158,17 @@ public class Item : MonoBehaviour
         if (!IsHidden) return;
 
         EnsureSpriteRenderer();
-        spriteRenderer.color = hiddenColor;
 
+        Sprite hiddenSprite = palette != null ? palette.HiddenSprite : null;
+        if (hiddenSprite != null)
+        {
+            spriteRenderer.sprite = hiddenSprite;
+            spriteRenderer.color = Color.white;
+            HideOverlay();
+            return;
+        }
+
+        spriteRenderer.color = hiddenColor;
         if (hiddenIcon != null) ShowOverlay(hiddenIcon);
     }
 
@@ -154,8 +182,7 @@ public class Item : MonoBehaviour
 
         itemType = ItemType.Normal;
 
-        EnsureSpriteRenderer();
-        spriteRenderer.color = itemColor;
+        ShowColorLook();
         HideOverlay();
     }
 
@@ -200,7 +227,7 @@ public class Item : MonoBehaviour
 
         EnsureSpriteRenderer();
         spriteRenderer.sprite = itemSprite;
-        spriteRenderer.color = itemColor;
+        ShowColorLook();
 
         CheckExitPulse();
     }
@@ -220,6 +247,28 @@ public class Item : MonoBehaviour
 
         spriteRenderer.sprite = barrelDamageSprites[index];
         spriteRenderer.color = Color.white; // Show the barrel art untinted
+    }
+
+    // Shows the item's real color: the palette sprite for its colorID or the base sprite tinted with itemColor
+    private void ShowColorLook()
+    {
+        EnsureSpriteRenderer();
+
+        Sprite colorSprite = palette != null ? palette.GetSprite(colorID) : null;
+        if (colorSprite != null)
+        {
+            spriteRenderer.sprite = colorSprite;
+            spriteRenderer.color = Color.white; // The sprite already carries its color
+        }
+        else
+        {
+            spriteRenderer.color = itemColor;
+        }
+    }
+
+    private void SetScale(float scale)
+    {
+        transform.localScale = new Vector3(scale, scale, 1f);
     }
 
     private void ShowOverlay(Sprite icon)
@@ -270,18 +319,19 @@ public class Item : MonoBehaviour
 
         if (IsHidden) return;
 
-        EnsureSpriteRenderer();
-        spriteRenderer.color = color;
+        ShowColorLook();
     }
 
+    /// <summary>
+    /// Changes color and type at once and shows the item as visible. Call ApplyHiddenLook afterwards if the new type is Hidden
+    /// </summary>
     public void SetIdentity(int id, Color color, ItemType type)
     {
         colorID = id;
         itemColor = color;
         itemType = type;
 
-        EnsureSpriteRenderer();
-        spriteRenderer.color = color;
+        ShowColorLook();
         HideOverlay();
     }
 
@@ -310,15 +360,14 @@ public class Item : MonoBehaviour
             StopCoroutine(pulseCoroutine);
             pulseCoroutine = null;
         }
-        transform.localScale = new Vector3(defaultScale, defaultScale, 1f);
+        SetScale(BaseScale);
     }
 
     private IEnumerator PulseRoutine()
     {
         while (!inTray)
         {
-            float currentPulse = defaultScale + Mathf.Sin(Time.time * pulseSpeed) * pulseAmount;
-            transform.localScale = new Vector3(currentPulse, currentPulse, 1f);
+            SetScale(BaseScale + Mathf.Sin(Time.time * pulseSpeed) * pulseAmount);
             yield return null;
         }
         StopPulse();

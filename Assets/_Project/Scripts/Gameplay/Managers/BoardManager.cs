@@ -27,11 +27,12 @@ public class BoardManager : MonoBehaviour
     [Header("Pipes Lines Data")]
     public PipeLineRenderer pipeLineRenderer;
 
-    [Header("Item Settings")]
+    [Header("Item Visuals")]
+    public ItemPalette itemPalette;
+
+    [Header("Legacy Item Visuals (used only without a palette)")]
     public Sprite itemSprite;
     public Color[] possibleItemColors = new Color[] { Color.red, Color.blue, Color.yellow, Color.green };
-
-    [Header("Hidden Item Settings")]
     public Color hiddenItemColor = new Color(0.45f, 0.45f, 0.5f, 1f);
     public Sprite hiddenItemIcon;
 
@@ -187,6 +188,14 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    /// <summary>Logical color of a colorId: from the palette when assigned, otherwise from the legacy color list.</summary>
+    public Color GetItemColor(int colorId)
+    {
+        if (itemPalette != null && itemPalette.HasColor(colorId)) return itemPalette.GetColor(colorId);
+        if (possibleItemColors != null && colorId >= 0 && colorId < possibleItemColors.Length) return possibleItemColors[colorId];
+        return Color.white;
+    }
+
     // Helper function to find the highest layer pipe at a specific coordinate
     public Pipe GetHighestLayerPipeAt(Vector2Int pos)
     {
@@ -234,7 +243,8 @@ public class BoardManager : MonoBehaviour
         itemObj.transform.SetParent(this.transform);
         itemObj.transform.position = GridToWorld(pos);
 
-        itemComponent.Init(data, possibleItemColors[data.colorId], pos, pipe, itemSprite);
+        itemComponent.SetPalette(itemPalette);
+        itemComponent.Init(data, GetItemColor(data.colorId), pos, pipe, itemSprite);
 
         //Hides hidden items
         itemComponent.ApplyHiddenLook(hiddenItemColor, hiddenItemIcon);
@@ -453,7 +463,7 @@ public class BoardManager : MonoBehaviour
             var (pipe, index, item) = slots[i];
             var (newColorId, newType) = identities[i];
 
-            item.SetIdentity(newColorId, possibleItemColors[newColorId], newType);
+            item.SetIdentity(newColorId, GetItemColor(newColorId), newType);
             item.ApplyHiddenLook(hiddenItemColor, hiddenItemIcon); // Does nothing if it ended up as a normal item
 
             // Keep the queue in sync with what's on the board

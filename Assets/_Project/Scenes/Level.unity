@@ -882,6 +882,7 @@ MonoBehaviour:
   trayManager: {fileID: 307449189}
   traySpace: 2.5
   pipeLineRenderer: {fileID: 462780003}
+  itemPalette: {fileID: 11400000, guid: 5fa9eeed0c9357c796e6fbaf26f06eb2, type: 2}
   itemSprite: {fileID: -2413806693520163455, guid: 9f949e1d48d7f664fb214fc446472e13, type: 3}
   possibleItemColors:
   - {r: 1, g: 0, b: 0, a: 1}
@@ -2422,7 +2423,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 21.7
+  m_fontSize: 21.65
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

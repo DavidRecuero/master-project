@@ -10,6 +10,7 @@ public class TrayManager : MonoBehaviour
     [Tooltip("Distance between slot centres (world units). 0.944 = 46 pt slot + 5 pt gap, with a cell of 54 pt = 1 unit")]
     public float slotSpacing = 0.944f;
     public float moveSpeed = 15f;
+    [Tooltip("Tray centre above the camera bottom. Only used when no Bottom Band is assigned.")]
     public float bottomPadding = 1.2f;
     public float snapDistance = 0.01f;
     public float matchDestroyDelay = 0.25f;
@@ -34,6 +35,12 @@ public class TrayManager : MonoBehaviour
     [Tooltip("Height of the shadow baked under the panel sprite (world units)")]
     public float panelShadowHeight = 0.111f;
     public int panelSortingOrder = -12;
+
+    [Header("Bottom Band")]
+    [Tooltip("Optional. When set, the tray sits right above the booster band instead of using Bottom Padding.")]
+    [SerializeField] private BottomBand bottomBand;
+    [Tooltip("Gap between the band's top edge and the tray panel's shadow (world units). 0.2 = ~11 pt")]
+    public float gapAboveBand = 0.2f;
 
     [Header("Match Feedback")]
     [Tooltip("Matched items grow and fade during matchDestroyDelay before leaving")]
@@ -182,8 +189,19 @@ public class TrayManager : MonoBehaviour
     // Returns the center position of the tray based on the camera's view and bottom padding
     private Vector3 GetTrayCenterPosition()
     {
+        if (bottomBand != null && Camera.main != null)
+        {
+            return new Vector3(0, CenterYAboveBand(bottomBand.TopWorldY(Camera.main)), 0);
+        }
+
         float bottomY = _cameraController != null ? _cameraController.GetCameraBottomY() : 0f;
         return new Vector3(0, bottomY + bottomPadding, 0);
+    }
+
+    /// <summary>Slot row Y so the panel (face + its shadow) rests gapAboveBand over the band's top edge.</summary>
+    public float CenterYAboveBand(float bandTopY)
+    {
+        return bandTopY + gapAboveBand + panelShadowHeight + PanelFaceSize().y / 2f;
     }
 
     // Manages the clicks on items

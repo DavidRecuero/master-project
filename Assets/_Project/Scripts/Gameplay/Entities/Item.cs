@@ -10,10 +10,12 @@ public class Item : MonoBehaviour
     public Pipe parentPipe;
 
     [Header("Item Settings")]
-    // Item sprites are drawn inside the tube a bit smaller, and full size once they reach the exit
+    // Item sprites are drawn at exit-platform size (200 px of a 256 px cell, PPU 256).
+    // Inside the tube they are shown a bit smaller, and full size once they reach the exit.
     public float defaultScale = 0.86f;
     public float exitScaleMultiplier = 1.17f;
-    public int baseSortingOrder = 10;
+    [Tooltip("Order inside the pipe's layer band (see BoardSortingOrder): above its tube, below the mouths")]
+    public int baseSortingOrder = BoardSortingOrder.Item;
     public Vector2 colliderSize = new Vector2(1f, 1f);
 
     [Header("Animation Settings")]
@@ -56,10 +58,10 @@ public class Item : MonoBehaviour
     /// <summary> A plain item whose color is visible. Boosters that work with colors (Match, Shuffle) only touch these, so they never reveal or move obstacles. </summary>
     public bool HasKnownColor => itemType == ItemType.Normal;
 
-    /// <summary>Resting scale: full size on the exit platform, smaller inside the tube and in the tray</summary>
+    /// <summary>Resting scale: full size on the exit platform, smaller inside the tube and in the tray.</summary>
     public float BaseScale => (!inTray && IsAtExit) ? defaultScale * exitScaleMultiplier : defaultScale;
 
-    /// <summary>The palette this item uses to pick its sprite. Set it before Init</summary>
+    /// <summary>The palette this item uses to pick its sprite. Set it before Init.</summary>
     public ItemPalette Palette => palette;
 
     private void Awake()
@@ -102,7 +104,8 @@ public class Item : MonoBehaviour
     }
 
     /// <summary>
-    /// Assigns the palette used to draw this item. With a palette every color has its own finished sprite. Without one, the base sprite passed to Init is tinted with the item color.
+    /// Assigns the palette used to draw this item. With a palette every color has its own finished sprite;
+    /// without one, the base sprite passed to Init is tinted with the item color.
     /// </summary>
     public void SetPalette(ItemPalette itemPalette)
     {
@@ -134,8 +137,8 @@ public class Item : MonoBehaviour
         // Smaller inside the tube, full size on the exit platform
         SetScale(BaseScale);
 
-        // Draw above the tilemap (Tilemap is usually layer 0)
-        spriteRenderer.sortingOrder = baseSortingOrder + pipe.layer;
+        // Above its own tube, below every pipe of a higher layer
+        spriteRenderer.sortingOrder = BoardSortingOrder.For(pipe.layer, baseSortingOrder);
 
         // A reused pooled object might still have an icon from its previous life
         HideOverlay();
@@ -150,7 +153,8 @@ public class Item : MonoBehaviour
     }
 
     /// <summary>
-    /// Covers the real color of a Hidden item. Uses the palette's hidden sprite (grey drop with "?") when there is one; otherwise tints the base sprite with hiddenColor and draws hiddenIcon on top (legacy look).
+    /// Covers the real color of a Hidden item. Uses the palette's hidden sprite (grey drop with "?") when there is one;
+    /// otherwise tints the base sprite with hiddenColor and draws hiddenIcon on top (legacy look).
     /// The real color is kept in itemColor/colorID and shown again on Reveal().
     /// </summary>
     public void ApplyHiddenLook(Color hiddenColor, Sprite hiddenIcon)
@@ -249,7 +253,7 @@ public class Item : MonoBehaviour
         spriteRenderer.color = Color.white; // Show the barrel art untinted
     }
 
-    // Shows the item's real color: the palette sprite for its colorID or the base sprite tinted with itemColor
+    // Shows the item's real color: the palette sprite for its colorID, or the base sprite tinted with itemColor
     private void ShowColorLook()
     {
         EnsureSpriteRenderer();
@@ -323,7 +327,8 @@ public class Item : MonoBehaviour
     }
 
     /// <summary>
-    /// Changes color and type at once and shows the item as visible. Call ApplyHiddenLook afterwards if the new type is Hidden
+    /// Changes color and type at once and shows the item as visible.
+    /// Call ApplyHiddenLook afterwards if the new type is Hidden.
     /// </summary>
     public void SetIdentity(int id, Color color, ItemType type)
     {

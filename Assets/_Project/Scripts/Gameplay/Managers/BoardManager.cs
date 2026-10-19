@@ -24,10 +24,15 @@ public class BoardManager : MonoBehaviour
     public int Height => height;
     public IReadOnlyList<Pipe> Pipes => pipes;
 
-    [Header("Pipes Lines Data")]
+    [Header("Pipe Visuals")]
+    [Tooltip("Draws pipes with sprites (tubes, mouths, platforms, counters, board panel). When assigned, the tilemap cells are left empty and the pipe lines are not drawn.")]
+    public PipeBoardRenderer pipeBoardRenderer;
+
+    [Header("Legacy Pipe Visuals (used only without a PipeBoardRenderer)")]
     public PipeLineRenderer pipeLineRenderer;
 
     [Header("Item Visuals")]
+    [Tooltip("Finished sprite and color for each colorId, plus the hidden sprite. When empty, the legacy settings below are used.")]
     public ItemPalette itemPalette;
 
     [Header("Legacy Item Visuals (used only without a palette)")]
@@ -94,6 +99,18 @@ public class BoardManager : MonoBehaviour
     {
         //Clear the tilemap before generating the board
         tilemap.ClearAllTiles();
+
+        // --- SPRITE PIPES ---
+        // The tilemap stays as the coordinate grid only; pipes, exits and the panel are drawn by the renderer
+        if (pipeBoardRenderer != null)
+        {
+            CenterBoard();
+            pipeBoardRenderer.Build(pipes, width, height, GridToWorld);
+            InitializePipesAndItems();
+            return;
+        }
+
+        // --- LEGACY: grey cells + pipe lines ---
 
         // --- PRECALCULATE PIPE COLORS ---
 

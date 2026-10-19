@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 116fa2e70c925d6a832694f16bd1bbad, type: 3}
+  m_Name: PipeTileSet
+  m_EditorClassIdentifier: GameScripts::PipeTileSet
+  straightVertical: {fileID: 21300000, guid: 526ffdb146a351ff9e237fda073c0007, type: 3}
+  straightHorizontal: {fileID: 21300000, guid: 2d276c629a845fdaae1474a7d7a3acf1, type: 3}
+  cornerUpRight: {fileID: 21300000, guid: b544f70904ca58a88f097061f6793e61, type: 3}
+  cornerUpLeft: {fileID: 21300000, guid: 9635b5c06562555ebbdeb6441e051086, type: 3}
+  cornerDownRight: {fileID: 21300000, guid: 897b023ba5225aeeb5d2050681b02c02, type: 3}
+  cornerDownLeft: {fileID: 21300000, guid: 5e6e7139c9835f65844676e5e4182f73, type: 3}
+  pieceOverlapScale: 1.004
+  mouthHorizontal: {fileID: 21300000, guid: 08b22e7c06935102bd5a399d9bfe83aa, type: 3}
+  mouthVertical: {fileID: 21300000, guid: dab72f70b3fe572ba0d72e96157a6dda, type: 3}
+  outletMouthInset: 0.09
+  platformActive: {fileID: 21300000, guid: 8092a12d22e3502aaaac4aec14dc11bd, type: 3}
+  platformOff: {fileID: 21300000, guid: bff8fc411ec15ada88951ca4417ce070, type: 3}
+  counterPlate: {fileID: 21300000, guid: 2588be768c5e53b4b81512971c647fac, type: 3}
+  counterPost: {fileID: 21300000, guid: aafcf9d2ab79565291f661ab4c72b234, type: 3}
+  counterPostDistance: 0.19
+  counterPlateDistance: 0.48
+  counterFont: {fileID: 0}
+  counterFontSize: 2.6
+  counterTextColor: {r: 0.13333334, g: 0.1882353, b: 0.2901961, a: 1}
+  hideCounterWhenEmpty: 1
+  depthTintStep: 0.05
+  shadowColor: {r: 0.13, g: 0.19, b: 0.29, a: 0.35}
+  shadowOffset: {x: 0.04, y: -0.075}
+  boardPanel: {fileID: 21300000, guid: b498d2266b3951bf986c382844e5eb60, type: 3}
+  panelSidePadding: 0.08
+  panelTopPadding: 0.85
+  panelBottomPadding: 0.12
+  panelShadowHeight: 0.111

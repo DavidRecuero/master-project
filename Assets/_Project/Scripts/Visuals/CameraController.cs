@@ -5,6 +5,8 @@ public class CameraController : MonoBehaviour, ICameraController
     [Header("Settings")]
     public float edgeMargin = 1f;   // Extra space around the board
     public float cameraZDepth = -10f;
+    [Tooltip("The view is never narrower than this (world units), so the 7-slot tray always fits, even on 5-cell boards. It also keeps items the same size on screen in every level.")]
+    public float minVisibleWidth = 7f;
 
     private Camera cam;
 
@@ -26,7 +28,7 @@ public class CameraController : MonoBehaviour, ICameraController
         transform.position = new Vector3(0, -traySpace / 2f, cameraZDepth);
 
         float sizeForHeight = totalHeight / 2f;
-        float sizeForWidth = (width / 2f) / cam.aspect;
+        float sizeForWidth = (Mathf.Max(width, minVisibleWidth) / 2f) / cam.aspect;
 
         //Pick the larger size(so nothing gets cut off) and add the margin
         cam.orthographicSize = Mathf.Max(sizeForHeight, sizeForWidth) + edgeMargin;

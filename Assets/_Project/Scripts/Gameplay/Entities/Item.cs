@@ -213,8 +213,13 @@ public class Item : MonoBehaviour
     {
         if (!IsBarrel) return false;
 
+        int before = barrelLives;
         barrelLives = Mathf.Max(0, barrelLives - amount);
         UpdateBarrelSprite();
+
+        // The last hit is announced by BreakOpen, when the crate actually bursts
+        if (barrelLives > 0 && barrelLives < before) GameEvents.TriggerBarrelDamaged(this, barrelLives);
+
         return barrelLives == 0;
     }
 
@@ -224,6 +229,9 @@ public class Item : MonoBehaviour
     public void BreakOpen(Sprite itemSprite)
     {
         if (!IsBarrel) return;
+
+        // Announced before the sprite changes, so effects still see the crate where it was
+        GameEvents.TriggerBarrelDamaged(this, 0);
 
         itemType = barrelContentHidden ? ItemType.Hidden : ItemType.Normal;
         barrelLives = 0;

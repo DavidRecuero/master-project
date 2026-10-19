@@ -15,23 +15,23 @@ public class FogManager : MonoBehaviour
     [SerializeField] private BoardManager boardManager;
 
     [Header("Visuals")]
-    [Tooltip("Cloud sprite drawn on each fog cell. If empty, a plain square is used.")]
     public Sprite fogSprite;
-    public Color fogColor = new Color(0.86f, 0.89f, 0.95f, 1f);
-    [Tooltip("Must be above items (≈10-20) and below the tray (100)")]
+    public Color fogColor = Color.white;
     public int sortingOrder = 50;
-    [Tooltip("Size of each cloud relative to a cell. Above 1 so neighbor clouds overlap and look like one.")]
-    public float cellScale = 1.15f;
+    public float cellScale = 1.3f;
+
+    [Header("Cloud Backing")]
+    public bool drawBacking = true;
+    public Color backingColor = new Color32(0xCB, 0xD8, 0xE6, 0xFF);
+    public float backingScale = 1.06f;
+    public float backingOffsetY = -0.05f;
     public float moveDuration = 0.25f;
 
     [Header("Movement Rules")]
-    [Tooltip("If on, the fog can only move over cells that belong to a pipe")]
     public bool onlyOverPipes = true;
     [Range(0f, 1f)]
-    [Tooltip("Chance that each cell follows the shared direction of the move. Higher = drifts more as a whole.")]
     public float windBias = 0.6f;
     public int maxAttempts = 200;
-    [Tooltip("0 = different every time. Any other value makes the movement repeatable (useful to debug).")]
     public int randomSeed = 0;
 
     private readonly List<Vector2Int> cells = new List<Vector2Int>();
@@ -111,6 +111,21 @@ public class FogManager : MonoBehaviour
         sr.sprite = fogSprite != null ? fogSprite : CreateFallbackSprite();
         sr.color = fogColor;
         sr.sortingOrder = sortingOrder;
+
+        if (drawBacking)
+        {
+            // Child of the cloud, so it follows every move; one order below ALL clouds
+            GameObject backingObj = new GameObject("Backing");
+            backingObj.transform.SetParent(cloudObj.transform, false);
+            backingObj.transform.localPosition = new Vector3(0f, backingOffsetY / Mathf.Max(0.01f, cellScale), 0f);
+            backingObj.transform.localScale = new Vector3(backingScale, backingScale, 1f);
+
+            SpriteRenderer backing = backingObj.AddComponent<SpriteRenderer>();
+            backing.sprite = sr.sprite;
+            backing.color = backingColor;
+            backing.sortingOrder = sortingOrder - 1;
+        }
+
         return sr;
     }
 

@@ -895,9 +895,9 @@ MonoBehaviour:
   hiddenItemIcon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
   defaultBarrelLives: 3
   barrelDamageSprites:
-  - {fileID: 21300000, guid: 1029f1da3ec91f94583431342540443b, type: 3}
-  - {fileID: 21300000, guid: 31deb524fe78575448215b10eec52bd6, type: 3}
-  - {fileID: 21300000, guid: 1e5779b7871d34746a6ba32a68644b0a, type: 3}
+  - {fileID: 21300000, guid: 9ee386ea6f9b551585ac6dc57fa3f60f, type: 3}
+  - {fileID: 21300000, guid: 4654267b91445959b72f83c09fbfbb57, type: 3}
+  - {fileID: 21300000, guid: 24e28e0b6a9459d4b03f3b42bd958cc7, type: 3}
   barrelFallbackColor: {r: 0.55, g: 0.35, b: 0.2, a: 1}
 --- !u!4 &462780002
 Transform:
@@ -957,10 +957,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GameScripts::FogManager
   boardManager: {fileID: 0}
-  fogSprite: {fileID: 21300000, guid: 1e90c1ddf2ab30248a3070439645c4a8, type: 3}
+  fogSprite: {fileID: 21300000, guid: 85f5d4a8314552d993b493248ac42194, type: 3}
   fogColor: {r: 0.86, g: 0.89, b: 0.95, a: 1}
   sortingOrder: 50
   cellScale: 1.15
+  drawBacking: 1
+  backingColor: {r: 0.79607844, g: 0.84705883, b: 0.9019608, a: 1}
+  backingScale: 1.06
+  backingOffsetY: -0.05
   moveDuration: 0.25
   onlyOverPipes: 1
   windBias: 0.6
@@ -2385,6 +2389,62 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1548418934}
   m_CullTransparentMesh: 1
+--- !u!1 &1580446123
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1580446125}
+  - component: {fileID: 1580446124}
+  m_Layer: 0
+  m_Name: ObstacleEffects
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1580446124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1580446123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c82ff4a6b465a758bf444b7f9f82cd0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameScripts::CrateDebrisEffect
+  plankSprite: {fileID: 21300000, guid: 49c4ba6f14745799ab72c6a94d3edb91, type: 3}
+  splinterSprite: {fileID: 21300000, guid: 5c82ce86d83057d093aae0d6fc258452, type: 3}
+  sortingOrder: 60
+  plankOffsets:
+  - 0.25
+  - 0
+  - -0.23
+  duration: 0.55
+  gravity: -7
+  plankSpeed: 1.6
+  splintersOnBreak: 7
+  splinterSpeed: {x: 1.4, y: 2.6}
+--- !u!4 &1580446125
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1580446123}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1678156524
 GameObject:
   m_ObjectHideFlags: 0
@@ -2469,7 +2529,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 21.6
+  m_fontSize: 18
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -3870,3 +3930,4 @@ SceneRoots:
   - {fileID: 922096507}
   - {fileID: 1347774936}
   - {fileID: 704164163}
+  - {fileID: 1580446125}

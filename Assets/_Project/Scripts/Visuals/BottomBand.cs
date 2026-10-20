@@ -28,13 +28,8 @@ public class BottomBand : MonoBehaviour, IScreenInset
 
     private RectTransform _rect;
     private RectTransform _edge;
-    private RectTransform _content;
-
-    /// <summary>Area of the band above the safe area and below the top edge. The boosters go in here.</summary>
-    public RectTransform Content
-    {
-        get { Refresh(); return _content; }
-    }
+    private RectTransform _content;   // Area above the safe area and below the edge: the boosters live here
+    private Image _image;
     private Canvas _canvas;
 
     /// <summary>Points to pixels: follows the width, but never grows past the height ratio (wide screens).</summary>
@@ -81,13 +76,9 @@ public class BottomBand : MonoBehaviour, IScreenInset
         _rect.anchoredPosition = Vector2.zero;
         _rect.sizeDelta = new Vector2(0f, HeightPixelsNow / scale);
 
-        // The band's own fill. Added here too, in case the component went on an object without an Image.
-        Image image = GetComponent<Image>();
-        if (image == null) image = gameObject.AddComponent<Image>();
-        image.sprite = null;
-        image.type = Image.Type.Simple;
-        image.color = bandColor;
-        image.raycastTarget = true;   // Taps on the band never reach the board
+        // The band's own fill. It also catches taps, so they never reach the board
+        _image ??= GetComponent<Image>();
+        _image.color = bandColor;
 
         EnsureEdge();
         float ppp = PixelsPerPoint(Screen.width, Screen.height, designWidthPt, designHeightPt);

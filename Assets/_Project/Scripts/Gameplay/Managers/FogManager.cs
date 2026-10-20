@@ -17,6 +17,7 @@ public class FogManager : MonoBehaviour
     [Header("Visuals")]
     public Sprite fogSprite;
     public Color fogColor = Color.white;
+    [Tooltip("Lowest draw order of the clouds. Raised on each level so they always sit above the highest pipe layer.")]
     public int sortingOrder = 50;
     public float cellScale = 1.3f;
 
@@ -37,6 +38,7 @@ public class FogManager : MonoBehaviour
     private readonly List<Vector2Int> cells = new List<Vector2Int>();
     private readonly List<SpriteRenderer> clouds = new List<SpriteRenderer>();
     private System.Random rng;
+    private int cloudOrder;
     private Coroutine moveRoutine;
 
     /// <summary>Cells currently covered by fog.</summary>
@@ -44,7 +46,7 @@ public class FogManager : MonoBehaviour
 
     private void Awake()
     {
-        boardManager ??= FindFirstObjectByType<BoardManager>();
+        if (boardManager == null) boardManager = FindFirstObjectByType<BoardManager>();
     }
 
     public void Initialize(BoardManager board)
@@ -73,6 +75,9 @@ public class FogManager : MonoBehaviour
         rng = randomSeed != 0 ? new System.Random(randomSeed) : new System.Random();
 
         if (data?.fog == null || data.fog.Count == 0) return;
+
+        // The backing goes one order below the clouds, so both stay above every pipe band
+        cloudOrder = Mathf.Max(sortingOrder, BoardSortingOrder.AboveBoard(data) + 1);
 
         foreach (Vector2IntData c in data.fog)
         {
@@ -110,7 +115,7 @@ public class FogManager : MonoBehaviour
         SpriteRenderer sr = cloudObj.AddComponent<SpriteRenderer>();
         sr.sprite = fogSprite != null ? fogSprite : CreateFallbackSprite();
         sr.color = fogColor;
-        sr.sortingOrder = sortingOrder;
+        sr.sortingOrder = cloudOrder;
 
         if (drawBacking)
         {
@@ -123,7 +128,7 @@ public class FogManager : MonoBehaviour
             SpriteRenderer backing = backingObj.AddComponent<SpriteRenderer>();
             backing.sprite = sr.sprite;
             backing.color = backingColor;
-            backing.sortingOrder = sortingOrder - 1;
+            backing.sortingOrder = cloudOrder - 1;
         }
 
         return sr;

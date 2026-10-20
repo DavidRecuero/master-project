@@ -6,8 +6,8 @@ using UnityEngine.Tilemaps;
 public class BoardManager : MonoBehaviour
 {
     [Header("References")]
+    [Tooltip("Coordinate grid only (cell size and origin). Nothing is painted on it.")]
     public Tilemap tilemap;
-    public TileBase[] tiles; // Different possible tiles to use in the board
     [SerializeField] private TrayManager trayManager;
 
     [Header("Level Data")]
@@ -26,26 +26,17 @@ public class BoardManager : MonoBehaviour
     public IReadOnlyList<Pipe> Pipes => pipes;
 
     [Header("Pipe Visuals")]
-    [Tooltip("Draws pipes with sprites (tubes, mouths, platforms, counters, board panel). When assigned, the tilemap cells are left empty and the pipe lines are not drawn.")]
+    [Tooltip("Draws the board: tubes, mouths, platforms, inlet counters and the board panel")]
     public PipeBoardRenderer pipeBoardRenderer;
 
-    [Header("Legacy Pipe Visuals (used only without a PipeBoardRenderer)")]
-    public PipeLineRenderer pipeLineRenderer;
-
     [Header("Item Visuals")]
-    [Tooltip("Finished sprite and color for each colorId, plus the hidden sprite. When empty, the legacy settings below are used.")]
+    [Tooltip("Finished sprite and color for each colorId, plus the hidden sprite")]
     public ItemPalette itemPalette;
-
-    [Header("Legacy Item Visuals (used only without a palette)")]
-    public Sprite itemSprite;
-    public Color[] possibleItemColors = new Color[] { Color.red, Color.blue, Color.yellow, Color.green };
-    public Color hiddenItemColor = new Color(0.45f, 0.45f, 0.5f, 1f);
-    public Sprite hiddenItemIcon;
 
     [Header("Barrel Settings")]
     public int defaultBarrelLives = 3;
+    [Tooltip("Crate sprites: [0] = intact, each next one more damaged")]
     public Sprite[] barrelDamageSprites;
-    public Color barrelFallbackColor = new Color(0.55f, 0.35f, 0.2f, 1f);
 
     //Injected dependencies
     private ILevelLoader _levelLoader;
@@ -54,7 +45,7 @@ public class BoardManager : MonoBehaviour
 
     private void Awake()
     {
-        trayManager ??= FindFirstObjectByType<TrayManager>();
+        if (trayManager == null) trayManager = FindFirstObjectByType<TrayManager>();
     }
 
     public void Initialize(ILevelLoader levelLoader, IItemPool itemPool, ICameraController cameraController)
@@ -100,84 +91,19 @@ public class BoardManager : MonoBehaviour
 
     void GenerateBoard()
     {
-        //Clear the tilemap before generating the board
-        tilemap.ClearAllTiles();
-
-        // --- SPRITE PIPES ---
-        // The tilemap stays as the coordinate grid only; pipes, exits and the panel are drawn by the renderer
-        if (pipeBoardRenderer != null)
-        {
-            CenterBoard();
-            Rect? frame = _cameraController != null && _cameraController.TryGetBoardFrame(out Rect f) ? f : (Rect?)null;
-            pipeBoardRenderer.Build(pipes, width, height, GridToWorld, frame);
-            InitializePipesAndItems();
-            return;
-        }
-
-        // --- LEGACY: grey cells + pipe lines ---
-
-        // --- PRECALCULATE PIPE COLORS ---
-
-        // Sort all pipes from lowest layer to highest layer to precalculate their colors
-        List<Pipe> sortedPipes = pipes.OrderBy(p => p.layer).ToList();
-        Dictionary<Pipe, Color> pipeColors = new Dictionary<Pipe, Color>();
-
-        int count = sortedPipes.Count;
-        for (int i = 0; i < count; i++)
-        {
-            if (count == 1)
-            {
-                // If there's only 1 pipe, it's black
-                pipeColors[sortedPipes[i]] = Color.black;
-            }
-            else
-            {
-                // If there are multiple pipes, interpolate between White (lowest) and Black (highest)
-                // i = 0 (lowest) -> grayscale = 1f (White)
-                // i = count - 1 (highest) -> grayscale = 0f (Black)
-                float grayscale = 1f - ((float)i / (count - 1));
-                pipeColors[sortedPipes[i]] = new Color(grayscale, grayscale, grayscale, 1f);
-            }
-        }
-
-
-        // --- DRAW THE BOARD ---
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                Vector3Int position = new Vector3Int(x, y, 0);
-                Vector2Int currentPos2D = new Vector2Int(x, y);
-
-                // Draw the base tile
-                tilemap.SetTile(position, tiles[0]);
-
-                // Unlock the tile so we can change its color
-                tilemap.SetTileFlags(position, TileFlags.None);
-
-                // Check if there is a pipe at this exact coordinate
-                Pipe topPipe = GetHighestLayerPipeAt(currentPos2D);
-
-                if (topPipe != null)
-                {
-                    // Paint it with the precalculated grayscale color
-                    tilemap.SetColor(position, pipeColors[topPipe]);
-                }
-                else
-                {
-                    // Background: Fully transparent
-                    tilemap.SetColor(position, Color.clear);
-                }
-            }
-        }
-
+        // The tilemap is only the coordinate grid; pipes, exits and the panel are drawn by the renderer
         CenterBoard();
 
-        //Draw pipe lines
-        if (pipeLineRenderer != null)
-            pipeLineRenderer.DrawPipeLines(pipes, pipeColors, tilemap);
+        if (pipeBoardRenderer != null)
+        {
+            Rect? frame = _cameraController != null && _cameraController.TryGetBoardFrame(out Rect f) ? f : (Rect?)null;
+            pipeBoardRenderer.Build(pipes, width, height, GridToWorld, frame);
+        }
+        else
+        {
+            Debug.LogWarning("[BoardManager] No PipeBoardRenderer assigned: the pipes won't be drawn.");
+        }
 
-        // --- SPAWN ITEMS ---
         InitializePipesAndItems();
     }
 
@@ -209,12 +135,10 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    /// <summary>Logical color of a colorId: from the palette when assigned, otherwise from the legacy color list.</summary>
+    /// <summary>Logical color of a colorId, from the palette.</summary>
     public Color GetItemColor(int colorId)
     {
-        if (itemPalette != null && itemPalette.HasColor(colorId)) return itemPalette.GetColor(colorId);
-        if (possibleItemColors != null && colorId >= 0 && colorId < possibleItemColors.Length) return possibleItemColors[colorId];
-        return Color.white;
+        return itemPalette != null ? itemPalette.GetColor(colorId) : Color.white;
     }
 
     // Helper function to find the highest layer pipe at a specific coordinate
@@ -265,15 +189,15 @@ public class BoardManager : MonoBehaviour
         itemObj.transform.position = GridToWorld(pos);
 
         itemComponent.SetPalette(itemPalette);
-        itemComponent.Init(data, GetItemColor(data.colorId), pos, pipe, itemSprite);
+        itemComponent.Init(data, GetItemColor(data.colorId), pos, pipe);
 
         //Hides hidden items
-        itemComponent.ApplyHiddenLook(hiddenItemColor, hiddenItemIcon);
+        itemComponent.ApplyHiddenLook();
 
         if (data.type == ItemType.Barrel)
         {
             int lives = data.lives > 0 ? data.lives : defaultBarrelLives;
-            itemComponent.ApplyBarrelLook(lives, barrelDamageSprites, barrelFallbackColor);
+            itemComponent.ApplyBarrelLook(lives, barrelDamageSprites);
         }
 
         // Visibility Check
@@ -369,8 +293,8 @@ public class BoardManager : MonoBehaviour
     {
         if (barrel == null || !barrel.IsBarrel) return;
 
-        barrel.BreakOpen(itemSprite);
-        barrel.ApplyHiddenLook(hiddenItemColor, hiddenItemIcon); // Only if the content was hidden
+        barrel.BreakOpen();
+        barrel.ApplyHiddenLook(); // Only if the content was hidden
 
         // Keep the queue in sync with what's on the board
         ItemSpawnData queueEntry = FindQueueEntry(barrel);
@@ -440,7 +364,7 @@ public class BoardManager : MonoBehaviour
             Item target = pipe.activeItems[index];
             target.gameObject.SetActive(true);
 
-            if (target.IsBarrel) target.BreakOpen(itemSprite);
+            if (target.IsBarrel) target.BreakOpen();
 
             Item extractedItem = RemoveItemAt(pipe, index);
 
@@ -485,7 +409,7 @@ public class BoardManager : MonoBehaviour
             var (newColorId, newType) = identities[i];
 
             item.SetIdentity(newColorId, GetItemColor(newColorId), newType);
-            item.ApplyHiddenLook(hiddenItemColor, hiddenItemIcon); // Does nothing if it ended up as a normal item
+            item.ApplyHiddenLook(); // Does nothing if it ended up as a normal item
 
             // Keep the queue in sync with what's on the board
             pipe.itemsQueue[index].colorId = newColorId;

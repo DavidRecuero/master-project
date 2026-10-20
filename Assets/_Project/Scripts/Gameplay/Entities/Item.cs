@@ -24,16 +24,14 @@ public class Item : MonoBehaviour
     [HideInInspector] public bool inTray = false;
 
     private SpriteRenderer spriteRenderer;
-    private SpriteRenderer overlayRenderer; // Extra icon drawn on top of the item (legacy "?" for hidden items)
     private Coroutine pulseCoroutine;
 
-    // Finished sprite per color. When null, the item falls back to tinting its base sprite (legacy look).
+    // Finished sprite per color, plus the hidden sprite. Every look comes from here.
     private ItemPalette palette;
 
     // ---- Barrel state
     private int barrelLives;
     private Sprite[] barrelDamageSprites;   // [0] = intact, [last] = most damaged
-    private Color barrelFallbackColor = Color.white;
     private bool barrelContentHidden;       // The element inside comes out as Hidden
 
     /// <summary>True when this item sits on the last cell of its pipe.</summary>
@@ -89,36 +87,19 @@ public class Item : MonoBehaviour
         }
     }
 
-    // Lazily creates a child SpriteRenderer used to draw an icon on top of the item
-    private void EnsureOverlayRenderer()
-    {
-        if (overlayRenderer != null) return;
-
-        GameObject overlayObj = new GameObject("Overlay");
-        overlayObj.transform.SetParent(transform, false);
-        overlayObj.transform.localPosition = Vector3.zero;
-        overlayObj.transform.localScale = Vector3.one;
-
-        overlayRenderer = overlayObj.AddComponent<SpriteRenderer>();
-        overlayRenderer.enabled = false;
-    }
-
-    /// <summary>
-    /// Assigns the palette used to draw this item. With a palette every color has its own finished sprite;
-    /// without one, the base sprite passed to Init is tinted with the item color.
-    /// </summary>
+    /// <summary>Assigns the palette used to draw this item: one finished sprite per color, plus the hidden sprite.</summary>
     public void SetPalette(ItemPalette itemPalette)
     {
         palette = itemPalette;
     }
 
     /// <summary>Convenience overload for plain colored items.</summary>
-    public void Init(int id, Color color, Vector2Int pos, Pipe pipe, Sprite sprite)
+    public void Init(int id, Color color, Vector2Int pos, Pipe pipe)
     {
-        Init(ItemSpawnData.Normal(id), color, pos, pipe, sprite);
+        Init(ItemSpawnData.Normal(id), color, pos, pipe);
     }
 
-    public void Init(ItemSpawnData data, Color color, Vector2Int pos, Pipe pipe, Sprite sprite)
+    public void Init(ItemSpawnData data, Color color, Vector2Int pos, Pipe pipe)
     {
         colorID = data.colorId;
         itemType = data.type;
@@ -129,9 +110,6 @@ public class Item : MonoBehaviour
         gridPosition = pos;
         parentPipe = pipe;
 
-        EnsureSpriteRenderer();
-
-        spriteRenderer.sprite = sprite;
         ShowColorLook();
 
         // Smaller inside the tube, full size on the exit platform
@@ -139,9 +117,6 @@ public class Item : MonoBehaviour
 
         // Above its own tube, below every pipe of a higher layer
         spriteRenderer.sortingOrder = BoardSortingOrder.For(pipe.layer, baseSortingOrder);
-
-        // A reused pooled object might still have an icon from its previous life
-        HideOverlay();
 
         // Collider to detect clicks or interactions
         BoxCollider2D col = gameObject.GetComponent<BoxCollider2D>();
@@ -153,27 +128,16 @@ public class Item : MonoBehaviour
     }
 
     /// <summary>
-    /// Covers the real color of a Hidden item. Uses the palette's hidden sprite (grey drop with "?") when there is one;
-    /// otherwise tints the base sprite with hiddenColor and draws hiddenIcon on top (legacy look).
+    /// Covers the real color of a Hidden item with the palette's hidden sprite (grey drop with "?").
     /// The real color is kept in itemColor/colorID and shown again on Reveal().
     /// </summary>
-    public void ApplyHiddenLook(Color hiddenColor, Sprite hiddenIcon)
+    public void ApplyHiddenLook()
     {
         if (!IsHidden) return;
 
         EnsureSpriteRenderer();
-
-        Sprite hiddenSprite = palette != null ? palette.HiddenSprite : null;
-        if (hiddenSprite != null)
-        {
-            spriteRenderer.sprite = hiddenSprite;
-            spriteRenderer.color = Color.white;
-            HideOverlay();
-            return;
-        }
-
-        spriteRenderer.color = hiddenColor;
-        if (hiddenIcon != null) ShowOverlay(hiddenIcon);
+        spriteRenderer.sprite = palette != null ? palette.HiddenSprite : null;
+        spriteRenderer.color = Color.white;
     }
 
     /// <summary>
@@ -187,23 +151,20 @@ public class Item : MonoBehaviour
         itemType = ItemType.Normal;
 
         ShowColorLook();
-        HideOverlay();
     }
 
     // ---------- Barrel ----------
 
     /// <summary>
-    /// Sets up the barrel look and lives. damageSprites[0] is the intact barrel and each next sprite is more damaged. If no sprites are given, the item sprite is tinted with fallbackColor.
+    /// Sets up the barrel look and lives. damageSprites[0] is the intact barrel and each next sprite is more damaged.
     /// </summary>
-    public void ApplyBarrelLook(int lives, Sprite[] damageSprites, Color fallbackColor)
+    public void ApplyBarrelLook(int lives, Sprite[] damageSprites)
     {
         if (!IsBarrel) return;
 
         barrelLives = Mathf.Max(1, lives);
         barrelDamageSprites = damageSprites;
-        barrelFallbackColor = fallbackColor;
 
-        HideOverlay();
         UpdateBarrelSprite();
         CheckExitPulse();
     }
@@ -226,7 +187,7 @@ public class Item : MonoBehaviour
     /// <summary>
     /// Turns the barrel into the element it was holding (normal or hidden), keeping its color id, position and pipe. Call ApplyHiddenLook afterwards to cover a hidden content.
     /// </summary>
-    public void BreakOpen(Sprite itemSprite)
+    public void BreakOpen()
     {
         if (!IsBarrel) return;
 
@@ -237,8 +198,6 @@ public class Item : MonoBehaviour
         barrelLives = 0;
         barrelDamageSprites = null;
 
-        EnsureSpriteRenderer();
-        spriteRenderer.sprite = itemSprite;
         ShowColorLook();
 
         CheckExitPulse();
@@ -247,53 +206,26 @@ public class Item : MonoBehaviour
     // Shows the sprite that matches the damage taken so far
     private void UpdateBarrelSprite()
     {
+        if (barrelDamageSprites == null || barrelDamageSprites.Length == 0) return;
+
         EnsureSpriteRenderer();
-
-        if (barrelDamageSprites == null || barrelDamageSprites.Length == 0)
-        {
-            spriteRenderer.color = barrelFallbackColor;
-            return;
-        }
-
         int index = Mathf.Clamp(barrelDamageSprites.Length - barrelLives, 0, barrelDamageSprites.Length - 1);
 
         spriteRenderer.sprite = barrelDamageSprites[index];
         spriteRenderer.color = Color.white; // Show the barrel art untinted
     }
 
-    // Shows the item's real color: the palette sprite for its colorID, or the base sprite tinted with itemColor
+    // Shows the item's real color: the palette sprite for its colorID (the sprite already carries its color)
     private void ShowColorLook()
     {
         EnsureSpriteRenderer();
-
-        Sprite colorSprite = palette != null ? palette.GetSprite(colorID) : null;
-        if (colorSprite != null)
-        {
-            spriteRenderer.sprite = colorSprite;
-            spriteRenderer.color = Color.white; // The sprite already carries its color
-        }
-        else
-        {
-            spriteRenderer.color = itemColor;
-        }
+        spriteRenderer.sprite = palette != null ? palette.GetSprite(colorID) : null;
+        spriteRenderer.color = Color.white;
     }
 
     private void SetScale(float scale)
     {
         transform.localScale = new Vector3(scale, scale, 1f);
-    }
-
-    private void ShowOverlay(Sprite icon)
-    {
-        EnsureOverlayRenderer();
-        overlayRenderer.sprite = icon;
-        overlayRenderer.sortingOrder = spriteRenderer.sortingOrder + 1;
-        overlayRenderer.enabled = true;
-    }
-
-    private void HideOverlay()
-    {
-        if (overlayRenderer != null) overlayRenderer.enabled = false;
     }
 
     /// <summary>
@@ -309,7 +241,6 @@ public class Item : MonoBehaviour
         barrelLives = 0;
         barrelDamageSprites = null;
         barrelContentHidden = false;
-        HideOverlay();
         if (TryGetComponent(out Collider2D col)) col.enabled = true;
     }
 
@@ -345,7 +276,6 @@ public class Item : MonoBehaviour
         itemType = type;
 
         ShowColorLook();
-        HideOverlay();
     }
 
     public void CheckExitPulse()

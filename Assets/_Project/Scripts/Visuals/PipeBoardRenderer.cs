@@ -4,7 +4,6 @@ using UnityEngine;
 
 /// <summary>
 /// Builds the visual board: the panel behind the cells and one PipeView per pipe.
-/// Replaces the grey tilemap cells and the PipeLineRenderer when it is assigned in BoardManager.
 /// Refreshes platforms and inlet counters every time the board changes.
 /// </summary>
 public class PipeBoardRenderer : MonoBehaviour

@@ -20,7 +20,7 @@ public class BoosterBarController : MonoBehaviour
 
     private void Awake()
     {
-        boosterManager ??= FindFirstObjectByType<BoosterManager>();
+        if (boosterManager == null) boosterManager = FindFirstObjectByType<BoosterManager>();
 
         foreach (BoosterButtonBinding binding in buttons)
         {

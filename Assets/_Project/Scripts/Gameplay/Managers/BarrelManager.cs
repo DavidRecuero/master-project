@@ -26,7 +26,7 @@ public class BarrelManager : MonoBehaviour
 
     private void Awake()
     {
-        boardManager ??= FindFirstObjectByType<BoardManager>();
+        if (boardManager == null) boardManager = FindFirstObjectByType<BoardManager>();
     }
 
     public void Initialize(BoardManager board)

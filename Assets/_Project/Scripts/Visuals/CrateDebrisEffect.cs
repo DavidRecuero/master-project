@@ -13,6 +13,7 @@ public class CrateDebrisEffect : MonoBehaviour
     public Sprite splinterSprite;
 
     [Header("Look")]
+    [Tooltip("Lowest draw order of the flying pieces. Raised on each level so they fly above the highest pipe layer (and the fog).")]
     public int sortingOrder = 60;
     public float[] plankOffsets = { 0.25f, 0.0f, -0.23f };
 
@@ -23,14 +24,29 @@ public class CrateDebrisEffect : MonoBehaviour
     public int splintersOnBreak = 7;
     public Vector2 splinterSpeed = new Vector2(1.4f, 2.6f);
 
+    private int pieceOrder;
+
+    private void Awake()
+    {
+        pieceOrder = sortingOrder;
+    }
+
     private void OnEnable()
     {
         GameEvents.OnBarrelDamaged += HandleBarrelDamaged;
+        GameEvents.OnLevelLoaded += HandleLevelLoaded;
     }
 
     private void OnDisable()
     {
         GameEvents.OnBarrelDamaged -= HandleBarrelDamaged;
+        GameEvents.OnLevelLoaded -= HandleLevelLoaded;
+    }
+
+    // Above the pipes and the fog (which takes the first two orders above the board)
+    private void HandleLevelLoaded(LevelData data)
+    {
+        pieceOrder = Mathf.Max(sortingOrder, BoardSortingOrder.AboveBoard(data) + 5);
     }
 
     /// <summary>Which plank leaves the sprite when the crate goes down to `livesLeft` (3 planks art). -1 = none.</summary>
@@ -91,7 +107,7 @@ public class CrateDebrisEffect : MonoBehaviour
 
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = sprite;
-        sr.sortingOrder = sortingOrder;
+        sr.sortingOrder = pieceOrder;
 
         StartCoroutine(Fly(go.transform, sr, velocity, Random.Range(-540f, 540f)));
     }

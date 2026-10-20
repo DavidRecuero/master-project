@@ -30,8 +30,8 @@ public class BoosterManager : MonoBehaviour
     {
         if (_boosters != null) return;
 
-        trayManager ??= FindFirstObjectByType<TrayManager>();
-        boardManager ??= FindFirstObjectByType<BoardManager>();
+        if (trayManager == null) trayManager = FindFirstObjectByType<TrayManager>();
+        if (boardManager == null) boardManager = FindFirstObjectByType<BoardManager>();
 
         _inventory ??= UserDataManager.Instance;
         _currency ??= UserDataManager.Instance;

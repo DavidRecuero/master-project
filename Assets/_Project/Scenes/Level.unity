@@ -974,7 +974,7 @@ MonoBehaviour:
   slotSprite: {fileID: 21300000, guid: 0b2370186b315f0cb029c68956830750, type: 3}
   slotColor: {r: 1, g: 1, b: 1, a: 1}
   slotScale: 1
-  slotVisualSize: 0.85
+  slotVisualSize: 0.87
   panelSprite: {fileID: 21300000, guid: b498d2266b3951bf986c382844e5eb60, type: 3}
   panelPadding: {x: 0.185, y: 0.148}
   panelShadowHeight: 0.111
@@ -1259,7 +1259,6 @@ GameObject:
   m_Component:
   - component: {fileID: 462780002}
   - component: {fileID: 462780001}
-  - component: {fileID: 462780003}
   - component: {fileID: 462780004}
   - component: {fileID: 462780005}
   m_Layer: 0
@@ -1282,28 +1281,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Board
   tilemap: {fileID: 855564688}
-  tiles:
-  - {fileID: 11400000, guid: 16042a9f40fdc2e4693fa5993ca76202, type: 2}
   trayManager: {fileID: 307449189}
   traySpace: 2
   pipeBoardRenderer: {fileID: 704164162}
-  pipeLineRenderer: {fileID: 462780003}
   itemPalette: {fileID: 11400000, guid: 5fa9eeed0c9357c796e6fbaf26f06eb2, type: 2}
-  itemSprite: {fileID: -2413806693520163455, guid: 9f949e1d48d7f664fb214fc446472e13, type: 3}
-  possibleItemColors:
-  - {r: 1, g: 0, b: 0, a: 1}
-  - {r: 0, g: 0, b: 1, a: 1}
-  - {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  - {r: 0, g: 1, b: 0, a: 1}
-  - {r: 1, g: 0, b: 0.75, a: 1}
-  hiddenItemColor: {r: 0.45, g: 0.45, b: 0.5, a: 1}
-  hiddenItemIcon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
   defaultBarrelLives: 3
   barrelDamageSprites:
   - {fileID: 21300000, guid: 9ee386ea6f9b551585ac6dc57fa3f60f, type: 3}
   - {fileID: 21300000, guid: 4654267b91445959b72f83c09fbfbb57, type: 3}
   - {fileID: 21300000, guid: 24e28e0b6a9459d4b03f3b42bd958cc7, type: 3}
-  barrelFallbackColor: {r: 0.55, g: 0.35, b: 0.2, a: 1}
 --- !u!4 &462780002
 Transform:
   m_ObjectHideFlags: 0
@@ -1319,21 +1305,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &462780003
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 462780000}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5963a1dae71771f488cc16957a6f7d08, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PipeLineRenderer
-  alpha: 0.4
-  lineWidth: 0.05
-  lineSortingOffset: 4
 --- !u!114 &462780004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1363,9 +1334,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: GameScripts::FogManager
   boardManager: {fileID: 462780001}
   fogSprite: {fileID: 21300000, guid: 85f5d4a8314552d993b493248ac42194, type: 3}
-  fogColor: {r: 0.86, g: 0.89, b: 0.95, a: 1}
+  fogColor: {r: 0.6862745, g: 0.9333334, b: 0.9333334, a: 1}
   sortingOrder: 50
-  cellScale: 1.15
+  cellScale: 1.3
   drawBacking: 1
   backingColor: {r: 0.79607844, g: 0.84705883, b: 0.9019608, a: 1}
   backingScale: 1.06
@@ -3004,7 +2975,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1347774936}
   - component: {fileID: 1347774937}
-  - component: {fileID: 1347774938}
   m_Layer: 0
   m_Name: BoosterManager
   m_TagString: Untagged
@@ -3045,26 +3015,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: aaff11c547cc0d44dad5c1e872ef1f95, type: 2}
   - {fileID: 11400000, guid: 439d43ef6b5454e43aaf64a8eb59ec53, type: 2}
   - {fileID: 11400000, guid: c0c4f9fa296fa76458cef6072c1ea8bc, type: 2}
---- !u!114 &1347774938
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1347774935}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9034ef6b549564f46b9c16faea23d9c7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: GameScripts::BoosterBarController
-  boosterManager: {fileID: 1347774937}
-  buttons:
-  - type: 0
-    view: {fileID: 0}
-  - type: 1
-    view: {fileID: 0}
-  - type: 2
-    view: {fileID: 0}
 --- !u!1 &1365661302
 GameObject:
   m_ObjectHideFlags: 0

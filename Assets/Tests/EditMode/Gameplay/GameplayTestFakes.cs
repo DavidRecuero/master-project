@@ -39,6 +39,15 @@ public class FakeCameraController : ICameraController
     }
 
     public float GetCameraBottomY() => MockBottomY;
+
+    /// <summary>Defaults to the camera bottom, like a camera without a booster band.</summary>
+    public float? MockPlayAreaBottomY { get; set; }
+    public float GetPlayAreaBottomY() => MockPlayAreaBottomY ?? MockBottomY;
+}
+
+public class FakeScreenInset : IScreenInset
+{
+    public float ScreenFraction { get; set; }
 }
 
 public class FakeGameStateController : IGameStateController

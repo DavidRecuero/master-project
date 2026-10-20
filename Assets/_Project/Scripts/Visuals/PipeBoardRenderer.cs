@@ -27,13 +27,16 @@ public class PipeBoardRenderer : MonoBehaviour
         GameEvents.OnBoardChanged -= RefreshAll;
     }
 
-    /// <summary>Rebuilds every pipe view. Call after the board has been centred (GridToWorld must be final).</summary>
-    public void Build(IReadOnlyList<Pipe> pipes, int width, int height, Func<Vector2Int, Vector3> gridToWorld)
+    /// <summary>
+    /// Rebuilds every pipe view. Call after the board has been centred (GridToWorld must be final).
+    /// frame = panel face rect from the camera (fills the free screen area); null fits the panel to the board.
+    /// </summary>
+    public void Build(IReadOnlyList<Pipe> pipes, int width, int height, Func<Vector2Int, Vector3> gridToWorld, Rect? frame = null)
     {
         Clear();
         if (tileSet == null || pipes == null) return;
 
-        BuildPanel(width, height, gridToWorld);
+        BuildPanel(width, height, gridToWorld, frame);
 
         // Darken only what is really covered by another pipe, not every layer below the top one
         Dictionary<Pipe, int> depths = PipeDepthCalculator.Compute(pipes);
@@ -83,27 +86,46 @@ public class PipeBoardRenderer : MonoBehaviour
         return root;
     }
 
-    private void BuildPanel(int width, int height, Func<Vector2Int, Vector3> gridToWorld)
+    private void BuildPanel(int width, int height, Func<Vector2Int, Vector3> gridToWorld, Rect? frame)
     {
         if (tileSet.boardPanel == null || width <= 0 || height <= 0) return;
 
-        Vector3 bottomLeft = gridToWorld(new Vector2Int(0, 0));
-        Vector3 topRight = gridToWorld(new Vector2Int(width - 1, height - 1));
-        Vector3 cellsCenter = (bottomLeft + topRight) * 0.5f;
-
-        float faceWidth = width + tileSet.panelSidePadding * 2f;
-        float faceHeight = height + tileSet.panelTopPadding + tileSet.panelBottomPadding;
-        float faceCenterY = cellsCenter.y + (tileSet.panelTopPadding - tileSet.panelBottomPadding) * 0.5f;
+        Rect face = PanelFace(FittedFace(width, height, gridToWorld), frame);
 
         GameObject go = new GameObject("BoardPanel");
         go.transform.SetParent(EnsureRoot(), false);
         // The sprite includes the shadow below the face, so the whole sprite is shifted down by half of it
-        go.transform.position = new Vector3(cellsCenter.x, faceCenterY - tileSet.panelShadowHeight * 0.5f, 0f);
+        go.transform.position = new Vector3(face.center.x, face.center.y - tileSet.panelShadowHeight * 0.5f, 0f);
 
         panelRenderer = go.AddComponent<SpriteRenderer>();
         panelRenderer.sprite = tileSet.boardPanel;
         panelRenderer.drawMode = SpriteDrawMode.Sliced;
-        panelRenderer.size = new Vector2(faceWidth, faceHeight + tileSet.panelShadowHeight);
+        panelRenderer.size = new Vector2(face.width, face.height + tileSet.panelShadowHeight);
         panelRenderer.sortingOrder = BoardSortingOrder.Panel;
+    }
+
+    // Smallest panel face around the cells, with the tile set paddings
+    private Rect FittedFace(int width, int height, Func<Vector2Int, Vector3> gridToWorld)
+    {
+        Vector3 bottomLeft = gridToWorld(new Vector2Int(0, 0));
+        Vector3 topRight = gridToWorld(new Vector2Int(width - 1, height - 1));
+        Vector3 cellsCenter = (bottomLeft + topRight) * 0.5f;
+
+        return Rect.MinMaxRect(
+            cellsCenter.x - width / 2f - tileSet.panelSidePadding,
+            cellsCenter.y - height / 2f - tileSet.panelBottomPadding,
+            cellsCenter.x + width / 2f + tileSet.panelSidePadding,
+            cellsCenter.y + height / 2f + tileSet.panelTopPadding);
+    }
+
+    /// <summary>The camera's frame when there is one, grown if needed so it never cuts the board.</summary>
+    public static Rect PanelFace(Rect fitted, Rect? frame)
+    {
+        if (!frame.HasValue) return fitted;
+
+        Rect f = frame.Value;
+        return Rect.MinMaxRect(
+            Mathf.Min(f.xMin, fitted.xMin), Mathf.Min(f.yMin, fitted.yMin),
+            Mathf.Max(f.xMax, fitted.xMax), Mathf.Max(f.yMax, fitted.yMax));
     }
 }

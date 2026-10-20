@@ -18,7 +18,8 @@ public class BoardManager : MonoBehaviour
     private int width;
     private int height;
     private List<Pipe> pipes = new List<Pipe>();
-    public float traySpace = 2.5f;  // Extra space reserved at the bottom for the tray
+    [Tooltip("Space between the top of the booster band and the board's last row: tray + gaps + panel bottom (world units)")]
+    public float traySpace = 2.0f;
 
     public int Width => width;
     public int Height => height;
@@ -83,12 +84,14 @@ public class BoardManager : MonoBehaviour
         int totalItemsInLevel = pipes.Sum(p => p.itemsQueue.Count);
         _itemPool.PreparePool(totalItemsInLevel);
 
+        // Framed first: the board panel fills the area the camera leaves free
+        _cameraController?.AdjustToBoard(width, height, traySpace);
+
         GenerateBoard();
 
         // Lets obstacles that aren't pipe items (the fog) build from the level data
         GameEvents.TriggerLevelLoaded(data);
 
-        _cameraController?.AdjustToBoard(width, height, traySpace);
         trayManager?.InitializeTray();
 
         // Lets obstacles evaluate the starting board
@@ -105,7 +108,8 @@ public class BoardManager : MonoBehaviour
         if (pipeBoardRenderer != null)
         {
             CenterBoard();
-            pipeBoardRenderer.Build(pipes, width, height, GridToWorld);
+            Rect? frame = _cameraController != null && _cameraController.TryGetBoardFrame(out Rect f) ? f : (Rect?)null;
+            pipeBoardRenderer.Build(pipes, width, height, GridToWorld, frame);
             InitializePipesAndItems();
             return;
         }

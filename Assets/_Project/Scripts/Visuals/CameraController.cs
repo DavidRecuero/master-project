@@ -1,16 +1,40 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
+/// <summary>
+/// Frames the level for any screen. Items keep the same size on the board and in the tray, so the zoom is
+/// limited by whichever is wider (the board or the 7-slot tray) with thin side margins, and by the height
+/// available between the top HUD and the tray. The board panel then fills all the free space (BoardFrame).
+/// </summary>
 public class CameraController : MonoBehaviour, ICameraController
 {
-    [Header("Settings")]
-    [Tooltip("Space kept above the board (below the top HUD, room for the inlet counters) and on the sides (world units)")]
-    public float edgeMargin = 1f;
+    /// <summary>Result of framing a level: camera size and Y, plus the board panel face rect (world units).</summary>
+    public struct Framing
+    {
+        public float size;
+        public float y;
+        public Rect boardFrame;
+    }
+
+    [Header("Width")]
+    [Tooltip("Screen edge to the board panel and to the tray (world units). 0.15 = ~8 pt")]
+    public float sideMargin = 0.15f;
+    [Tooltip("Board cells to the panel edge, left and right (world units)")]
+    public float boardSidePadding = 0.15f;
+    [Tooltip("Width of the tray face (world units). The view is never narrower than this plus the side margins, so the 7 slots always fit at the same scale as the board.")]
+    public float minVisibleWidth = 6.9f;
+
+    [Header("Height")]
+    [Tooltip("Top HUD bottom edge to the board panel (world units)")]
+    public float topGap = 0.2f;
+    [Tooltip("Panel top to the first row of cells: room for the inlet counters (world units)")]
+    public float boardTopPadding = 0.85f;
+    [Tooltip("Last row of cells to the panel's bottom edge (world units)")]
+    public float boardBottomPadding = 0.12f;
+    [Tooltip("Where the board sits inside the panel when there is spare height: 0 = bottom, 0.5 = centred, 1 = top")]
+    [Range(0f, 1f)] public float boardVerticalAlign = 0.5f;
+
     public float cameraZDepth = -10f;
-    [Tooltip("The view is never narrower than this (world units), so the 7-slot tray always fits, even on 5-cell boards. It also keeps items the same size on screen in every level.")]
-    public float minVisibleWidth = 7f;
-    [Tooltip("Where the board sits when the screen has spare height: 0 = right above the tray, 0.5 = centred, 1 = at the top")]
-    [Range(0f, 1f)] public float boardVerticalAlign = 0.25f;
 
     [Header("Screen Insets (optional, must implement IScreenInset)")]
     [Tooltip("Strip at the bottom of the screen (BottomBand). Board and tray are framed above it.")]
@@ -22,6 +46,7 @@ public class CameraController : MonoBehaviour, ICameraController
     private Camera cam;
     private IScreenInset _bottomInset;
     private IScreenInset _topInset;
+    private Rect? _boardFrame;
 
     /// <summary>Injects the insets directly (tests, or code-built scenes). Overrides the inspector sources.</summary>
     public void Initialize(IScreenInset bottomInset, IScreenInset topInset)
@@ -60,45 +85,62 @@ public class CameraController : MonoBehaviour, ICameraController
     private float TopFraction => _topInset != null ? _topInset.ScreenFraction : 0f;
 
     /// <summary>
-    /// Adjusts the camera to ensure the entire board is visible with a margin
+    /// Frames a board centred at the origin. traySpace = space between the top of the bottom inset
+    /// and the board's last row (tray + gaps + panel bottom).
     /// </summary>
     public void AdjustToBoard(int width, int height, float traySpace)
     {
         EnsureCameraReference();
-
         ResolveInsets();
-        Frame(width, height, traySpace, BottomFraction, TopFraction, out float size, out float y);
 
-        cam.orthographicSize = size;
-        transform.position = new Vector3(0, y, cameraZDepth);
+        Framing framing = Frame(width, height, traySpace, BottomFraction, TopFraction);
+
+        cam.orthographicSize = framing.size;
+        transform.position = new Vector3(0, framing.y, cameraZDepth);
+        _boardFrame = framing.boardFrame;
     }
 
     /// <summary>
-    /// Orthographic size and camera Y for a board centred at the origin.
-    /// The view is split, bottom to top, into: the band (reservedBottom, fraction of the screen height),
-    /// the tray area (traySpace world units, the tray sits right on the band), the board, and edgeMargin on top.
-    /// Spare height (tall screens) is shared above/below the board following boardVerticalAlign.
+    /// Pure framing maths. reservedBottom / reservedTop = fraction of the screen height taken by the insets.
+    /// Bottom to top: inset, tray area (traySpace), board, boardTopPadding + topGap, inset.
     /// </summary>
-    public void Frame(int width, int height, float traySpace, float reservedBottom, out float size, out float y)
-    {
-        Frame(width, height, traySpace, reservedBottom, 0f, out size, out y);
-    }
-
-    /// <summary>Same as above, also keeping reservedTop (fraction of the screen height) free for the top HUD.</summary>
-    public void Frame(int width, int height, float traySpace, float reservedBottom, float reservedTop, out float size, out float y)
+    public Framing Frame(int width, int height, float traySpace, float reservedBottom, float reservedTop)
     {
         EnsureCameraReference();
+        float aspect = cam.aspect;
         float free = Mathf.Clamp(1f - reservedBottom - reservedTop, 0.1f, 1f);
 
-        float sizeForHeight = (height + traySpace + edgeMargin) / 2f / free;
-        float sizeForWidth = (Mathf.Max(width, minVisibleWidth) / 2f) / cam.aspect + edgeMargin;
+        // Width: the board with its panel padding, or the tray, whichever is wider
+        float viewWidth = Mathf.Max(width + 2f * boardSidePadding, minVisibleWidth) + 2f * sideMargin;
+        float sizeForWidth = viewWidth / 2f / aspect;
 
-        // Pick the larger size so nothing gets cut off
-        size = Mathf.Max(sizeForHeight, sizeForWidth);
+        // Height: everything between the two insets
+        float needed = topGap + boardTopPadding + height + traySpace;
+        float sizeForHeight = needed / 2f / free;
 
-        float spare = 2f * size * free - edgeMargin - traySpace - height;
-        float bandTop = -height / 2f - traySpace - spare * Mathf.Clamp01(boardVerticalAlign);
-        y = bandTop + size * (1f - 2f * reservedBottom);
+        float size = Mathf.Max(sizeForWidth, sizeForHeight);
+
+        float freeSpan = 2f * size * free;
+        float spare = freeSpan - needed;
+        float insetTop = -height / 2f - traySpace - spare * Mathf.Clamp01(boardVerticalAlign);
+
+        // The panel fills the free area: full width minus margins, from below the HUD down to the tray area
+        float halfWidth = size * aspect - sideMargin;
+        float frameTop = insetTop + freeSpan - topGap;
+        float frameBottom = insetTop + traySpace - boardBottomPadding;
+
+        return new Framing
+        {
+            size = size,
+            y = insetTop + size * (1f - 2f * reservedBottom),
+            boardFrame = Rect.MinMaxRect(-halfWidth, frameBottom, halfWidth, frameTop)
+        };
+    }
+
+    public bool TryGetBoardFrame(out Rect frame)
+    {
+        frame = _boardFrame ?? default;
+        return _boardFrame.HasValue;
     }
 
     public float GetCameraBottomY()

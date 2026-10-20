@@ -1,15 +1,19 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 /// <summary>
 /// Coin pill of the top HUD: shows the player's balance and keeps it in sync through GameEvents.OnCoinsChanged.
-/// The "+" button only announces the request (GameEvents.OnCoinStoreRequested); the store decides what to do.
+/// The whole pill is the button (the "+" is just its icon): a tap only announces the request
+/// (GameEvents.OnCoinStoreRequested), the store decides what to do.
 /// </summary>
 public class CoinsView : MonoBehaviour
 {
     [SerializeField] private TMP_Text amountText;
-    [SerializeField] private Button plusButton;
+    [Tooltip("Button on the whole coin pill. The \"+\" inside it is only a picture.")]
+    [FormerlySerializedAs("plusButton")]
+    [SerializeField] private Button storeButton;
     [Tooltip("Thousands separator: \".\" shows 1.250, \",\" shows 1,250, empty shows 1250")]
     [SerializeField] private string thousandsSeparator = ".";
 
@@ -31,13 +35,13 @@ public class CoinsView : MonoBehaviour
     private void OnEnable()
     {
         GameEvents.OnCoinsChanged += Show;
-        if (plusButton != null) plusButton.onClick.AddListener(GameEvents.TriggerCoinStoreRequested);
+        if (storeButton != null) storeButton.onClick.AddListener(GameEvents.TriggerCoinStoreRequested);
     }
 
     private void OnDisable()
     {
         GameEvents.OnCoinsChanged -= Show;
-        if (plusButton != null) plusButton.onClick.RemoveListener(GameEvents.TriggerCoinStoreRequested);
+        if (storeButton != null) storeButton.onClick.RemoveListener(GameEvents.TriggerCoinStoreRequested);
     }
 
     private void Start()

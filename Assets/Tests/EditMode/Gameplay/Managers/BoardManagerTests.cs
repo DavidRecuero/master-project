@@ -20,7 +20,6 @@ public class BoardManagerTests
         var tilemapGo = new GameObject("Tilemap");
         tilemapGo.transform.SetParent(_boardObject.transform);
         _boardManager.tilemap = tilemapGo.AddComponent<Tilemap>();
-        _boardManager.tiles = new TileBase[] { ScriptableObject.CreateInstance<Tile>() };
 
         _fakePool = new FakeItemPool();
         _fakeCam = new FakeCameraController();

@@ -46,13 +46,13 @@ public class HudLayoutTests
         CameraController controller = go.AddComponent<CameraController>();
 
         const float band = 0.16f, top = 0.12f;
-        controller.Frame(7, 7, 2f, band, top, out float size, out float y);
+        CameraController.Framing f = controller.Frame(7, 7, 2f, band, top);
 
-        float viewTop = y + size;
-        float hudBottom = viewTop - top * size * 2f;
-        float bandTop = (y - size) + band * size * 2f;
+        float viewTop = f.y + f.size;
+        float hudBottom = viewTop - top * f.size * 2f;
+        float bandTop = (f.y - f.size) + band * f.size * 2f;
 
-        Assert.AreEqual(3.5f + 1f, hudBottom, 1e-4f);    // Board top + edgeMargin
+        Assert.AreEqual(3.5f + 1.05f, hudBottom, 1e-4f); // Board top + boardTopPadding + topGap
         Assert.AreEqual(-3.5f - 2f, bandTop, 1e-4f);     // Board bottom - traySpace
         Object.DestroyImmediate(go);
     }

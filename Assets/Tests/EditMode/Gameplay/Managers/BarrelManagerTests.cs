@@ -49,8 +49,8 @@ public class BarrelManagerTests
         _spawned.Add(go);
         Item item = go.AddComponent<Item>();
 
-        item.Init(data, Color.red, pipe.ExitPosition, pipe, null);
-        if (data.type == ItemType.Barrel) item.ApplyBarrelLook(data.lives, null, Color.gray);
+        item.Init(data, Color.red, pipe.ExitPosition, pipe);
+        if (data.type == ItemType.Barrel) item.ApplyBarrelLook(data.lives, null);
 
         pipe.activeItems.Add(item);
         pipe.itemsQueue.Add(data);
@@ -133,8 +133,8 @@ public class BarrelManagerTests
         _spawned.Add(go);
         Item barrel = go.AddComponent<Item>();
         ItemSpawnData barrelData = Barrel(colorId: 1, lives: 3);
-        barrel.Init(barrelData, Color.red, barrelPipe.path[0], barrelPipe, null);
-        barrel.ApplyBarrelLook(3, null, Color.gray);
+        barrel.Init(barrelData, Color.red, barrelPipe.path[0], barrelPipe);
+        barrel.ApplyBarrelLook(3, null);
         barrelPipe.activeItems.Add(barrel);
         barrelPipe.itemsQueue.Add(barrelData);
 

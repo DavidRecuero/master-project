@@ -30,8 +30,8 @@ public class CrateEventsTests
     private void MakeCrate(int lives)
     {
         var pipe = new Pipe { layer = 0, path = new List<Vector2Int> { new Vector2Int(0, 0) } };
-        _item.Init(new ItemSpawnData { colorId = 1, type = ItemType.Barrel }, Color.red, new Vector2Int(0, 0), pipe, null);
-        _item.ApplyBarrelLook(lives, null, Color.gray);
+        _item.Init(new ItemSpawnData { colorId = 1, type = ItemType.Barrel }, Color.red, new Vector2Int(0, 0), pipe);
+        _item.ApplyBarrelLook(lives, null);
     }
 
     [Test]
@@ -54,7 +54,7 @@ public class CrateEventsTests
         Assert.IsTrue(destroyed);
         Assert.AreEqual(0, _events.Count, "The last hit waits for the crate to actually burst.");
 
-        _item.BreakOpen(null);
+        _item.BreakOpen();
 
         CollectionAssert.AreEqual(new[] { 0 }, _events);
     }
@@ -63,10 +63,10 @@ public class CrateEventsTests
     public void NormalItems_NeverAnnounceDamage()
     {
         var pipe = new Pipe { layer = 0, path = new List<Vector2Int> { new Vector2Int(0, 0) } };
-        _item.Init(2, Color.blue, new Vector2Int(0, 0), pipe, null);
+        _item.Init(2, Color.blue, new Vector2Int(0, 0), pipe);
 
         _item.TakeBarrelDamage();
-        _item.BreakOpen(null);
+        _item.BreakOpen();
 
         Assert.AreEqual(0, _events.Count);
     }

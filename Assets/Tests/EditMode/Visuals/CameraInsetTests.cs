@@ -35,7 +35,7 @@ public class CameraInsetTests
         float size = _camera.orthographicSize;
         float viewTop = _camObject.transform.position.y + size;
         Assert.AreEqual(-3.5f - 2f, _cameraController.GetPlayAreaBottomY(), 1e-4f);   // Band top = board bottom - traySpace
-        Assert.AreEqual(3.5f + 1f, viewTop - 0.12f * size * 2f, 1e-4f);              // HUD bottom = board top + edgeMargin
+        Assert.AreEqual(3.5f + 1.05f, viewTop - 0.12f * size * 2f, 1e-4f);           // HUD bottom = board top + paddings
     }
 
     [Test]

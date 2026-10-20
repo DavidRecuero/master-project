@@ -11,7 +11,7 @@ public class ItemPaletteTests
     private GameObject _gameObject;
     private Item _item;
     private ItemPalette _palette;
-    private Sprite _red, _blue, _hidden, _base;
+    private Sprite _red, _blue, _hidden;
 
     [SetUp]
     public void SetUp()
@@ -19,7 +19,7 @@ public class ItemPaletteTests
         _gameObject = new GameObject("Item");
         _item = _gameObject.AddComponent<Item>();
 
-        _red = MakeSprite(); _blue = MakeSprite(); _hidden = MakeSprite(); _base = MakeSprite();
+        _red = MakeSprite(); _blue = MakeSprite(); _hidden = MakeSprite();
 
         _palette = ScriptableObject.CreateInstance<ItemPalette>();
         _palette.SetData(new[]
@@ -64,7 +64,7 @@ public class ItemPaletteTests
     public void Init_WithPalette_ShowsTheColorSprite_Untinted()
     {
         _item.SetPalette(_palette);
-        _item.Init(1, Color.blue, new Vector2Int(0, 0), MakePipe(new Vector2Int(0, 0)), _base);
+        _item.Init(1, Color.blue, new Vector2Int(0, 0), MakePipe(new Vector2Int(0, 0)));
 
         Assert.AreSame(_blue, Renderer.sprite);
         Assert.AreEqual(Color.white, Renderer.color, "Palette sprites already carry their color.");
@@ -72,21 +72,21 @@ public class ItemPaletteTests
     }
 
     [Test]
-    public void Init_WithPalette_FallsBackToTint_WhenTheColorHasNoSprite()
+    public void Init_ColorMissingFromThePalette_ShowsNoSprite()
     {
         _item.SetPalette(_palette);
-        _item.Init(4, Color.green, new Vector2Int(0, 0), MakePipe(new Vector2Int(0, 0)), _base);
+        _item.Init(4, Color.green, new Vector2Int(0, 0), MakePipe(new Vector2Int(0, 0)));
 
-        Assert.AreSame(_base, Renderer.sprite);
-        Assert.AreEqual(Color.green, Renderer.color);
+        Assert.IsNull(Renderer.sprite, "Items are only drawn with palette sprites; there is no tinted fallback.");
+        Assert.AreEqual(Color.white, Renderer.color);
     }
 
     [Test]
     public void HiddenItem_ShowsHiddenSprite_ThenColorSprite_WhenRevealed()
     {
         _item.SetPalette(_palette);
-        _item.Init(new ItemSpawnData { colorId = 0, type = ItemType.Hidden }, Color.red, new Vector2Int(0, 0), MakePipe(new Vector2Int(0, 0)), _base);
-        _item.ApplyHiddenLook(Color.gray, null);
+        _item.Init(new ItemSpawnData { colorId = 0, type = ItemType.Hidden }, Color.red, new Vector2Int(0, 0), MakePipe(new Vector2Int(0, 0)));
+        _item.ApplyHiddenLook();
 
         Assert.AreSame(_hidden, Renderer.sprite, "A hidden item must not show its real color.");
 
@@ -100,7 +100,7 @@ public class ItemPaletteTests
     public void SetIdentity_WithPalette_SwapsToTheNewColorSprite()
     {
         _item.SetPalette(_palette);
-        _item.Init(0, Color.red, new Vector2Int(0, 0), MakePipe(new Vector2Int(0, 0)), _base);
+        _item.Init(0, Color.red, new Vector2Int(0, 0), MakePipe(new Vector2Int(0, 0)));
 
         _item.SetIdentity(1, Color.blue, ItemType.Normal);
 
@@ -111,7 +111,7 @@ public class ItemPaletteTests
     public void BaseScale_IsBigger_OnTheExitCell_AndBackToDefault_InTheTray()
     {
         Pipe pipe = MakePipe(new Vector2Int(0, 1), new Vector2Int(0, 0));
-        _item.Init(0, Color.red, new Vector2Int(0, 1), pipe, _base);
+        _item.Init(0, Color.red, new Vector2Int(0, 1), pipe);
 
         Assert.AreEqual(_item.defaultScale, _item.BaseScale, 1e-4f, "Inside the tube.");
 

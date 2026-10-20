@@ -4,12 +4,13 @@ using UnityEngine.UI;
 /// <summary>
 /// Blue strip at the bottom of the screen where the boosters live (design: 101 pt + the bottom safe area,
 /// with an 8 pt darker edge on top). It sizes itself in real screen pixels, so it works with any Canvas Scaler,
-/// and tells the camera and the tray how much of the screen it covers.
+/// and tells the camera how much of the screen it covers (IScreenInset).
+/// Put it on a full-width UI Image anchored to the bottom of the Canvas, as the Canvas's first child.
 /// </summary>
 [RequireComponent(typeof(RectTransform))]
 [RequireComponent(typeof(Image))]
 [ExecuteAlways]
-public class BottomBand : MonoBehaviour
+public class BottomBand : MonoBehaviour, IScreenInset
 {
     [Header("Design (iPhone 13 mockup, points)")]
     [Tooltip("Width of the mockup the sizes come from")]
@@ -27,6 +28,13 @@ public class BottomBand : MonoBehaviour
 
     private RectTransform _rect;
     private RectTransform _edge;
+    private RectTransform _content;
+
+    /// <summary>Area of the band above the safe area and below the top edge. The boosters go in here.</summary>
+    public RectTransform Content
+    {
+        get { Refresh(); return _content; }
+    }
     private Canvas _canvas;
 
     /// <summary>Points to pixels: follows the width, but never grows past the height ratio (wide screens).</summary>
@@ -49,26 +57,18 @@ public class BottomBand : MonoBehaviour
     /// <summary>Part of the screen height covered by the band (0..1).</summary>
     public float ScreenFraction => Screen.height > 0 ? Mathf.Clamp01(HeightPixelsNow / Screen.height) : 0f;
 
-    /// <summary>World Y of the band's top edge, as seen by an orthographic camera.</summary>
-    public float TopWorldY(Camera cam)
-    {
-        if (cam == null) return 0f;
-        float bottom = cam.transform.position.y - cam.orthographicSize;
-        return bottom + ScreenFraction * cam.orthographicSize * 2f;
-    }
-
     private void OnEnable()
     {
-        Apply();
+        Refresh();
     }
 
     private void Update()
     {
         // Cheap; keeps up with rotation, editor resolution changes and safe area changes
-        Apply();
+        Refresh();
     }
 
-    private void Apply()
+    public void Refresh()
     {
         _rect ??= GetComponent<RectTransform>();
         _canvas ??= GetComponentInParent<Canvas>();
@@ -92,6 +92,28 @@ public class BottomBand : MonoBehaviour
         EnsureEdge();
         float ppp = PixelsPerPoint(Screen.width, Screen.height, designWidthPt, designHeightPt);
         _edge.sizeDelta = new Vector2(0f, edgeHeightPt * ppp / scale);
+
+        EnsureContent();
+        _content.offsetMin = new Vector2(0f, Screen.safeArea.yMin / scale);
+        _content.offsetMax = new Vector2(0f, -edgeHeightPt * ppp / scale);
+    }
+
+    private void EnsureContent()
+    {
+        if (_content != null) return;
+
+        Transform found = transform.Find("Content");
+        if (found == null)
+        {
+            var go = new GameObject("Content", typeof(RectTransform));
+            go.transform.SetParent(transform, false);
+            found = go.transform;
+        }
+
+        _content = (RectTransform)found;
+        _content.anchorMin = Vector2.zero;
+        _content.anchorMax = Vector2.one;
+        _content.pivot = new Vector2(0.5f, 0.5f);
     }
 
     private void EnsureEdge()

@@ -10,8 +10,6 @@ public class TrayManager : MonoBehaviour
     [Tooltip("Distance between slot centres (world units). 0.944 = 46 pt slot + 5 pt gap, with a cell of 54 pt = 1 unit")]
     public float slotSpacing = 0.944f;
     public float moveSpeed = 15f;
-    [Tooltip("Tray centre above the camera bottom. Only used when no Bottom Band is assigned.")]
-    public float bottomPadding = 1.2f;
     public float snapDistance = 0.01f;
     public float matchDestroyDelay = 0.25f;
 
@@ -36,10 +34,8 @@ public class TrayManager : MonoBehaviour
     public float panelShadowHeight = 0.111f;
     public int panelSortingOrder = -12;
 
-    [Header("Bottom Band")]
-    [Tooltip("Optional. When set, the tray sits right above the booster band instead of using Bottom Padding.")]
-    [SerializeField] private BottomBand bottomBand;
-    [Tooltip("Gap between the band's top edge and the tray panel's shadow (world units). 0.2 = ~11 pt")]
+    [Header("Placement")]
+    [Tooltip("Gap between the bottom of the play area (top of the booster band) and the tray panel's shadow (world units). 0.2 = ~11 pt")]
     public float gapAboveBand = 0.2f;
 
     [Header("Match Feedback")]
@@ -186,16 +182,11 @@ public class TrayManager : MonoBehaviour
         GameEvents.TriggerTrayChanged();
     }
 
-    // Returns the center position of the tray based on the camera's view and bottom padding
+    // The tray rests on the bottom of the play area the camera reports (right above the booster band)
     private Vector3 GetTrayCenterPosition()
     {
-        if (bottomBand != null && Camera.main != null)
-        {
-            return new Vector3(0, CenterYAboveBand(bottomBand.TopWorldY(Camera.main)), 0);
-        }
-
-        float bottomY = _cameraController != null ? _cameraController.GetCameraBottomY() : 0f;
-        return new Vector3(0, bottomY + bottomPadding, 0);
+        float playAreaBottom = _cameraController != null ? _cameraController.GetPlayAreaBottomY() : 0f;
+        return new Vector3(0, CenterYAboveBand(playAreaBottom), 0);
     }
 
     /// <summary>Slot row Y so the panel (face + its shadow) rests gapAboveBand over the band's top edge.</summary>

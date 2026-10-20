@@ -86,6 +86,7 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
 
         Profile.Coins -= amount;
         _dataService.SaveProfile(Profile);
+        GameEvents.TriggerCoinsChanged(Profile.Coins);
         return true;
     }
 
@@ -104,6 +105,7 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
         Profile = new UserProfile();
 
         _dataService.SaveProfile(Profile);
+        GameEvents.TriggerCoinsChanged(Profile.Coins);
 
         Debug.Log($"[DataReset] CurrentLvl: {Profile.CurrentLevel}, Coins: {Profile.Coins}");
     }

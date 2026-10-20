@@ -28,7 +28,7 @@ MonoBehaviour:
   counterPost: {fileID: 21300000, guid: aafcf9d2ab79565291f661ab4c72b234, type: 3}
   counterPostDistance: 0.19
   counterPlateDistance: 0.48
-  counterFont: {fileID: 0}
+  counterFont: {fileID: 11400000, guid: a402a954d45f47f4ca6b1a8880e6e635, type: 2}
   counterFontSize: 2.6
   counterTextColor: {r: 0.13333334, g: 0.1882353, b: 0.2901961, a: 1}
   hideCounterWhenEmpty: 1

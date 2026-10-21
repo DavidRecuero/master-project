@@ -8,10 +8,16 @@ using UnityEngine.UI;
 public class MainMenuController : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private TextMeshProUGUI coinsText;
-    [SerializeField] private TextMeshProUGUI playButtonText;
+    [Tooltip("CoinsPill prefab: shows and keeps the balance in sync")]
+    [SerializeField] private CoinsView coinsView;
+    [Tooltip("LevelPill prefab above the Play button")]
+    [SerializeField] private LevelPillView levelPill;
+    [Tooltip("Name text of the ProfilePill prefab (Play Games name, or Guest)")]
     [SerializeField] private TextMeshProUGUI playerIdText;
+    [Tooltip("Photo of the ProfilePill prefab. Hidden until the Play Games picture is loaded; the default avatar shows behind it.")]
     [SerializeField] private RawImage avatarImage;
+    [Tooltip("Longer names are cut with an ellipsis so the pill never reaches the coins")]
+    [SerializeField] private int maxNameLength = 14;
     private bool _avatarLoading;
 
     private IUserDataProvider _userDataProvider;
@@ -44,17 +50,15 @@ public class MainMenuController : MonoBehaviour
             return;
         }
 
-        // Coins indicator updater
-        if (coinsText != null)
-            coinsText.text = _userDataProvider.Coins.ToString();
+        // Coins indicator: same view (and same injection) as in the gameplay HUD
+        if (coinsView != null) coinsView.Initialize(_userDataProvider);
 
-        // Current Level indicator
-        if (playButtonText != null)
-            playButtonText.text = $"Level {_userDataProvider.CurrentLevel}";
+        // Current level, on the shared LevelPill
+        if (levelPill != null) levelPill.SetLevel(_userDataProvider.CurrentLevel);
 
-        // Player identity indicator (guest id today, real Google name later)
+        // Player identity: Play Games name when signed in, guest label otherwise
         if (playerIdText != null)
-            playerIdText.text = FormatPlayerLabel(PlayerSession.DisplayName, _userDataProvider.UserId);
+            playerIdText.text = Truncate(FormatPlayerLabel(PlayerSession.DisplayName, _userDataProvider.UserId), maxNameLength);
 
         UpdateAvatar();
     }
@@ -66,6 +70,13 @@ public class MainMenuController : MonoBehaviour
 
         string shortId = userId.Length > 8 ? userId.Substring(0, 8) : userId;
         return $"Guest: {shortId}";
+    }
+
+    /// <summary>Cuts text longer than maxLength and ends it with "..." (plain dots: the static fonts only hold Latin-1).</summary>
+    public static string Truncate(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text) || maxLength <= 0 || text.Length <= maxLength) return text;
+        return text.Substring(0, Mathf.Max(1, maxLength - 3)).TrimEnd() + "...";
     }
 
     private void UpdateAvatar()

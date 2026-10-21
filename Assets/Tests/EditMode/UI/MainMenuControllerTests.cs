@@ -9,6 +9,8 @@ public class MainMenuControllerTests
     private MainMenuController _controller;
     private FakeUserDataProvider _userDataProvider;
     private FakeSceneLoader _sceneLoader;
+    private TextMeshProUGUI _coinsText;
+    private LevelPillView _levelPill;
 
     [SetUp]
     public void SetUp()
@@ -21,22 +23,22 @@ public class MainMenuControllerTests
         _userDataProvider = new FakeUserDataProvider();
         _sceneLoader = new FakeSceneLoader();
 
-        var coinsGo = new GameObject("CoinsText");
-        var playBtnGo = new GameObject("PlayButtonText");
-
+        // CoinsPill and LevelPill prefabs, reduced to their views and labels
+        var coinsGo = new GameObject("CoinsPill");
+        var pillGo = new GameObject("LevelPill");
         coinsGo.transform.SetParent(_gameObject.transform);
-        playBtnGo.transform.SetParent(_gameObject.transform);
+        pillGo.transform.SetParent(_gameObject.transform);
 
-        var coinsText = coinsGo.AddComponent<TextMeshProUGUI>();
-        var playButtonText = playBtnGo.AddComponent<TextMeshProUGUI>();
+        _coinsText = new GameObject("Amount").AddComponent<TextMeshProUGUI>();
+        _coinsText.transform.SetParent(coinsGo.transform);
+        var coinsView = coinsGo.AddComponent<CoinsView>();
+        typeof(CoinsView).GetField("amountText", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            ?.SetValue(coinsView, _coinsText);
 
-        typeof(MainMenuController)
-            .GetField("coinsText", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.SetValue(_controller, coinsText);
+        _levelPill = pillGo.AddComponent<LevelPillView>();
 
-        typeof(MainMenuController)
-            .GetField("playButtonText", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.SetValue(_controller, playButtonText);
+        SetField("coinsView", coinsView);
+        SetField("levelPill", _levelPill);
     }
 
     [TearDown]
@@ -48,23 +50,23 @@ public class MainMenuControllerTests
     }
 
     [Test]
-    public void Initialize_UpdatesCoinsAndLevelText_Correctly()
+    public void Initialize_UpdatesCoinsAndLevelPill_Correctly()
     {
-        _userDataProvider.Coins = 250;
+        _userDataProvider.Coins = 1250;
         _userDataProvider.CurrentLevel = 4;
 
         _controller.Initialize(_userDataProvider, _sceneLoader);
 
-        var coinsText = (TextMeshProUGUI)typeof(MainMenuController)
-            .GetField("coinsText", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.GetValue(_controller);
+        Assert.AreEqual("1.250", _coinsText.text);
+        Assert.AreEqual(4, _levelPill.Level);
+    }
 
-        var playBtnText = (TextMeshProUGUI)typeof(MainMenuController)
-            .GetField("playButtonText", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.GetValue(_controller);
-
-        Assert.AreEqual("250", coinsText.text);
-        Assert.AreEqual("Level 4", playBtnText.text);
+    [TestCase("Ana", 14, "Ana")]
+    [TestCase("PipeMasterSupreme2000", 14, "PipeMasterS...")]
+    [TestCase("", 14, "")]
+    public void Truncate_CutsLongNamesWithAnEllipsis(string name, int max, string expected)
+    {
+        Assert.AreEqual(expected, MainMenuController.Truncate(name, max));
     }
 
     [Test]

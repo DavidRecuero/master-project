@@ -16,7 +16,7 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI playerIdText;
     [Tooltip("Photo of the ProfilePill prefab. Hidden until the Play Games picture is loaded; the default avatar shows behind it.")]
     [SerializeField] private RawImage avatarImage;
-    [Tooltip("Longer names are cut with an ellipsis so the pill never reaches the coins")]
+    [Tooltip("Longer Play Games names are cut with \"...\" so the pill never reaches the coins. The guest label is never cut.")]
     [SerializeField] private int maxNameLength = 14;
     private bool _avatarLoading;
 
@@ -56,9 +56,9 @@ public class MainMenuController : MonoBehaviour
         // Current level, on the shared LevelPill
         if (levelPill != null) levelPill.SetLevel(_userDataProvider.CurrentLevel);
 
-        // Player identity: Play Games name when signed in, guest label otherwise
+        // Player identity: Play Games name when signed in (cut if too long), guest label otherwise
         if (playerIdText != null)
-            playerIdText.text = Truncate(FormatPlayerLabel(PlayerSession.DisplayName, _userDataProvider.UserId), maxNameLength);
+            playerIdText.text = FormatPlayerLabel(Truncate(PlayerSession.DisplayName, maxNameLength), _userDataProvider.UserId);
 
         UpdateAvatar();
     }

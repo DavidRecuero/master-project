@@ -1,0 +1,131 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6c1fce17cb2fa14bab3f1ac5e5f4fcb, type: 3}
+  m_Name: SoundLibrary
+  m_EditorClassIdentifier: GameScripts::SoundLibrary
+  entries:
+  - id: 14
+    clips:
+    - {fileID: 8300000, guid: cf58a24114855e741b1e7dfa62be3c16, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    cooldown: 0.03
+  - id: 13
+    clips:
+    - {fileID: 8300000, guid: 639a6af34a11d8249a1e2d63cf66189a, type: 3}
+    volume: 1
+    pitchRange: {x: 0.95, y: 1.05}
+    cooldown: 0.03
+  - id: 12
+    clips:
+    - {fileID: 8300000, guid: 06b3217fcf68f7149ac8a110878c2699, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    cooldown: 0.03
+  - id: 9
+    clips:
+    - {fileID: 8300000, guid: 93b57f083cd93174bb985994144e396a, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    cooldown: 0.03
+  - id: 10
+    clips:
+    - {fileID: 8300000, guid: 51a878791c4bd9b43994e1fbe7060dc6, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    cooldown: 0.03
+  - id: 11
+    clips:
+    - {fileID: 8300000, guid: 55af023eb56a2f64a84152aa2df6448c, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    cooldown: 0.03
+  - id: 6
+    clips:
+    - {fileID: 8300000, guid: a1f0f43dc0970b74b95752ab078b67d6, type: 3}
+    volume: 0.7
+    pitchRange: {x: 1, y: 1}
+    cooldown: 0.03
+  - id: 17
+    clips:
+    - {fileID: 8300000, guid: bb73c12261f824e4186b0245967ede04, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    cooldown: 0.08
+  - id: 18
+    clips:
+    - {fileID: 8300000, guid: 09a68e1e5d19ecc45b53bee595d563b5, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    cooldown: 0.03
+  - id: 15
+    clips:
+    - {fileID: 8300000, guid: 42e4b76da708e3e498cdfe7c237ce74c, type: 3}
+    volume: 0.6
+    pitchRange: {x: 1, y: 1}
+    cooldown: 0.2
+  - id: 16
+    clips:
+    - {fileID: 8300000, guid: d2b013b2c5d40674e872c4eb17ae1c85, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    cooldown: 0.03
+  - id: 2
+    clips:
+    - {fileID: 8300000, guid: a16541c16a38c1244b0439d89235e224, type: 3}
+    volume: 0.6
+    pitchRange: {x: 0.95, y: 1.05}
+    cooldown: 0.05
+  - id: 1
+    clips:
+    - {fileID: 8300000, guid: 620ef495785077140a464a6cc3b73b81, type: 3}
+    - {fileID: 8300000, guid: bb4556267761f5847b31712cc843fe8d, type: 3}
+    - {fileID: 8300000, guid: 2017f2308607bf549803ec1f13d631ea, type: 3}
+    volume: 0.8
+    pitchRange: {x: 0.96, y: 1.04}
+    cooldown: 0.03
+  - id: 5
+    clips:
+    - {fileID: 8300000, guid: 71d9d0aff7a59ba408074ae056288ec8, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    cooldown: 1
+  - id: 4
+    clips:
+    - {fileID: 8300000, guid: 9fec1c4372fe1e54c9d74e74284ce624, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    cooldown: 1
+  - id: 3
+    clips:
+    - {fileID: 8300000, guid: e529150749a27eb42a460cf4d46995d4, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    cooldown: 0.03
+  - id: 7
+    clips:
+    - {fileID: 8300000, guid: 39ac79f8dcd7bb24d98aeefc264ed909, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    cooldown: 0.03
+  - id: 8
+    clips:
+    - {fileID: 8300000, guid: 1d9f328714dcdd240bb2689dfbda1192, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+    cooldown: 0.03
+  - id: 19
+    clips:
+    - {fileID: 8300000, guid: a27a8444786bdd246ad594a72fe5f5d9, type: 3}
+    volume: 0.7
+    pitchRange: {x: 1, y: 1}
+    cooldown: 0.5

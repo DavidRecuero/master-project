@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 3715775483452138436}
   - component: {fileID: 6652876385210787620}
   - component: {fileID: 5766900715679541091}
+  - component: {fileID: -3995469378045027662}
   m_Layer: 5
   m_Name: SecondaryButton
   m_TagString: Untagged
@@ -136,6 +137,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: GameScripts::PressSink
   target: {fileID: 3056433981133288914}
   sinkDistance: 12
+--- !u!114 &-3995469378045027662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 62664495489599717}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee1add301958c514988367fde7f76f5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameScripts::ButtonSound
+  sound: 6
 --- !u!1 &2365560776527709779
 GameObject:
   m_ObjectHideFlags: 0

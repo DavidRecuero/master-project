@@ -112,6 +112,7 @@ public class BoosterManager : MonoBehaviour
             if (!_currency.TrySpendCoins(price))
             {
                 Debug.Log($"[BoosterManager] No free {type} left and not enough coins (needs {price}).");
+                GameEvents.TriggerBoosterDenied(type);
                 // TODO: here to open the coin store/rewarded ad flow
                 return false;
             }

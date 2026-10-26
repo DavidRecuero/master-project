@@ -169,6 +169,7 @@ public class FogManager : MonoBehaviour
 
         cells.Clear();
         cells.AddRange(next);
+        GameEvents.TriggerFogMoved();
 
         if (clouds.Count == cells.Count)
         {

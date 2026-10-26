@@ -571,10 +571,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f79530abaccb5b42986c7d705682ef5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: GameScripts::AudioManager
+  library: {fileID: 11400000, guid: 6108c1de82eeb3142b46bafbd2d1fc08, type: 2}
   musicGroup: {fileID: 0}
+  sfxGroup: {fileID: 0}
   crossfadeDuration: 1.2
   duckLevel: 0.25
   duckFade: 0.25
+  sfxVoices: 8
 --- !u!4 &1460091270
 Transform:
   m_ObjectHideFlags: 0

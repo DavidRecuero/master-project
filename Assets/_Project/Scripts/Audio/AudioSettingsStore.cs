@@ -1,13 +1,15 @@
 using System.Globalization;
 
 /// <summary>
-/// Reads and writes the player's audio settings (music on/off and volume).
+/// Reads and writes the player's audio settings (music and SFX on/off and volume).
 /// These are device settings, not account data, so they live in local storage and not in UserProfile.
 /// </summary>
 public class AudioSettingsStore
 {
     public const string MusicEnabledKey = "audio.music.enabled";
     public const string MusicVolumeKey = "audio.music.volume";
+    public const string SfxEnabledKey = "audio.sfx.enabled";
+    public const string SfxVolumeKey = "audio.sfx.volume";
 
     private readonly IStorageProvider _storage;
 
@@ -26,6 +28,18 @@ public class AudioSettingsStore
     {
         get => GetFloat(MusicVolumeKey, 1f);
         set => SetFloat(MusicVolumeKey, value);
+    }
+
+    public bool SfxEnabled
+    {
+        get => GetBool(SfxEnabledKey, true);
+        set => SetBool(SfxEnabledKey, value);
+    }
+
+    public float SfxVolume
+    {
+        get => GetFloat(SfxVolumeKey, 1f);
+        set => SetFloat(SfxVolumeKey, value);
     }
 
     private bool GetBool(string key, bool fallback)

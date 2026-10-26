@@ -45,6 +45,8 @@ public class TrayManager : MonoBehaviour
 
     private List<Item> trayItems = new List<Item>();
     private readonly List<GameObject> trayVisuals = new List<GameObject>();
+    // Items flying into the tray that haven't reached their slot yet (they announce the landing once)
+    private readonly HashSet<Item> arrivingItems = new HashSet<Item>();
 
     public bool IsFull => trayItems.Count >= maxCapacity;
     public IReadOnlyList<Item> TrayItems => trayItems;
@@ -175,6 +177,7 @@ public class TrayManager : MonoBehaviour
     {
         if (item == null || !trayItems.Remove(item)) return;
 
+        arrivingItems.Remove(item);
         item.StopAllCoroutines();
         _itemPool.ReleaseItem(item);
 
@@ -233,7 +236,9 @@ public class TrayManager : MonoBehaviour
         if (IsFull) return false;
 
         // Hidden items show their real color as soon as they land in the tray, before grouping and matching (both rely on colorID)
+        bool wasHidden = item.IsHidden;
         item.Reveal();
+        if (wasHidden) GameEvents.TriggerHiddenItemRevealed(item);
 
         Collider2D col = item.GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
@@ -251,6 +256,7 @@ public class TrayManager : MonoBehaviour
         int insertIndex = (lastMatchIndex != -1) ? lastMatchIndex + 1 : trayItems.Count;
 
         trayItems.Insert(insertIndex, item);
+        arrivingItems.Add(item);
 
         UpdateTrayLayout();
         CheckForMatches(item.colorID);
@@ -292,7 +298,12 @@ public class TrayManager : MonoBehaviour
             yield return null;
         }
 
-        if (item != null) item.transform.position = targetPos;
+        if (item == null) yield break;
+
+        item.transform.position = targetPos;
+
+        // Re-layouts restart this coroutine for every item; only the first arrival of a new item counts
+        if (arrivingItems.Remove(item)) GameEvents.TriggerItemLandedInTray(item);
     }
 
     // Checks for matches of 3 or more items of the same color in the tray and handles their removal
@@ -302,6 +313,7 @@ public class TrayManager : MonoBehaviour
 
         if (matchingItems.Count >= matchSize)
         {
+            GameEvents.TriggerMatchCompleted(colorIDToCheck);
             StartCoroutine(HandleMatch3Visuals(matchingItems));
         }
     }
@@ -309,7 +321,11 @@ public class TrayManager : MonoBehaviour
     // Handles the visual effects and removal of matched items from the tray
     private IEnumerator HandleMatch3Visuals(List<Item> matchedItems)
     {
-        foreach (Item item in matchedItems) trayItems.Remove(item);
+        foreach (Item item in matchedItems)
+        {
+            trayItems.Remove(item);
+            arrivingItems.Remove(item);   // The match sound covers it, no landing sound on top
+        }
 
         if (popOnMatch) yield return PopItems(matchedItems, matchDestroyDelay);
         else yield return new WaitForSeconds(matchDestroyDelay);

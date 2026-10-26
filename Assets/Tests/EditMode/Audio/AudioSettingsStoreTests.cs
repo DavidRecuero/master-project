@@ -15,10 +15,12 @@ public class AudioSettingsStoreTests
     }
 
     [Test]
-    public void Defaults_MusicOnAtFullVolume()
+    public void Defaults_EverythingOnAtFullVolume()
     {
         Assert.IsTrue(_store.MusicEnabled);
         Assert.AreEqual(1f, _store.MusicVolume);
+        Assert.IsTrue(_store.SfxEnabled);
+        Assert.AreEqual(1f, _store.SfxVolume);
     }
 
     [Test]
@@ -30,6 +32,16 @@ public class AudioSettingsStoreTests
     }
 
     [Test]
+    public void SfxEnabled_IsPersisted_IndependentlyOfMusic()
+    {
+        _store.SfxEnabled = false;
+
+        var reloaded = new AudioSettingsStore(_storage);
+        Assert.IsFalse(reloaded.SfxEnabled);
+        Assert.IsTrue(reloaded.MusicEnabled);
+    }
+
+    [Test]
     public void MusicVolume_IsPersistedAndClamped()
     {
         _store.MusicVolume = 0.35f;
@@ -37,6 +49,16 @@ public class AudioSettingsStoreTests
 
         _store.MusicVolume = 3f;
         Assert.AreEqual(1f, _store.MusicVolume);
+    }
+
+    [Test]
+    public void SfxVolume_IsPersistedAndClamped()
+    {
+        _store.SfxVolume = 0.8f;
+        Assert.AreEqual(0.8f, new AudioSettingsStore(_storage).SfxVolume, 0.0001f);
+
+        _store.SfxVolume = -1f;
+        Assert.AreEqual(0f, _store.SfxVolume);
     }
 
     [Test]

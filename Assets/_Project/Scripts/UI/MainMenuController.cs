@@ -18,15 +18,22 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private RawImage avatarImage;
     [Tooltip("Longer Play Games names are cut with \"...\" so the pill never reaches the coins. The guest label is never cut.")]
     [SerializeField] private int maxNameLength = 14;
+
+    [Header("Popups")]
+    [Tooltip("SettingsPopup prefab, opened by the Settings button")]
+    [SerializeField] private SettingsPopup settingsPopupPrefab;
+
     private bool _avatarLoading;
 
     private IUserDataProvider _userDataProvider;
     private ISceneLoader _sceneLoader;
+    private IPopupService _popupService;
 
-    public void Initialize(IUserDataProvider userDataProvider, ISceneLoader sceneLoader)
+    public void Initialize(IUserDataProvider userDataProvider, ISceneLoader sceneLoader, IPopupService popupService = null)
     {
         _userDataProvider = userDataProvider;
         _sceneLoader = sceneLoader;
+        if (popupService != null) _popupService = popupService;
         UpdateUI();
     }
 
@@ -126,5 +133,19 @@ public class MainMenuController : MonoBehaviour
 
         //Loading "Level" scene
         _sceneLoader?.LoadScene(2);
+    }
+
+    // Settings button function
+    public void OnSettingsButtonClicked()
+    {
+        // Looked up on click: the PopupService comes from the Boot scene
+        IPopupService popups = _popupService ?? PopupService.Instance;
+        if (popups == null)
+        {
+            Debug.LogWarning("[MainMenu] No PopupService found. Start from Boot scene.");
+            return;
+        }
+
+        popups.Open(settingsPopupPrefab);
     }
 }

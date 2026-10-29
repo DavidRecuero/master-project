@@ -351,7 +351,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GameScripts::CreditsPopup
   bodyText: {fileID: 2861931779513590093}
-  creditsFile: {fileID: 0}
+  creditsFile:
+    m_TableReference:
+      m_TableCollectionName: GUID:d699b33cbcc1ba742aa2917fffbb8a86
+    m_TableEntryReference:
+      m_KeyId: 20022460416
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
 --- !u!114 &5274150031484086950
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -593,50 +600,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '<b>PIPE MESS</b>
-
-    A game by David Recuero
-
-
-    <b>MUSIC</b>
-
-    Music
-    by Matthew Pablo
-
-    www.matthewpablo.com
-
-    "Pleasant Creek" (main menu)
-
-    "Riverside
-    Ride" (gameplay)
-
-    Licensed under CC-BY 3.0
-
-    creativecommons.org/licenses/by/3.0
-
-    From
-    OpenGameArt.org
-
-
-    <b>FONTS</b>
-
-    Lilita One by Juan Montoreano
-
-    Nunito
-    by Vernon Adams, Cyreal
-
-    and Jacques Le Bailly
-
-    SIL Open Font License
-    1.1
-
-
-    <b>LIBRARIES</b>
-
-    Google Play Games plugin for Unity
-
-    Apache
-    License 2.0'
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 07c0ddc136e66ec4f87b53258ced1efa, type: 2}
   m_sharedMaterial: {fileID: -313167150961172119, guid: 07c0ddc136e66ec4f87b53258ced1efa, type: 2}

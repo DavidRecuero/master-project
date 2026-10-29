@@ -64,8 +64,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b302d609b8d581543ba17448164c5404, type: 2}
   - {fileID: 11400000, guid: efca88558086c604e990b0252f5261d7, type: 2}
   - {fileID: 11400000, guid: 542c09dbab05be54ea3f571b35e4b919, type: 2}
+  - {fileID: 11400000, guid: abc94425f40249e4abce218e786867c6, type: 2}
+  - {fileID: 11400000, guid: 8b1bed0b9aa66e743a9f0fd807ca5f35, type: 2}
   - {fileID: 11400000, guid: 6052df0bc302a09428d18ab8099e0c51, type: 2}
+  - {fileID: 11400000, guid: fa28857aab74f594e85b7670ead87acf, type: 2}
   - {fileID: 11400000, guid: afdde3da160da2e4abfd43717827931c, type: 2}
+  - {fileID: 11400000, guid: cb183afc327f27a46855bc1731c552a4, type: 2}
+  - {fileID: 11400000, guid: e18a9f6bdbb1bfe46afc67bc1161de31, type: 2}
+  - {fileID: 11400000, guid: f7a8e7c1ddcfdf446b2305860f4314ac, type: 2}
   - {fileID: 11400000, guid: cd671dc411d299e4e8591710bca9b513, type: 2}
   m_BuildSettings:
     m_LogResourceManagerExceptions: 1

@@ -1,0 +1,21 @@
+<b>PIPE MESS</b>
+Un juego de David Recuero
+
+<b>MÚSICA</b>
+Música de Matthew Pablo
+www.matthewpablo.com
+"Pleasant Creek"
+"Riverside Ride"
+Con licencia CC-BY 3.0
+creativecommons.org/licenses/by/3.0
+De OpenGameArt.org
+
+<b>TIPOGRAFÍAS</b>
+Lilita One, de Juan Montoreano
+Nunito, de Vernon Adams, Cyreal
+y Jacques Le Bailly
+SIL Open Font License 1.1
+
+<b>BIBLIOTECAS</b>
+Google Play Games plugin for Unity
+Apache License 2.0

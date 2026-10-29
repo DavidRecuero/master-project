@@ -1,12 +1,15 @@
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using TMPro;
+using UnityEditor.Localization;
 using UnityEngine;
 using UnityEngine.TestTools;
 
 public class CreditsPopupTests
 {
-    private const string CreditsFilePath = "_Project/Data/Credits.txt";
+    private const string CreditsFolder = "_Project/Data/Credits";
 
     private GameObject _serviceGo;
     private PopupService _service;
@@ -35,9 +38,9 @@ public class CreditsPopupTests
     public void Open_ShowsTheTextOfTheAssignedFile()
     {
         var file = new TextAsset("<b>MUSIC</b>\nSomeone");
-        PopupTestUtils.SetField(_prefab, "creditsFile", file);
 
         CreditsPopup credits = _service.Open(_prefab);
+        credits.Initialize(file);
 
         Assert.AreEqual("<b>MUSIC</b>\nSomeone", credits.GetComponentInChildren<TextMeshProUGUI>().text);
         Object.DestroyImmediate(file);
@@ -60,30 +63,41 @@ public class CreditsPopupTests
         Assert.AreEqual(string.Empty, CreditsPopup.Normalize(null));
     }
 
-    // ---------- The real credits file ----------
+    // ---------- The real credits files (one per language) ----------
 
-    private static string ReadCreditsFile()
+    private static string CreditsPath(string language) =>
+        Path.Combine(Application.dataPath, CreditsFolder, $"Credits_{language}.txt");
+
+    private static IEnumerable<string> ProjectLanguages() =>
+        LocalizationEditorSettings.GetLocales().Select(l => l.Identifier.Code);
+
+    [Test]
+    public void EveryLanguage_HasACreditsFile()
     {
-        string path = Path.Combine(Application.dataPath, CreditsFilePath);
-        Assert.IsTrue(File.Exists(path), $"Credits file missing: Assets/{CreditsFilePath}");
-        return File.ReadAllText(path);
+        foreach (string language in ProjectLanguages())
+            Assert.IsTrue(File.Exists(CreditsPath(language)), $"Credits file missing: Assets/{CreditsFolder}/Credits_{language}.txt");
     }
 
     [Test]
-    public void CreditsFile_AttributesTheCcByMusic()
+    public void EveryCreditsFile_AttributesTheCcByMusic()
     {
-        // CC-BY requires the author and the license to be shown
-        string text = ReadCreditsFile();
-
-        StringAssert.Contains("Matthew Pablo", text);
-        StringAssert.Contains("CC-BY 3.0", text);
+        // CC-BY requires the author and the license to be shown, whatever the language
+        foreach (string language in ProjectLanguages())
+        {
+            string text = File.ReadAllText(CreditsPath(language));
+            StringAssert.Contains("Matthew Pablo", text, language);
+            StringAssert.Contains("CC-BY 3.0", text, language);
+        }
     }
 
     [Test]
-    public void CreditsFile_UsesOnlyLatin1()
+    public void EveryCreditsFile_UsesOnlyLatin1()
     {
         // The static fonts only hold Latin-1: anything else would show as a missing glyph
-        foreach (char c in ReadCreditsFile())
-            Assert.LessOrEqual((int)c, 0xFF, $"'{c}' is not Latin-1");
+        foreach (string language in ProjectLanguages())
+        {
+            foreach (char c in File.ReadAllText(CreditsPath(language)))
+                Assert.LessOrEqual((int)c, 0xFF, $"'{c}' is not Latin-1 ({language})");
+        }
     }
 }

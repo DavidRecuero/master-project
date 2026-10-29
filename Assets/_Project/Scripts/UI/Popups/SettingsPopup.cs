@@ -1,14 +1,20 @@
-using TMPro;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Components;
 using UnityEngine.UI;
 
 /// <summary>
-/// Settings popup: music and SFX on/off, the button that opens the credits on top,
-/// and a footer with the game version and the player ID (for support and bug reports).
+/// Settings popup: music and SFX on/off, the language selector, the button that opens the credits
+/// on top, and a footer with the game version and the player ID (for support and bug reports).
 /// It only talks to IAudioService, which already saves the audio choices on the device.
+/// The language selector is its own component (LanguageDropdown) inside the popup.
+/// Every fixed label of the prefab uses a LocalizeStringEvent; only the footer is filled from here.
 /// </summary>
 public class SettingsPopup : PopupView
 {
+    public const string VersionVariable = "version";
+    public const string IdVariable = "id";
+
     [Header("Audio")]
     [SerializeField] private Toggle musicToggle;
     [SerializeField] private Toggle sfxToggle;
@@ -19,8 +25,10 @@ public class SettingsPopup : PopupView
     [SerializeField] private CreditsPopup creditsPopupPrefab;
 
     [Header("Info")]
-    [Tooltip("Small text at the bottom: version and player ID")]
-    [SerializeField] private TextMeshProUGUI infoText;
+    [Tooltip("LocalizeStringEvent of the small text at the bottom. Leave its String Reference empty: the popup sets it.")]
+    [SerializeField] private LocalizeStringEvent infoLabel;
+    [Tooltip("UI/settings.info, Smart String with {version} and {id}")]
+    [SerializeField] private LocalizedString infoText = new LocalizedString();
 
     private IAudioService _audio;
     private IUserDataProvider _userData;
@@ -67,17 +75,17 @@ public class SettingsPopup : PopupView
             if (sfxToggle != null) sfxToggle.SetIsOnWithoutNotify(_audio.SfxEnabled);
         }
 
-        if (infoText != null)
-            infoText.text = FormatInfo(_version ?? Application.version, _userData?.UserId);
+        // The full ID is shown (not cut) so the player can send it with a bug report.
+        // Variables first, then the string: it is never formatted without them.
+        infoText.SetVariable(VersionVariable, SafeValue(_version ?? Application.version));
+        infoText.SetVariable(IdVariable, SafeValue(_userData?.UserId));
+
+        if (infoLabel != null && !ReferenceEquals(infoLabel.StringReference, infoText))
+            infoLabel.StringReference = infoText;
     }
 
-    /// <summary>Footer text. The full ID is shown (not cut) so the player can send it with a bug report.</summary>
-    public static string FormatInfo(string version, string userId)
-    {
-        string v = string.IsNullOrEmpty(version) ? "-" : version;
-        string id = string.IsNullOrEmpty(userId) ? "-" : userId;
-        return $"Version {v}\nID: {id}";
-    }
+    /// <summary>A missing value shows as a dash, never as an empty gap.</summary>
+    public static string SafeValue(string value) => string.IsNullOrEmpty(value) ? "-" : value;
 
     public void OnMusicToggled(bool isOn)
     {

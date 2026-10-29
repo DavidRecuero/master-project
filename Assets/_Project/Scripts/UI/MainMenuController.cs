@@ -4,9 +4,13 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Components;
 
 public class MainMenuController : MonoBehaviour
 {
+    private const string GuestIdVariable = "id";
+
     [Header("UI References")]
     [Tooltip("CoinsPill prefab: shows and keeps the balance in sync")]
     [SerializeField] private CoinsView coinsView;
@@ -14,6 +18,14 @@ public class MainMenuController : MonoBehaviour
     [SerializeField] private LevelPillView levelPill;
     [Tooltip("Name text of the ProfilePill prefab (Play Games name, or Guest)")]
     [SerializeField] private TextMeshProUGUI playerIdText;
+    [Tooltip("LocalizeStringEvent on that same text. Used for the guest label; turned off while it shows the Play Games name (a name is never translated).")]
+    [SerializeField] private LocalizeStringEvent playerLabel;
+
+    [Header("Texts (UI table)")]
+    [Tooltip("menu.guest: guest without an ID")]
+    [SerializeField] private LocalizedString guestLabel = new LocalizedString();
+    [Tooltip("menu.guest_id: guest with the start of its ID, Smart String with {id}")]
+    [SerializeField] private LocalizedString guestWithIdLabel = new LocalizedString();
     [Tooltip("Photo of the ProfilePill prefab. Hidden until the Play Games picture is loaded; the default avatar shows behind it.")]
     [SerializeField] private RawImage avatarImage;
     [Tooltip("Longer Play Games names are cut with \"...\" so the pill never reaches the coins. The guest label is never cut.")]
@@ -63,20 +75,46 @@ public class MainMenuController : MonoBehaviour
         // Current level, on the shared LevelPill
         if (levelPill != null) levelPill.SetLevel(_userDataProvider.CurrentLevel);
 
-        // Player identity: Play Games name when signed in (cut if too long), guest label otherwise
-        if (playerIdText != null)
-            playerIdText.text = FormatPlayerLabel(Truncate(PlayerSession.DisplayName, maxNameLength), _userDataProvider.UserId);
+        UpdatePlayerLabel(PlayerSession.DisplayName, _userDataProvider.UserId);
 
         UpdateAvatar();
     }
 
-    public static string FormatPlayerLabel(string displayName, string userId)
+    /// <summary>
+    /// Play Games name when signed in (cut if too long), shown as it is.
+    /// Otherwise the translated guest label, with the start of the ID when there is one.
+    /// </summary>
+    private void UpdatePlayerLabel(string displayName, string userId)
     {
-        if (!string.IsNullOrEmpty(displayName)) return displayName;
-        if (string.IsNullOrEmpty(userId)) return "Guest";
+        string shownName = Truncate(displayName, maxNameLength);
+        if (!string.IsNullOrEmpty(shownName))
+        {
+            if (playerLabel != null) playerLabel.enabled = false;   // so it doesn't write the guest label over the name
+            if (playerIdText != null) playerIdText.text = shownName;
+            return;
+        }
 
-        string shortId = userId.Length > 8 ? userId.Substring(0, 8) : userId;
-        return $"Guest: {shortId}";
+        if (playerLabel == null) return;
+
+        string shortId = ShortGuestId(userId);
+        if (shortId == null)
+        {
+            playerLabel.StringReference = guestLabel;
+        }
+        else
+        {
+            guestWithIdLabel.SetVariable(GuestIdVariable, shortId);
+            playerLabel.StringReference = guestWithIdLabel;
+        }
+
+        playerLabel.enabled = true;
+    }
+
+    /// <summary>First 8 characters of the ID (enough to tell guests apart), or null if there is no ID.</summary>
+    public static string ShortGuestId(string userId)
+    {
+        if (string.IsNullOrEmpty(userId)) return null;
+        return userId.Length > 8 ? userId.Substring(0, 8) : userId;
     }
 
     /// <summary>Cuts text longer than maxLength and ends it with "..." (plain dots: the static fonts only hold Latin-1).</summary>

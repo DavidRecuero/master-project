@@ -2,15 +2,17 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Components;
 
 public class UIManager : MonoBehaviour
 {
     [Header("Result Popup")]
     public GameObject resultPanel;
-    public TextMeshProUGUI resultText;
-    [Tooltip("Optional line under the title")]
-    public TextMeshProUGUI resultSubtitleText;
+    [Tooltip("LocalizeStringEvent of the title. Leave its String Reference empty: it is set when the level ends.")]
+    public LocalizeStringEvent resultTitleLabel;
+    [Tooltip("Optional line under the title (LocalizeStringEvent, String Reference empty)")]
+    public LocalizeStringEvent resultSubtitleLabel;
     [Tooltip("Shown only when the level is cleared (the three drops)")]
     public GameObject resultWinArt;
     [Tooltip("Shown only when the level is lost (the full grey tray)")]
@@ -20,19 +22,26 @@ public class UIManager : MonoBehaviour
 
     [Header("Buttons")]
     public Button playButton;
-    public TextMeshProUGUI playButtonText;
+    [Tooltip("LocalizeStringEvent of the button text (String Reference empty)")]
+    public LocalizeStringEvent playButtonLabel;
 
     [Header("Indicators")]
     [Tooltip("Every LevelPill that shows the current level (gameplay HUD, result popup)")]
     public LevelPillView[] levelPills;
 
-    [Header("Text Configuration")]
-    public string winTitleText = "LEVEL CLEARED!";
-    public string loseTitleText = "OUT OF SPACE!";
-    public string nextLevelButtonLabel = "NEXT LEVEL";
-    public string retryButtonLabel = "RETRY";
-    public string winSubtitleText = "Every pipe is empty. Great job!";
-    public string loseSubtitleText = "The tray is full";
+    [Header("Texts (UI table)")]
+    [Tooltip("result.win_title")]
+    public LocalizedString winTitle = new LocalizedString();
+    [Tooltip("result.win_subtitle")]
+    public LocalizedString winSubtitle = new LocalizedString();
+    [Tooltip("result.next_level")]
+    public LocalizedString nextLevelButton = new LocalizedString();
+    [Tooltip("result.lose_title")]
+    public LocalizedString loseTitle = new LocalizedString();
+    [Tooltip("result.lose_subtitle")]
+    public LocalizedString loseSubtitle = new LocalizedString();
+    [Tooltip("result.retry")]
+    public LocalizedString retryButton = new LocalizedString();
 
     private Action _onPlayAgainAction;
     private int _currentLevelIndex = 1;
@@ -106,19 +115,20 @@ public class UIManager : MonoBehaviour
         if (resultWinArt != null) resultWinArt.SetActive(won);
         if (resultLoseArt != null) resultLoseArt.SetActive(!won);
 
-        if (won) SetupResultScreen(winTitleText, winSubtitleText, nextLevelButtonLabel, () => _onPlayAgainAction?.Invoke());
-        else SetupResultScreen(loseTitleText, loseSubtitleText, retryButtonLabel, () => _onPlayAgainAction?.Invoke());
+        if (won) SetupResultScreen(winTitle, winSubtitle, nextLevelButton, () => _onPlayAgainAction?.Invoke());
+        else SetupResultScreen(loseTitle, loseSubtitle, retryButton, () => _onPlayAgainAction?.Invoke());
     }
 
     /// <summary>
-    /// Configures the final panel, updates the text button and assigns its action dynamically
+    /// Configures the final panel, points its texts to the right entries of the UI table
+    /// (the LocalizeStringEvents translate them and follow language changes) and assigns the button action
     /// </summary>
-    private void SetupResultScreen(string title, string subtitle, string buttonLabel, UnityEngine.Events.UnityAction buttonAction)
+    private void SetupResultScreen(LocalizedString title, LocalizedString subtitle, LocalizedString buttonLabel, UnityEngine.Events.UnityAction buttonAction)
     {
         if (resultPanel != null) resultPanel.SetActive(true);
-        if (resultText != null) resultText.text = title;
-        if (resultSubtitleText != null) resultSubtitleText.text = subtitle;
-        if (playButtonText != null) playButtonText.text = buttonLabel;
+        if (resultTitleLabel != null) resultTitleLabel.StringReference = title;
+        if (resultSubtitleLabel != null) resultSubtitleLabel.StringReference = subtitle;
+        if (playButtonLabel != null) playButtonLabel.StringReference = buttonLabel;
 
         if (playButton != null)
         {

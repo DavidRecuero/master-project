@@ -2,24 +2,30 @@ using System.Reflection;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Localization.Components;
 
-/// <summary>Shared menu widgets: LevelPill text and the PrimaryButton animation curves.</summary>
+/// <summary>Shared menu widgets: LevelPill level and the PrimaryButton animation curves.</summary>
 public class MenuWidgetsTests
 {
     [Test]
     public void LevelPill_ShowsTheLevel_AndNeverBelowOne()
     {
         var go = new GameObject("LevelPill");
-        var label = new GameObject("Label").AddComponent<TextMeshProUGUI>();
-        label.transform.SetParent(go.transform);
+        var labelGo = new GameObject("Label");
+        labelGo.transform.SetParent(go.transform);
+        labelGo.AddComponent<TextMeshProUGUI>();
+        var label = labelGo.AddComponent<LocalizeStringEvent>();
         var pill = go.AddComponent<LevelPillView>();
         typeof(LevelPillView).GetField("label", BindingFlags.NonPublic | BindingFlags.Instance)?.SetValue(pill, label);
 
         pill.SetLevel(12);
-        Assert.AreEqual("<size=62%>LEVEL</size> 12", label.text);
         Assert.AreEqual(12, pill.Level);
+        Assert.AreEqual(12, label.StringReference.GetVariableValue(LevelPillView.LevelVariable), "{level} of common.level");
 
-        Assert.AreEqual("LEVEL 1", LevelPillView.Format("LEVEL {0}", 0));
+        pill.SetLevel(0);
+        Assert.AreEqual(1, pill.Level);
+        Assert.AreEqual(1, label.StringReference.GetVariableValue(LevelPillView.LevelVariable));
+
         Object.DestroyImmediate(go);
     }
 

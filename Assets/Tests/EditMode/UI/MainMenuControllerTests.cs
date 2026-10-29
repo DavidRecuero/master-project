@@ -1,6 +1,8 @@
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Components;
 using UnityEngine.UI;
 
 public class MainMenuControllerTests
@@ -86,43 +88,69 @@ public class MainMenuControllerTests
             ?.SetValue(_controller, value);
     }
 
-    [TestCase("Ana", "abc", "Ana")]
-    [TestCase("", "1234567890", "Guest: 12345678")]
-    [TestCase("", "short", "Guest: short")]
-    [TestCase("", "", "Guest")]
-    [TestCase(null, null, "Guest")]
-    public void FormatPlayerLabel_ReturnsExpectedText(string displayName, string userId, string expected)
+    [TestCase("1234567890", "12345678")]
+    [TestCase("short", "short")]
+    [TestCase("", null)]
+    [TestCase(null, null)]
+    public void ShortGuestId_KeepsTheFirstEightCharacters(string userId, string expected)
     {
-        Assert.AreEqual(expected, MainMenuController.FormatPlayerLabel(displayName, userId));
+        Assert.AreEqual(expected, MainMenuController.ShortGuestId(userId));
+    }
+
+    private (TextMeshProUGUI text, LocalizeStringEvent label) AddPlayerLabel()
+    {
+        var go = new GameObject("PlayerIdText");
+        go.transform.SetParent(_gameObject.transform);
+        var text = go.AddComponent<TextMeshProUGUI>();
+        var label = go.AddComponent<LocalizeStringEvent>();
+        SetField("playerIdText", text);
+        SetField("playerLabel", label);
+        return (text, label);
+    }
+
+    private LocalizedString GetLocalized(string name)
+    {
+        return (LocalizedString)typeof(MainMenuController)
+            .GetField(name, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            ?.GetValue(_controller);
     }
 
     [Test]
     public void Initialize_ShowsDisplayName_WhenSignedIn()
     {
-        var go = new GameObject("PlayerIdText");
-        go.transform.SetParent(_gameObject.transform);
-        var text = go.AddComponent<TextMeshProUGUI>();
-        SetField("playerIdText", text);
+        var (text, label) = AddPlayerLabel();
         PlayerSession.Set("Ana", "");
         _userDataProvider.UserId = "a_8473080197345671757";
 
         _controller.Initialize(_userDataProvider, _sceneLoader);
 
         Assert.AreEqual("Ana", text.text);
+        Assert.IsFalse(label.enabled, "A Play Games name is never translated");
     }
 
     [Test]
-    public void Initialize_ShowsGuestLabel_WhenThereIsNoDisplayName()
+    public void Initialize_ShowsGuestLabelWithId_WhenThereIsNoDisplayName()
     {
-        var go = new GameObject("PlayerIdText");
-        go.transform.SetParent(_gameObject.transform);
-        var text = go.AddComponent<TextMeshProUGUI>();
-        SetField("playerIdText", text);
+        var (_, label) = AddPlayerLabel();
         _userDataProvider.UserId = "abcdefghijk";
 
         _controller.Initialize(_userDataProvider, _sceneLoader);
 
-        Assert.AreEqual("Guest: abcdefgh", text.text);
+        LocalizedString guestWithId = GetLocalized("guestWithIdLabel");
+        Assert.IsTrue(label.enabled);
+        Assert.AreSame(guestWithId, label.StringReference);
+        Assert.AreEqual("abcdefgh", guestWithId.GetVariableValue("id"));
+    }
+
+    [Test]
+    public void Initialize_ShowsPlainGuestLabel_WhenThereIsNoId()
+    {
+        var (_, label) = AddPlayerLabel();
+        _userDataProvider.UserId = "";
+
+        _controller.Initialize(_userDataProvider, _sceneLoader);
+
+        Assert.AreSame(GetLocalized("guestLabel"), label.StringReference);
     }
 
     [Test]

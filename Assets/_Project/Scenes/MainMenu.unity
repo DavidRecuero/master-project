@@ -762,6 +762,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+--- !u!114 &251771887 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3561914028306857844, guid: 92a1945a20c47824d8f852d387a8ac13, type: 3}
+  m_PrefabInstance: {fileID: 251771883}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56eb0353ae6e5124bb35b17aff880f16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Components.LocalizeStringEvent
 --- !u!1 &354575643
 GameObject:
   m_ObjectHideFlags: 0
@@ -874,8 +885,8 @@ RectTransform:
   - {fileID: 1764672404}
   m_Father: {fileID: 185282990}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.04028436}
-  m_AnchorMax: {x: 1, y: 0.9443128}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -2348,8 +2359,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 39}
-  m_SizeDelta: {x: 0, y: -126}
+  m_AnchoredPosition: {x: 0, y: -12}
+  m_SizeDelta: {x: 0, y: -24}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1877504803
 GameObject:
@@ -2836,7 +2847,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 405}
+  m_SizeDelta: {x: 0, y: 303}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &2090380680
 MonoBehaviour:
@@ -3096,9 +3107,31 @@ MonoBehaviour:
   coinsView: {fileID: 1955500652}
   levelPill: {fileID: 1344907958}
   playerIdText: {fileID: 251771886}
+  playerLabel: {fileID: 251771887}
+  guestLabel:
+    m_TableReference:
+      m_TableCollectionName: GUID:c09834c581dc3604b84448cb41c7a534
+    m_TableEntryReference:
+      m_KeyId: 102285344770
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  guestWithIdLabel:
+    m_TableReference:
+      m_TableCollectionName: GUID:c09834c581dc3604b84448cb41c7a534
+    m_TableEntryReference:
+      m_KeyId: 102285344771
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
   avatarImage: {fileID: 251771884}
   maxNameLength: 14
   settingsPopupPrefab: {fileID: 9111852422277453354, guid: 4e679e917b5dc7b499cd9459fbc5f4d6, type: 3}
+  references:
+    version: 2
+    RefIds: []
 --- !u!4 &2126883419
 Transform:
   m_ObjectHideFlags: 0

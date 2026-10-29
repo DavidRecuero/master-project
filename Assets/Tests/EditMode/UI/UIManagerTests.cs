@@ -1,7 +1,8 @@
-﻿using System.Reflection;
+using System.Reflection;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Localization.Components;
 using UnityEngine.UI;
 
 public class UIManagerTests
@@ -9,7 +10,7 @@ public class UIManagerTests
     private GameObject _gameObject;
     private UIManager _uiManager;
     private LevelPillView _levelPill;
-    private TextMeshProUGUI _levelLabel;
+    private LocalizeStringEvent _levelLabel;
 
     [SetUp]
     public void SetUp()
@@ -21,23 +22,19 @@ public class UIManagerTests
         panel.transform.SetParent(_gameObject.transform);
         _uiManager.resultPanel = panel;
 
-        _uiManager.resultText = new GameObject("ResultText").AddComponent<TextMeshProUGUI>();
-        _uiManager.playButtonText = new GameObject("ButtonText").AddComponent<TextMeshProUGUI>();
-        _levelLabel = new GameObject("LevelText").AddComponent<TextMeshProUGUI>();
+        _uiManager.resultTitleLabel = AddLabel("ResultText");
+        _uiManager.playButtonLabel = AddLabel("ButtonText");
+        _levelLabel = AddLabel("LevelText");
         _levelPill = new GameObject("LevelPill").AddComponent<LevelPillView>();
         typeof(LevelPillView).GetField("label", BindingFlags.NonPublic | BindingFlags.Instance)?.SetValue(_levelPill, _levelLabel);
         _uiManager.levelPills = new[] { _levelPill };
-        _uiManager.resultSubtitleText = new GameObject("Subtitle").AddComponent<TextMeshProUGUI>();
+        _uiManager.resultSubtitleLabel = AddLabel("Subtitle");
         _uiManager.resultWinArt = new GameObject("WinArt");
         _uiManager.resultLoseArt = new GameObject("LoseArt");
         _uiManager.resultDelay = 0f;   // Coroutines don't run in EditMode tests
         _uiManager.playButton = new GameObject("PlayButton").AddComponent<Button>();
 
-        _uiManager.resultText.transform.SetParent(_gameObject.transform);
-        _uiManager.playButtonText.transform.SetParent(_gameObject.transform);
-        _levelLabel.transform.SetParent(_gameObject.transform);
         _levelPill.transform.SetParent(_gameObject.transform);
-        _uiManager.resultSubtitleText.transform.SetParent(_gameObject.transform);
         _uiManager.resultWinArt.transform.SetParent(_gameObject.transform);
         _uiManager.resultLoseArt.transform.SetParent(_gameObject.transform);
         _uiManager.playButton.transform.SetParent(_gameObject.transform);
@@ -45,6 +42,15 @@ public class UIManagerTests
         typeof(UIManager)
             .GetMethod("OnEnable", BindingFlags.NonPublic | BindingFlags.Instance)
             ?.Invoke(_uiManager, null);
+    }
+
+    /// <summary>A TMP text with its LocalizeStringEvent, as in the ResultPopup prefab.</summary>
+    private LocalizeStringEvent AddLabel(string name)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(_gameObject.transform);
+        go.AddComponent<TextMeshProUGUI>();
+        return go.AddComponent<LocalizeStringEvent>();
     }
 
     [TearDown]
@@ -66,7 +72,7 @@ public class UIManagerTests
         _uiManager.Initialize(5, null);
 
         Assert.AreEqual(5, _levelPill.Level);
-        Assert.AreEqual(LevelPillView.Format("<size=62%>LEVEL</size> {0}", 5), _levelLabel.text);
+        Assert.AreEqual(5, _levelLabel.StringReference.GetVariableValue(LevelPillView.LevelVariable));
     }
 
     [Test]
@@ -77,11 +83,11 @@ public class UIManagerTests
         GameEvents.TriggerLevelCleared();
 
         Assert.IsTrue(_uiManager.resultPanel.activeSelf);
-        Assert.AreEqual(_uiManager.winTitleText, _uiManager.resultText.text);
-        Assert.AreEqual(_uiManager.winSubtitleText, _uiManager.resultSubtitleText.text);
+        Assert.AreSame(_uiManager.winTitle, _uiManager.resultTitleLabel.StringReference);
+        Assert.AreSame(_uiManager.winSubtitle, _uiManager.resultSubtitleLabel.StringReference);
         Assert.IsTrue(_uiManager.resultWinArt.activeSelf, "Win art on");
         Assert.IsFalse(_uiManager.resultLoseArt.activeSelf, "Lose art off");
-        Assert.AreEqual(_uiManager.nextLevelButtonLabel, _uiManager.playButtonText.text);
+        Assert.AreSame(_uiManager.nextLevelButton, _uiManager.playButtonLabel.StringReference);
     }
 
     [Test]
@@ -92,11 +98,11 @@ public class UIManagerTests
         GameEvents.TriggerLevelFailed();
 
         Assert.IsTrue(_uiManager.resultPanel.activeSelf);
-        Assert.AreEqual(_uiManager.loseTitleText, _uiManager.resultText.text);
-        Assert.AreEqual(_uiManager.loseSubtitleText, _uiManager.resultSubtitleText.text);
+        Assert.AreSame(_uiManager.loseTitle, _uiManager.resultTitleLabel.StringReference);
+        Assert.AreSame(_uiManager.loseSubtitle, _uiManager.resultSubtitleLabel.StringReference);
         Assert.IsFalse(_uiManager.resultWinArt.activeSelf, "Win art off");
         Assert.IsTrue(_uiManager.resultLoseArt.activeSelf, "Lose art on");
-        Assert.AreEqual(_uiManager.retryButtonLabel, _uiManager.playButtonText.text);
+        Assert.AreSame(_uiManager.retryButton, _uiManager.playButtonLabel.StringReference);
     }
 
     [Test]

@@ -63,12 +63,12 @@ MonoBehaviour:
     m_Key: settings.language_auto
     m_Metadata:
       m_Items: []
-  - m_Id: 102285344779
-    m_Key: settings.info_title
-    m_Metadata:
-      m_Items: []
   - m_Id: 102293733376
     m_Key: settings.info
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2300536848384
+    m_Key: settings.credits
     m_Metadata:
       m_Items: []
   - m_Id: 102293733377

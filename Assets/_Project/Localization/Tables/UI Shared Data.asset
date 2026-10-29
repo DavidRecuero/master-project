@@ -59,10 +59,6 @@ MonoBehaviour:
     m_Key: settings.language
     m_Metadata:
       m_Items: []
-  - m_Id: 102285344778
-    m_Key: settings.language_auto
-    m_Metadata:
-      m_Items: []
   - m_Id: 102293733376
     m_Key: settings.info
     m_Metadata:
@@ -109,6 +105,10 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 102293733386
     m_Key: booster.tray_clearer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17736099856384
+    m_Key: language.title
     m_Metadata:
       m_Items: []
   m_Metadata:

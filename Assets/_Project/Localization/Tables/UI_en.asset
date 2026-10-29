@@ -65,10 +65,6 @@ MonoBehaviour:
     m_Localized: Language
     m_Metadata:
       m_Items: []
-  - m_Id: 102285344778
-    m_Localized: Device language
-    m_Metadata:
-      m_Items: []
   - m_Id: 2300536848384
     m_Localized: CREDITS
     m_Metadata:
@@ -118,6 +114,10 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 102293733386
     m_Localized: Tray Clearer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 17736099856384
+    m_Localized: LANGUAGE
     m_Metadata:
       m_Items: []
   references:

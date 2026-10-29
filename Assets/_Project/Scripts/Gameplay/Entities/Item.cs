@@ -1,8 +1,17 @@
+using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-public class Item : MonoBehaviour
+public class Item : MonoBehaviour, IPointerDownHandler
 {
+    /// <summary>
+    /// Raised when the player presses on an item. It only reports the press: the InputManager decides
+    /// whether it counts (level still running) and the TrayManager whether the item can be collected.
+    /// Comes from the EventSystem (Physics2DRaycaster on the camera), the same path as the UI.
+    /// </summary>
+    public static event Action<Item> Pressed;
+
     public int colorID;
     public Color itemColor;
     public ItemType itemType = ItemType.Normal;
@@ -77,6 +86,12 @@ public class Item : MonoBehaviour
     {
         // Stops the courrotine if the GameObject is disabled
         StopPulse();
+    }
+
+    // Press (not click): the item reacts as soon as the finger touches it, without waiting for the release
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        Pressed?.Invoke(this);
     }
 
     private void EnsureSpriteRenderer()

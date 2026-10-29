@@ -1,16 +1,20 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class BootManager : MonoBehaviour
 {
+    [Tooltip("If the language tables take longer than this (seconds), the game goes on without waiting more")]
+    [SerializeField] private float localizationTimeout = 10f;
+
     private ISceneLoader _sceneLoader;
     private IAuthProvider _authProvider;
+    private ILocalizationService _localization;
 
-    public void Initialize(ISceneLoader sceneLoader, IAuthProvider authProvider)
+    public void Initialize(ISceneLoader sceneLoader, IAuthProvider authProvider, ILocalizationService localization = null)
     {
         _sceneLoader = sceneLoader;
         _authProvider = authProvider;
+        if (localization != null) _localization = localization;
     }
 
     private void Awake()
@@ -26,12 +30,18 @@ public class BootManager : MonoBehaviour
 
     private void Start()
     {
+        // Resolved here and not in Awake, so a test can inject a fake right after AddComponent
+        _localization ??= UnityLocalizationService.Instance;
         StartCoroutine(StartupSequence());
     }
 
     private IEnumerator StartupSequence()
     {
         Debug.Log("[BOOT] Init services...");
+
+        // Language tables and sign-in load at the same time
+        bool localizationReady = false;
+        _localization.Initialize(() => localizationReady = true);
 
         bool signInComplete = false;
         AuthResult signInResult = AuthResult.Error;
@@ -54,9 +64,18 @@ public class BootManager : MonoBehaviour
             UserDataManager.Instance.SetUserId(_authProvider.PlayerId);
         }
 
+        // The menu must open with its texts already translated (no flash of empty labels)
+        float waitUntil = Time.realtimeSinceStartup + localizationTimeout;
+        yield return new WaitUntil(() => localizationReady || Time.realtimeSinceStartup >= waitUntil);
+
+        if (localizationReady)
+            Debug.Log($"[BOOT] Localization ready (language: {_localization.CurrentLanguage}, automatic: {_localization.FollowsDevice})");
+        else
+            Debug.LogWarning("[BOOT] Localization not ready in time. Loading the menu anyway.");
+
         Debug.Log("[BOOT] Everything ready, loading main menu...");
 
-        // Loads the Main Menu scene 
+        // Loads the Main Menu scene
         _sceneLoader.LoadScene(1);
     }
 }

@@ -22,7 +22,7 @@ public class BootManagerTests
             AvatarUrl = "https://example.com/a.png"
         };
 
-        bootManager.Initialize(new FakeSceneLoader(), fakeAuthProvider);
+        bootManager.Initialize(new FakeSceneLoader(), fakeAuthProvider, new FakeBootLocalization());
 
         yield return new WaitForSeconds(0.2f);
 
@@ -43,7 +43,7 @@ public class BootManagerTests
             ResultToReturn = AuthResult.NoNetwork
         };
 
-        bootManager.Initialize(new FakeSceneLoader(), fakeAuthProvider);
+        bootManager.Initialize(new FakeSceneLoader(), fakeAuthProvider, new FakeBootLocalization());
 
         yield return new WaitForSeconds(0.2f);
 
@@ -60,7 +60,7 @@ public class BootManagerTests
         FakeSceneLoader fakeSceneLoader = new FakeSceneLoader();
         FakeAuthProvider fakeAuthProvider = new FakeAuthProvider();
 
-        bootManager.Initialize(fakeSceneLoader, fakeAuthProvider);
+        bootManager.Initialize(fakeSceneLoader, fakeAuthProvider, new FakeBootLocalization());
 
         yield return new WaitForSeconds(0.2f);
 
@@ -78,7 +78,7 @@ public class BootManagerTests
         FakeSceneLoader fakeSceneLoader = new FakeSceneLoader();
         FakeAuthProvider fakeAuthProvider = new FakeAuthProvider { ResultToReturn = AuthResult.NoNetwork };
 
-        bootManager.Initialize(fakeSceneLoader, fakeAuthProvider);
+        bootManager.Initialize(fakeSceneLoader, fakeAuthProvider, new FakeBootLocalization());
 
         yield return new WaitForSeconds(0.2f);
 
@@ -86,6 +86,61 @@ public class BootManagerTests
 
         Object.Destroy(bootGO);
     }
+
+    [UnityTest]
+    public IEnumerator StartupSequence_WaitsForTheLanguageTables_BeforeLoadingTheMenu()
+    {
+        GameObject bootGO = new GameObject();
+        BootManager bootManager = bootGO.AddComponent<BootManager>();
+        FakeSceneLoader fakeSceneLoader = new FakeSceneLoader();
+        var localization = new FakeBootLocalization { CompleteRightAway = false };
+
+        bootManager.Initialize(fakeSceneLoader, new FakeAuthProvider(), localization);
+
+        yield return new WaitForSeconds(0.2f);
+
+        Assert.IsTrue(localization.InitializeCalled, "Tables start loading at boot");
+        Assert.AreEqual(-1, fakeSceneLoader.LoadedSceneIndex, "The menu would open with untranslated labels");
+
+        localization.Complete();
+        yield return null;
+        yield return null;
+
+        Assert.AreEqual(1, fakeSceneLoader.LoadedSceneIndex);
+
+        Object.Destroy(bootGO);
+    }
+}
+
+/// <summary>Language service for the boot tests: ready right away, or when the test says so.</summary>
+public class FakeBootLocalization : ILocalizationService
+{
+    public bool CompleteRightAway { get; set; } = true;
+    public bool InitializeCalled { get; private set; }
+    private System.Action _onReady;
+
+    public bool IsReady { get; private set; }
+    public System.Collections.Generic.IReadOnlyList<LanguageInfo> Languages => new LanguageInfo[0];
+    public string CurrentLanguage => "en";
+    public bool FollowsDevice => true;
+    public event System.Action LanguageChanged { add { } remove { } }
+
+    public void Initialize(System.Action onReady)
+    {
+        InitializeCalled = true;
+        _onReady = onReady;
+        if (CompleteRightAway) Complete();
+    }
+
+    public void Complete()
+    {
+        IsReady = true;
+        _onReady?.Invoke();
+        _onReady = null;
+    }
+
+    public void SetLanguage(string code) { }
+    public void UseDeviceLanguage() { }
 }
 
 public class FakeSceneLoader : ISceneLoader

@@ -1,84 +1,69 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 
+/// <summary>
+/// Board input: the single gate between the player's taps on items and the gameplay.
+///
+/// Taps reach the items through the EventSystem, the same path as the UI: a Physics2DRaycaster on the
+/// camera finds the item under the pointer and the item raises Item.Pressed. This replaces polling
+/// Pointer.current.press, which only reads the last used pointer: in the Device Simulator (and on a device
+/// after losing focus mid-touch) it could get stuck on a pointer that no longer reports presses, so taps on
+/// the board stopped while the UI kept working.
+///
+/// The EventSystem also sorts every raycaster: a screen-space UI element over the board (boosters, band,
+/// popups) takes the tap first, so the board behind it never gets it.
+/// </summary>
 public class InputManager : MonoBehaviour
 {
     // Event subscribed to by other components
     public static event Action<Item> OnItemClicked;
 
-    private ICameraProvider _cameraProvider;
-
     // Board taps are ignored once the level has ended (the result popup is up)
     private bool _levelEnded;
-    private readonly List<RaycastResult> _uiHits = new List<RaycastResult>();
-
-    public void Initialize(ICameraProvider cameraProvider)
-    {
-        _cameraProvider = cameraProvider;
-    }
 
     private void Awake()
     {
-        if (_cameraProvider == null && Camera.main != null)
-        {
-            _cameraProvider = new UnityCameraProvider(Camera.main);
-        }
+        EnsurePhysicsRaycaster(Camera.main);
     }
 
     private void OnEnable()
     {
+        Item.Pressed += HandleItemPressed;
         GameEvents.OnLevelCleared += HandleLevelEnded;
         GameEvents.OnLevelFailed += HandleLevelEnded;
     }
 
     private void OnDisable()
     {
+        Item.Pressed -= HandleItemPressed;
         GameEvents.OnLevelCleared -= HandleLevelEnded;
         GameEvents.OnLevelFailed -= HandleLevelEnded;
     }
 
     private void HandleLevelEnded() => _levelEnded = true;
 
-    void Update()
+    private void HandleItemPressed(Item item)
     {
-        if (_levelEnded) return;
-
-        // Pointer.current handles both Mouse clicks and Touchscreen taps automatically
-        if (Pointer.current != null && Pointer.current.press.wasPressedThisFrame)
-        {
-            // Get the screen position of the tap/click
-            Vector2 screenPosition = Pointer.current.position.ReadValue();
-
-            // A tap on the UI (boosters, band, popup...) never reaches the board behind it
-            if (IsOverUi(screenPosition)) return;
-
-            // Convert the screen position to 2D world coordinates
-            Vector2 tapPosition = _cameraProvider != null
-                ? _cameraProvider.ScreenToWorldPoint(screenPosition)
-                : Vector2.zero;
-
-            // Cast an invisible ray to see if it hits any Collider
-            RaycastHit2D hit = Physics2D.Raycast(tapPosition, Vector2.zero);
-
-            if (hit.collider != null && hit.collider.TryGetComponent(out Item clickedItem))
-            {
-                OnItemClicked?.Invoke(clickedItem);
-            }
-        }
+        if (_levelEnded || item == null) return;
+        OnItemClicked?.Invoke(item);
     }
 
-    // Asks the UI raycasters directly, so it works the same with mouse and touch and doesn't depend on update order
-    private bool IsOverUi(Vector2 screenPosition)
+    /// <summary>
+    /// Without a Physics2DRaycaster on the camera the EventSystem never sees the items' colliders.
+    /// It should be in the scene; this only adds it (and warns) if it was forgotten.
+    /// </summary>
+    public static Physics2DRaycaster EnsurePhysicsRaycaster(Camera camera)
     {
-        EventSystem eventSystem = EventSystem.current;
-        if (eventSystem == null) return false;
+        if (camera == null)
+        {
+            Debug.LogWarning("[InputManager] No main camera: items can't be tapped.");
+            return null;
+        }
 
-        var pointer = new PointerEventData(eventSystem) { position = screenPosition };
-        _uiHits.Clear();
-        eventSystem.RaycastAll(pointer, _uiHits);
-        return _uiHits.Count > 0;
+        if (camera.TryGetComponent(out Physics2DRaycaster raycaster)) return raycaster;
+
+        Debug.LogWarning("[InputManager] The camera had no Physics2DRaycaster. Added at runtime: add it to the scene.");
+        return camera.gameObject.AddComponent<Physics2DRaycaster>();
     }
 }

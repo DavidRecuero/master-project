@@ -118,6 +118,10 @@ MonoBehaviour:
     m_Localized: IDIOMA
     m_Metadata:
       m_Items: []
+  - m_Id: 347740696379392
+    m_Localized: "Pol\xEDtica de privacidad"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

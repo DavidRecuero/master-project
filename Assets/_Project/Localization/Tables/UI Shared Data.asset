@@ -111,6 +111,10 @@ MonoBehaviour:
     m_Key: language.title
     m_Metadata:
       m_Items: []
+  - m_Id: 347740696379392
+    m_Key: settings.privacy
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

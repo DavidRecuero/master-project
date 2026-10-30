@@ -120,6 +120,10 @@ MonoBehaviour:
     m_Localized: LANGUAGE
     m_Metadata:
       m_Items: []
+  - m_Id: 347740696379392
+    m_Localized: Privacy policy
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

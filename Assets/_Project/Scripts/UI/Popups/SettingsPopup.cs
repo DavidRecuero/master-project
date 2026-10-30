@@ -5,7 +5,9 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Settings popup: music and SFX on/off, the language selector, the button that opens the credits
-/// on top, and a footer with the game version and the player ID (for support and bug reports).
+/// on top, the button that opens the privacy policy in the browser (Google Play requires it to be
+/// reachable from inside the game), and a footer with the game version and the player ID (for
+/// support and bug reports).
 /// It only talks to IAudioService, which already saves the audio choices on the device.
 /// The language selector is its own component (LanguageDropdown) inside the popup.
 /// Every fixed label of the prefab uses a LocalizeStringEvent; only the footer is filled from here.
@@ -24,6 +26,10 @@ public class SettingsPopup : PopupView
     [Tooltip("CreditsPopup prefab, opened on top of this one")]
     [SerializeField] private CreditsPopup creditsPopupPrefab;
 
+    [Header("Privacy")]
+    [Tooltip("Opens LegalLinks.PrivacyPolicy in the browser, in the language on screen")]
+    [SerializeField] private Button privacyButton;
+
     [Header("Info")]
     [Tooltip("LocalizeStringEvent of the small text at the bottom. Leave its String Reference empty: the popup sets it.")]
     [SerializeField] private LocalizeStringEvent infoLabel;
@@ -33,13 +39,21 @@ public class SettingsPopup : PopupView
     private IAudioService _audio;
     private IUserDataProvider _userData;
     private string _version;
+    private ILocalizationService _localization;
+    private IUrlOpener _urlOpener;
 
-    /// <summary>Optional injection (tests). Without it, the AudioManager, the UserDataManager and Application.version are used.</summary>
-    public void Initialize(IAudioService audio, IUserDataProvider userData = null, string version = null)
+    /// <summary>
+    /// Optional injection (tests). Without it, the AudioManager, the UserDataManager, Application.version,
+    /// the shared UnityLocalizationService and the device browser are used.
+    /// </summary>
+    public void Initialize(IAudioService audio, IUserDataProvider userData = null, string version = null,
+        ILocalizationService localization = null, IUrlOpener urlOpener = null)
     {
         _audio = audio;
         if (userData != null) _userData = userData;
         if (version != null) _version = version;
+        if (localization != null) _localization = localization;
+        if (urlOpener != null) _urlOpener = urlOpener;
         Refresh();
     }
 
@@ -48,6 +62,7 @@ public class SettingsPopup : PopupView
         if (musicToggle != null) musicToggle.onValueChanged.AddListener(OnMusicToggled);
         if (sfxToggle != null) sfxToggle.onValueChanged.AddListener(OnSfxToggled);
         if (creditsButton != null) creditsButton.onClick.AddListener(OnCreditsClicked);
+        if (privacyButton != null) privacyButton.onClick.AddListener(OnPrivacyClicked);
     }
 
     private void OnDestroy()
@@ -55,12 +70,14 @@ public class SettingsPopup : PopupView
         if (musicToggle != null) musicToggle.onValueChanged.RemoveListener(OnMusicToggled);
         if (sfxToggle != null) sfxToggle.onValueChanged.RemoveListener(OnSfxToggled);
         if (creditsButton != null) creditsButton.onClick.RemoveListener(OnCreditsClicked);
+        if (privacyButton != null) privacyButton.onClick.RemoveListener(OnPrivacyClicked);
     }
 
     protected override void OnOpened()
     {
         _audio ??= AudioManager.Instance;
         _userData ??= UserDataManager.Instance;
+        _localization ??= UnityLocalizationService.Instance;
         if (_audio == null) Debug.LogWarning("[SettingsPopup] No AudioManager found. Start from Boot scene.");
 
         Refresh();
@@ -110,5 +127,12 @@ public class SettingsPopup : PopupView
         }
 
         Service?.Open(creditsPopupPrefab);
+    }
+
+    /// <summary>Opens the privacy policy in the browser, at the section of the language on screen.</summary>
+    public void OnPrivacyClicked()
+    {
+        _urlOpener ??= new UnityUrlOpener();
+        _urlOpener.Open(LegalLinks.PrivacyPolicyUrl(_localization?.CurrentLanguage));
     }
 }

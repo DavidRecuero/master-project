@@ -32,6 +32,20 @@ public class BackgroundLayoutTests
     }
 
     [Test]
+    public void BottomInset_NoSafeArea_UsesTheMinimum()
+    {
+        // Android phone with gesture navigation: safe area bottom = 0 -> 24 pt at 3 px/pt
+        Assert.AreEqual(72f, BottomBand.BottomInsetPixels(0f, 24f, 3f), 1e-4f);
+    }
+
+    [Test]
+    public void BottomInset_BiggerSafeArea_KeepsTheSafeArea()
+    {
+        // iPhone 13: 34 pt home indicator (102 px) beats the 24 pt minimum
+        Assert.AreEqual(102f, BottomBand.BottomInsetPixels(102f, 24f, 3f), 1e-4f);
+    }
+
+    [Test]
     public void TraySitsOverTheBand_WithItsGapAndShadow()
     {
         var go = new GameObject("Tray");

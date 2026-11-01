@@ -3,7 +3,9 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Blue strip at the bottom of the screen where the boosters live (design: 101 pt + the bottom safe area,
-/// with an 8 pt darker edge on top). It sizes itself in real screen pixels, so it works with any Canvas Scaler,
+/// with an 8 pt darker edge on top). The bottom inset is never smaller than minBottomInsetPt, so on screens
+/// that report no bottom safe area (most Android phones) the boosters don't sit on the screen edge.
+/// It sizes itself in real screen pixels, so it works with any Canvas Scaler,
 /// and tells the camera how much of the screen it covers (IScreenInset).
 /// Put it on a full-width UI Image anchored to the bottom of the Canvas, as the Canvas's first child.
 /// </summary>
@@ -21,6 +23,9 @@ public class BottomBand : MonoBehaviour, IScreenInset
     public float bandHeightPt = 101f;
     [Tooltip("Darker edge on top of the band")]
     public float edgeHeightPt = 8f;
+    [Tooltip("Minimum space under the boosters (pt). Used when the device's bottom safe area is smaller "
+           + "(Android usually reports 0). 34 = iPhone home indicator, as in the mockup")]
+    public float minBottomInsetPt = 24f;
 
     [Header("Colors")]
     public Color bandColor = new Color32(0x3B, 0x5A, 0x8C, 0xFF);
@@ -45,9 +50,20 @@ public class BottomBand : MonoBehaviour, IScreenInset
         return bandPt * PixelsPerPoint(screenWidth, screenHeight, designWidth, designHeight) + safeBottomPixels;
     }
 
+    /// <summary>Space under the boosters in screen pixels: the safe area, but never less than the minimum.</summary>
+    public static float BottomInsetPixels(float safeBottomPixels, float minInsetPt, float pixelsPerPoint)
+    {
+        return Mathf.Max(safeBottomPixels, minInsetPt * pixelsPerPoint);
+    }
+
+    /// <summary>Space under the boosters in screen pixels for the current screen.</summary>
+    public float BottomInsetPixelsNow =>
+        BottomInsetPixels(Screen.safeArea.yMin, minBottomInsetPt,
+                          PixelsPerPoint(Screen.width, Screen.height, designWidthPt, designHeightPt));
+
     /// <summary>Band height in screen pixels for the current screen.</summary>
     public float HeightPixelsNow =>
-        HeightPixels(Screen.width, Screen.height, Screen.safeArea.yMin, bandHeightPt, designWidthPt, designHeightPt);
+        HeightPixels(Screen.width, Screen.height, BottomInsetPixelsNow, bandHeightPt, designWidthPt, designHeightPt);
 
     /// <summary>Part of the screen height covered by the band (0..1).</summary>
     public float ScreenFraction => Screen.height > 0 ? Mathf.Clamp01(HeightPixelsNow / Screen.height) : 0f;
@@ -85,7 +101,7 @@ public class BottomBand : MonoBehaviour, IScreenInset
         _edge.sizeDelta = new Vector2(0f, edgeHeightPt * ppp / scale);
 
         EnsureContent();
-        _content.offsetMin = new Vector2(0f, Screen.safeArea.yMin / scale);
+        _content.offsetMin = new Vector2(0f, BottomInsetPixelsNow / scale);
         _content.offsetMax = new Vector2(0f, -edgeHeightPt * ppp / scale);
     }
 

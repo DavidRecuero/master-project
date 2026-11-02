@@ -1,6 +1,7 @@
+using System;
 using UnityEngine;
 
-public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInventory
+public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInventory, IProfileRepository
 {
     public static UserDataManager Instance { get; private set; }
 
@@ -10,6 +11,9 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
     public int CurrentLevel => Profile != null ? Profile.CurrentLevel : 1;
     public int Coins => Profile != null ? Profile.Coins : 0;
     public string UserId => Profile != null ? Profile.UserId : "";
+
+    /// <summary>Raised after every save on the device. The cloud sync listens to it.</summary>
+    public event Action ProfileSaved;
 
     private void Awake()
     {
@@ -22,7 +26,7 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        // Local service, to switch for UGS/Playfab
+        // The device copy is always the one the game uses; CloudProfileSync keeps the cloud one equal
         _dataService = new LocalJsonUserDataService();
         Profile = _dataService.LoadProfile();
     }
@@ -41,8 +45,20 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
     {
         Profile.CurrentLevel++;
 
-        _dataService.SaveProfile(Profile);
+        Save();
         Debug.Log($"Saved. CurrentLvl: {Profile.CurrentLevel}, Coins: {Profile.Coins}");
+    }
+
+    /// <summary>
+    /// Saves on the device and tells the listeners (cloud sync).
+    /// touch: stamps the save time. False only when taking the cloud copy, which keeps its own.
+    /// </summary>
+    private void Save(bool touch = true)
+    {
+        if (touch) Profile.UpdatedAtTicks = DateTime.UtcNow.Ticks;
+
+        _dataService.SaveProfile(Profile);
+        ProfileSaved?.Invoke();
     }
 
     // --- IBoosterInventory ---
@@ -58,7 +74,7 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
         if (current <= 0) return false;
 
         Profile.SetBoosterCount(type, current - 1);
-        _dataService.SaveProfile(Profile);
+        Save();
         return true;
     }
 
@@ -67,7 +83,7 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
         if (amount <= 0 || Profile == null) return;
 
         Profile.SetBoosterCount(type, GetCount(type) + amount);
-        _dataService.SaveProfile(Profile);
+        Save();
     }
 
     public void EnsureStarterStock(BoosterType type, int amount)
@@ -75,7 +91,7 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
         if (Profile == null || Profile.HasBoosterEntry(type)) return;
 
         Profile.SetBoosterCount(type, amount);
-        _dataService.SaveProfile(Profile);
+        Save();
     }
 
     // --- Currency spending (used to buy boosters once free stock runs out) ---
@@ -85,18 +101,38 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
         if (Profile == null || Profile.Coins < amount) return false;
 
         Profile.Coins -= amount;
-        _dataService.SaveProfile(Profile);
+        Save();
         GameEvents.TriggerCoinsChanged(Profile.Coins);
         return true;
     }
 
-    // Only sets it if empty  so signing in later never relinks a players existing local progress
+    // Only sets it if empty, so signing in later never relinks a player's existing local progress.
+    // Used only when the cloud is off: with the cloud on, CloudProfileSync sets the owner (SetOwner).
     public void SetUserId(string userId)
     {
         if (Profile == null || string.IsNullOrEmpty(userId) || !string.IsNullOrEmpty(Profile.UserId)) return;
 
         Profile.UserId = userId;
-        _dataService.SaveProfile(Profile);
+        Save();
+    }
+
+    // --- IProfileRepository (cloud sync) ---
+
+    public void ReplaceProfile(UserProfile profile)
+    {
+        if (profile == null) return;
+
+        Profile = profile;
+        Save(touch: false);
+        GameEvents.TriggerCoinsChanged(Profile.Coins);
+    }
+
+    public void SetOwner(string playerId)
+    {
+        if (Profile == null || string.IsNullOrEmpty(playerId) || Profile.UserId == playerId) return;
+
+        Profile.UserId = playerId;
+        Save(touch: false);
     }
 
     public void ResetData()
@@ -104,7 +140,7 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
         // New profile applying default values
         Profile = new UserProfile();
 
-        _dataService.SaveProfile(Profile);
+        Save();
         GameEvents.TriggerCoinsChanged(Profile.Coins);
 
         Debug.Log($"[DataReset] CurrentLvl: {Profile.CurrentLevel}, Coins: {Profile.Coins}");

@@ -82,4 +82,50 @@ public class UserDataManagerTests
         Assert.AreEqual("first-id", _dataManager.Profile.UserId, "An existing UserId must never be overwritten by a later call.");
     }
 
+
+    // --- Cloud sync support (IProfileRepository) ---
+
+    [UnityTest]
+    public IEnumerator Saves_StampTheTime_AndRaiseProfileSaved()
+    {
+        yield return null;
+
+        int saves = 0;
+        _dataManager.ProfileSaved += () => saves++;
+        long before = System.DateTime.UtcNow.Ticks;
+
+        _dataManager.TrySpendCoins(10);
+
+        Assert.AreEqual(1, saves);
+        Assert.GreaterOrEqual(_dataManager.Profile.UpdatedAtTicks, before);
+    }
+
+    [UnityTest]
+    public IEnumerator ReplaceProfile_TakesTheCloudCopy_KeepingItsTimestamp_AndPersistsIt()
+    {
+        yield return null;
+
+        var cloud = new UserProfile { CurrentLevel = 8, Coins = 500, UserId = "ugs-1", UpdatedAtTicks = 12345 };
+
+        _dataManager.ReplaceProfile(cloud);
+
+        Assert.AreEqual(8, _dataManager.CurrentLevel);
+        Assert.AreEqual(12345, _dataManager.Profile.UpdatedAtTicks);
+
+        UserProfile onDisk = new LocalJsonUserDataService().LoadProfile();
+        Assert.AreEqual(8, onDisk.CurrentLevel);
+        Assert.AreEqual("ugs-1", onDisk.UserId);
+    }
+
+    [UnityTest]
+    public IEnumerator SetOwner_ReplacesTheId_EvenIfOneExists()
+    {
+        yield return null;
+
+        _dataManager.SetUserId("play-games-id");
+        _dataManager.SetOwner("ugs-1");
+
+        Assert.AreEqual("ugs-1", _dataManager.UserId, "The backend account owns the profile once the cloud sync runs");
+    }
+
 }

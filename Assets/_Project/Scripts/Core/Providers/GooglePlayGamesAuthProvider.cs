@@ -7,8 +7,9 @@ using GooglePlayGames.BasicApi;
 /// <summary>
 /// Real Google Play Games Services implementation of IAuthProvider
 /// Only works on an Android device/build - never in the Editor.
+/// Also hands out the one-time server code Unity Authentication needs (IServerAuthCodeProvider).
 /// </summary>
-public class GooglePlayGamesAuthProvider : IAuthProvider
+public class GooglePlayGamesAuthProvider : IAuthProvider, IServerAuthCodeProvider
 {
     public bool IsSignedIn { get; private set; }
     public string PlayerId { get; private set; } = "";
@@ -33,6 +34,33 @@ public class GooglePlayGamesAuthProvider : IAuthProvider
             PlayGamesPlatform.Instance.ManuallyAuthenticate(status2 =>
                 Finish(status2, onComplete));
         });
+    }
+
+    /// <summary>
+    /// One-time code for Unity Authentication (needs the Web App Client ID in the plugin setup).
+    /// forceRefreshToken: true, as Unity's sample does, so every start gets a fresh code.
+    /// </summary>
+    public void RequestServerAuthCode(Action<string> onCode)
+    {
+        if (!IsSignedIn)
+        {
+            onCode?.Invoke(null);
+            return;
+        }
+
+        try
+        {
+            PlayGamesPlatform.Instance.RequestServerSideAccess(true, code =>
+            {
+                if (string.IsNullOrEmpty(code)) Debug.LogWarning("[Auth] Play Games returned no server code.");
+                onCode?.Invoke(code);
+            });
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[Auth] Could not request the server code: " + e.Message);
+            onCode?.Invoke(null);
+        }
     }
 
     private void Finish(SignInStatus status, Action<AuthResult> onComplete)

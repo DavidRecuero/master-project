@@ -16,6 +16,12 @@ public class UserProfile
     public string Segment;
     public List<BoosterEntry> Boosters = new List<BoosterEntry>();
 
+    /// <summary>
+    /// Last save on the device, in UTC ticks. Breaks ties between the device and the cloud copy
+    /// (see ProfileMerger). 0 in profiles saved before the cloud sync existed.
+    /// </summary>
+    public long UpdatedAtTicks;
+
     public UserProfile()
     {
         CurrentLevel = 1;       //starting values

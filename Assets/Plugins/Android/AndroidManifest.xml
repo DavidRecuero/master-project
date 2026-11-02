@@ -10,5 +10,6 @@
     </activity>
     <meta-data android:name="com.google.android.gms.games.unityVersion" android:value="\u0032.3.0" />
     <meta-data android:name="com.google.android.gms.games.APP_ID" android:value="\u003529416272237" />
+    <meta-data android:name="com.google.android.gms.games.WEB_CLIENT_ID" android:value="529416272237-n95tb8rg8gk39fqdjeet0i22rjmmr9to.apps.googleusercontent.com" />
   </application>
 </manifest>

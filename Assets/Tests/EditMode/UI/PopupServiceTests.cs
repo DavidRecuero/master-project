@@ -186,6 +186,30 @@ public class PopupServiceTests
     }
 
     [Test]
+    public void Back_DoesNotClose_APopupThatCantBeClosedNow()
+    {
+        _service.Open(_prefabA);
+        LockedPopup locked = _service.Open(PopupTestUtils.MakePrefab<LockedPopup>("Locked"));
+
+        Assert.IsTrue(_service.HandleBack(), "Handled, so the scene doesn't use the back button either");
+
+        Assert.AreEqual(2, _service.Count);
+        Assert.AreSame(locked, _service.Top);
+        Object.DestroyImmediate(locked.SourcePrefab.gameObject);
+    }
+
+    [Test]
+    public void TheCloseButton_DoesNotClose_APopupThatCantBeClosedNow()
+    {
+        LockedPopup locked = _service.Open(PopupTestUtils.MakePrefab<LockedPopup>("Locked"));
+
+        locked.Close();
+
+        Assert.AreEqual(1, _service.Count);
+        Object.DestroyImmediate(locked.SourcePrefab.gameObject);
+    }
+
+    [Test]
     public void Back_WithNothingOpen_DoesNothing()
     {
         Assert.IsFalse(_service.HandleBack());
@@ -211,4 +235,10 @@ public class PopupServiceTests
 
         Assert.AreEqual(0, _service.Count);
     }
+}
+
+/// <summary>A popup that can't be closed by the player (like "delete account" while deleting).</summary>
+public class LockedPopup : PopupView
+{
+    public override bool CanClose => false;
 }

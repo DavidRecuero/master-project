@@ -154,6 +154,10 @@ MonoBehaviour:
     m_Localized: Conectando...
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000009
+    m_Localized: "Tu cuenta se ha borrado. El juego se cerrar\xE1."
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

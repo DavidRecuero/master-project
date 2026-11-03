@@ -100,7 +100,14 @@ public class PopupService : MonoBehaviour, IPopupService
     /// True if it closed one (later, false could let the scene handle back, e.g. "quit game?").
     /// Public so it can be tested without simulating input.
     /// </summary>
-    public bool HandleBack() => closeTopOnBack && CloseTop();
+    public bool HandleBack()
+    {
+        if (!closeTopOnBack) return false;
+
+        PopupView top = Top;
+        if (top != null && !top.CanClose) return true;   // handled: the popup stays open on purpose
+        return CloseTop();
+    }
 
     /// <summary>A popup from the previous scene would point at objects that no longer exist, so they all close.</summary>
     public void HandleSceneChange() => CloseAll();

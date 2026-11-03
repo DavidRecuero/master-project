@@ -3,14 +3,14 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>"Delete account" confirmation: states, and the restart from Boot once the account is gone.</summary>
+/// <summary>"Delete account" confirmation: states, and closing the game once the account is gone.</summary>
 public class DeleteAccountPopupTests
 {
     private GameObject _root;
     private DeleteAccountPopup _popup;
     private Button _confirmButton;
     private FakeAccountDeletion _deletion;
-    private FakeSceneLoader _sceneLoader;
+    private FakeAppQuitter _quitter;
 
     [SetUp]
     public void SetUp()
@@ -23,7 +23,7 @@ public class DeleteAccountPopupTests
         PopupTestUtils.SetField(_popup, "confirmButton", _confirmButton);
 
         _deletion = new FakeAccountDeletion();
-        _sceneLoader = new FakeSceneLoader();
+        _quitter = new FakeAppQuitter();
     }
 
     [TearDown]
@@ -32,7 +32,7 @@ public class DeleteAccountPopupTests
     [Test]
     public void Opens_AskingForConfirmation_WithTheButtonShown()
     {
-        _popup.Initialize(_deletion, _sceneLoader);
+        _popup.Initialize(_deletion, _quitter);
 
         Assert.AreEqual(DeleteAccountPopup.State.Confirm, _popup.CurrentState);
         Assert.IsTrue(_confirmButton.gameObject.activeSelf);
@@ -44,7 +44,7 @@ public class DeleteAccountPopupTests
     {
         _deletion.IsAvailable = false;
 
-        _popup.Initialize(_deletion, _sceneLoader);
+        _popup.Initialize(_deletion, _quitter);
 
         Assert.AreEqual(DeleteAccountPopup.State.Offline, _popup.CurrentState);
         Assert.IsFalse(_confirmButton.gameObject.activeSelf);
@@ -57,7 +57,7 @@ public class DeleteAccountPopupTests
         var connection = new FakeCloudConnection { ConnectsOnNextTry = true };
         connection.OnConnected = () => _deletion.IsAvailable = true;
 
-        _popup.Initialize(_deletion, _sceneLoader, connection);
+        _popup.Initialize(_deletion, _quitter, connection);
 
         Assert.AreEqual(1, connection.ConnectCalls);
         Assert.AreEqual(DeleteAccountPopup.State.Confirm, _popup.CurrentState);
@@ -70,7 +70,7 @@ public class DeleteAccountPopupTests
         _deletion.IsAvailable = false;
         var connection = new FakeCloudConnection { ConnectsOnNextTry = false };
 
-        _popup.Initialize(_deletion, _sceneLoader, connection);
+        _popup.Initialize(_deletion, _quitter, connection);
 
         Assert.AreEqual(DeleteAccountPopup.State.Offline, _popup.CurrentState);
         Assert.IsFalse(_confirmButton.gameObject.activeSelf);
@@ -82,7 +82,7 @@ public class DeleteAccountPopupTests
         _deletion.IsAvailable = false;
         var connection = new FakeCloudConnection { Pending = new TaskCompletionSource<bool>() };
 
-        _popup.Initialize(_deletion, _sceneLoader, connection);
+        _popup.Initialize(_deletion, _quitter, connection);
         _popup.OnConfirmClicked();
 
         Assert.AreEqual(DeleteAccountPopup.State.Connecting, _popup.CurrentState);
@@ -95,7 +95,7 @@ public class DeleteAccountPopupTests
     {
         _deletion.IsAvailable = false;
         var connection = new FakeCloudConnection { ConnectsOnNextTry = false };
-        _popup.Initialize(_deletion, _sceneLoader, connection);
+        _popup.Initialize(_deletion, _quitter, connection);
         Assert.AreEqual(DeleteAccountPopup.State.Offline, _popup.CurrentState);
 
         connection.ConnectsOnNextTry = true;   // the network is back a few seconds later
@@ -111,7 +111,7 @@ public class DeleteAccountPopupTests
     {
         _deletion.IsAvailable = false;
         var connection = new FakeCloudConnection { ConnectsOnNextTry = false };
-        _popup.Initialize(_deletion, _sceneLoader, connection);
+        _popup.Initialize(_deletion, _quitter, connection);
 
         _popup.TryReconnectAsync().GetAwaiter().GetResult();
 
@@ -124,28 +124,69 @@ public class DeleteAccountPopupTests
     {
         var connection = new FakeCloudConnection { IsConnected = true };
 
-        _popup.Initialize(_deletion, _sceneLoader, connection);
+        _popup.Initialize(_deletion, _quitter, connection);
 
         Assert.AreEqual(0, connection.ConnectCalls);
         Assert.AreEqual(DeleteAccountPopup.State.Confirm, _popup.CurrentState);
     }
 
     [Test]
-    public void Confirm_DeletesAndRestartsFromBoot()
+    public void Confirm_Deletes_ShowsDeleted_AndClosesTheGame()
     {
-        _popup.Initialize(_deletion, _sceneLoader);
+        _popup.Initialize(_deletion, _quitter);
 
         _popup.OnConfirmClicked();
 
         Assert.AreEqual(1, _deletion.Calls);
-        Assert.AreEqual(DeleteAccountPopup.BootSceneIndex, _sceneLoader.LoadedSceneIndex);
+        Assert.AreEqual(DeleteAccountPopup.State.Deleted, _popup.CurrentState);
+        Assert.IsFalse(_confirmButton.gameObject.activeSelf);
+        Assert.AreEqual(1, _quitter.QuitCalls);
+    }
+
+    [Test]
+    public void TheGameClosesOnlyOnce()
+    {
+        _popup.Initialize(_deletion, _quitter);
+        _popup.OnConfirmClicked();
+
+        // The delayed close runs too (in the Editor tests it can't wait, so it already closed)
+        var delayed = _popup.QuitAfterDelay();
+        while (delayed.MoveNext()) { }
+
+        Assert.AreEqual(1, _quitter.QuitCalls);
+    }
+
+    [Test]
+    public void WhileDeletingAndOnceDeleted_ThePopupCantBeClosed()
+    {
+        _deletion.Pending = new TaskCompletionSource<AccountDeletionResult>();
+        _popup.Initialize(_deletion, _quitter);
+        Assert.IsTrue(_popup.CanClose, "Before confirming, the X and the dim cancel");
+
+        _popup.OnConfirmClicked();
+        Assert.IsFalse(_popup.CanClose, "Deleting");
+
+        _deletion.Pending.SetResult(AccountDeletionResult.Deleted);
+        Assert.IsFalse(_popup.CanClose, "Deleted");
+    }
+
+    [Test]
+    public void AfterAFailure_ThePopupCanBeClosedAgain()
+    {
+        _deletion.Result = AccountDeletionResult.Failed;
+        _popup.Initialize(_deletion, _quitter);
+
+        _popup.OnConfirmClicked();
+
+        Assert.IsTrue(_popup.CanClose);
+        Assert.AreEqual(0, _quitter.QuitCalls);
     }
 
     [Test]
     public void WhileDeleting_TheButtonIsHidden_AndASecondTapDoesNothing()
     {
         _deletion.Pending = new TaskCompletionSource<AccountDeletionResult>();
-        _popup.Initialize(_deletion, _sceneLoader);
+        _popup.Initialize(_deletion, _quitter);
 
         _popup.OnConfirmClicked();
         _popup.OnConfirmClicked();
@@ -153,27 +194,27 @@ public class DeleteAccountPopupTests
         Assert.AreEqual(DeleteAccountPopup.State.Deleting, _popup.CurrentState);
         Assert.IsFalse(_confirmButton.gameObject.activeSelf);
         Assert.AreEqual(1, _deletion.Calls);
-        Assert.AreEqual(-1, _sceneLoader.LoadedSceneIndex);
+        Assert.AreEqual(0, _quitter.QuitCalls);
     }
 
     [Test]
     public void Failure_ShowsTheError_AndLetsThePlayerRetry()
     {
         _deletion.Result = AccountDeletionResult.Failed;
-        _popup.Initialize(_deletion, _sceneLoader);
+        _popup.Initialize(_deletion, _quitter);
 
         _popup.OnConfirmClicked();
 
         Assert.AreEqual(DeleteAccountPopup.State.Failed, _popup.CurrentState);
         Assert.IsTrue(_confirmButton.gameObject.activeSelf);
-        Assert.AreEqual(-1, _sceneLoader.LoadedSceneIndex, "No restart: the account still exists");
+        Assert.AreEqual(0, _quitter.QuitCalls, "No close: the account still exists");
     }
 
     [Test]
     public void ConnectionLostBeforeConfirming_ShowsOffline()
     {
         _deletion.Result = AccountDeletionResult.NotSignedIn;
-        _popup.Initialize(_deletion, _sceneLoader);
+        _popup.Initialize(_deletion, _quitter);
 
         _popup.OnConfirmClicked();
 
@@ -194,4 +235,12 @@ public class FakeAccountDeletion : IAccountDeletion
         Calls++;
         return Pending != null ? Pending.Task : Task.FromResult(Result);
     }
+}
+
+/// <summary>Counts the times the game was told to close. Closes nothing.</summary>
+public class FakeAppQuitter : IAppQuitter
+{
+    public int QuitCalls { get; private set; }
+
+    public void Quit() => QuitCalls++;
 }

@@ -156,6 +156,10 @@ MonoBehaviour:
     m_Localized: Connecting...
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000009
+    m_Localized: Your account has been deleted. The game will now close.
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

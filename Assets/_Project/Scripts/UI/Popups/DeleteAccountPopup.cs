@@ -16,19 +16,20 @@ using UnityEngine.UI;
 ///   Offline  - no connection: explains that it needs internet, button hidden, and keeps retrying every
 ///              retrySeconds while open (the network can take a few seconds to come back after airplane mode).
 ///   Failed   - the backend failed: error text, button shown to retry.
-/// When the account is deleted the game restarts from the Boot scene, with a new empty account.
+///   Deleted  - "account deleted, the game will close" text; after quitDelaySeconds the game closes.
+///              Opened again, the Boot signs in to a new, empty account.
+/// While Deleting and Deleted the popup can't be closed (no X, the dim and the back button do nothing).
 /// </summary>
 public class DeleteAccountPopup : PopupView
 {
-    public const int BootSceneIndex = 0;
-
     public enum State
     {
         Confirm,
         Connecting,
         Deleting,
         Offline,
-        Failed
+        Failed,
+        Deleted
     }
 
     [SerializeField] private Button confirmButton;
@@ -36,6 +37,8 @@ public class DeleteAccountPopup : PopupView
     [SerializeField] private HoldToConfirm confirmHold;
     [Tooltip("While offline, seconds between connection retries (only while the popup is open)")]
     [SerializeField] private float retrySeconds = 3f;
+    [Tooltip("Seconds the 'account deleted' message stays on screen before the game closes")]
+    [SerializeField] private float quitDelaySeconds = 2f;
 
     [Header("Texts")]
     [Tooltip("LocalizeStringEvent of the body text. The popup changes its string with the state.")]
@@ -50,23 +53,31 @@ public class DeleteAccountPopup : PopupView
     [SerializeField] private LocalizedString offlineText = new LocalizedString();
     [Tooltip("UI/delete.failed")]
     [SerializeField] private LocalizedString failedText = new LocalizedString();
+    [Tooltip("UI/delete.done")]
+    [SerializeField] private LocalizedString deletedText = new LocalizedString();
 
     private IAccountDeletion _deletion;
-    private ISceneLoader _sceneLoader;
+    private IAppQuitter _quitter;
     private ICloudConnection _connection;
 
     public State CurrentState { get; private set; }
 
+    /// <summary>The player can't leave while the account is being deleted or once it's gone.</summary>
+    public override bool CanClose => CurrentState != State.Deleting && CurrentState != State.Deleted;
+
+    /// <summary>True once the game was told to close.</summary>
+    public bool QuitRequested { get; private set; }
+
     private Coroutine _retry;
 
     /// <summary>
-    /// Optional injection (tests). Without it, the services created by the Boot and the real scene loader.
+    /// Optional injection (tests). Without it, the services created by the Boot and the real app quitter.
     /// connection: the cloud session, used to connect first if the game is offline (null: no retry).
     /// </summary>
-    public void Initialize(IAccountDeletion deletion, ISceneLoader sceneLoader, ICloudConnection connection = null)
+    public void Initialize(IAccountDeletion deletion, IAppQuitter quitter, ICloudConnection connection = null)
     {
         _deletion = deletion;
-        _sceneLoader = sceneLoader;
+        _quitter = quitter;
         _connection = connection;
         ShowInitialState();
     }
@@ -84,7 +95,7 @@ public class DeleteAccountPopup : PopupView
     protected override void OnOpened()
     {
         _deletion ??= AccountDeletion.FromBackendServices(UserDataManager.Instance);
-        _sceneLoader ??= new UnitySceneLoader();
+        _quitter ??= new UnityAppQuitter();
         _connection ??= BackendServices.Session;
         ShowInitialState();
     }
@@ -139,8 +150,9 @@ public class DeleteAccountPopup : PopupView
         switch (result)
         {
             case AccountDeletionResult.Deleted:
-                // Even if the popup was closed meanwhile: the game must restart on the new account
-                _sceneLoader?.LoadScene(BootSceneIndex);
+                Show(State.Deleted);
+                if (Application.isPlaying && this != null && isActiveAndEnabled) StartCoroutine(QuitAfterDelay());
+                else QuitNow();   // can't wait (tests, or the popup is gone): close right away
                 break;
             case AccountDeletionResult.NotSignedIn:
                 Show(State.Offline);
@@ -164,6 +176,10 @@ public class DeleteAccountPopup : PopupView
             confirmButton.gameObject.SetActive(state == State.Confirm || state == State.Failed);
 
         if (bodyLabel != null) bodyLabel.StringReference = TextFor(state);
+
+        // No X while it can't be closed (it would do nothing)
+        foreach (PopupCloseButton close in GetComponentsInChildren<PopupCloseButton>(true))
+            close.gameObject.SetActive(CanClose);
     }
 
     private LocalizedString TextFor(State state)
@@ -174,6 +190,7 @@ public class DeleteAccountPopup : PopupView
             case State.Deleting: return deletingText;
             case State.Offline: return offlineText;
             case State.Failed: return failedText;
+            case State.Deleted: return deletedText;
             default: return warningText;
         }
     }
@@ -207,5 +224,19 @@ public class DeleteAccountPopup : PopupView
         }
 
         if (CurrentState == State.Offline && _deletion.IsAvailable) Show(State.Confirm);
+    }
+
+    /// <summary>Leaves the "account deleted" message on screen for quitDelaySeconds, then closes the game.</summary>
+    public IEnumerator QuitAfterDelay()
+    {
+        yield return new WaitForSecondsRealtime(quitDelaySeconds);
+        QuitNow();
+    }
+
+    private void QuitNow()
+    {
+        if (QuitRequested) return;
+        QuitRequested = true;
+        _quitter?.Quit();
     }
 }

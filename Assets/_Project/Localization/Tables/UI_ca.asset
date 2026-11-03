@@ -154,6 +154,10 @@ MonoBehaviour:
     m_Localized: "S'est\xE0 connectant..."
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000009
+    m_Localized: "El teu compte s'ha esborrat. El joc es tancar\xE0."
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

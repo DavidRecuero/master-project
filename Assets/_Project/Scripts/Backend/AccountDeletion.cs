@@ -30,7 +30,7 @@ public interface IAccountDeletion
 ///   3. Delete the account (Unity Authentication). Unity also deletes the player's data in its services.
 ///   4. Reset the profile on the device.
 /// If the backend fails, the device keeps everything and the uploads start again: the player can retry.
-/// After Deleted, the game restarts from Boot, which signs in to a new, empty account.
+/// After Deleted, the game closes (DeleteAccountPopup); when it's opened again the Boot signs in to a new, empty account.
 /// </summary>
 public class AccountDeletion : IAccountDeletion
 {
@@ -72,7 +72,7 @@ public class AccountDeletion : IAccountDeletion
         }
 
         _profiles?.ResetData();
-        Debug.Log("[Account] Account deleted. Restarting with a new one.");
+        Debug.Log("[Account] Account deleted.");
         return AccountDeletionResult.Deleted;
     }
 

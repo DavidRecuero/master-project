@@ -29,9 +29,17 @@ public class PopupView : MonoBehaviour
     /// <summary>Called just before the popup is destroyed.</summary>
     protected virtual void OnClosed() { }
 
+    /// <summary>
+    /// False while the player must not leave the popup (e.g. in the middle of deleting the account):
+    /// the X, the dim and the back button do nothing. Closing it from code (scene change) still works.
+    /// </summary>
+    public virtual bool CanClose => true;
+
     /// <summary>For the close button (and the dim). Closes this popup and any popup opened on top of it.</summary>
     public void Close()
     {
+        if (!CanClose) return;
+
         if (Service != null)
         {
             Service.Close(this);

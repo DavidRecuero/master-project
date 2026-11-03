@@ -21,8 +21,6 @@ public class BootCloudTests
         PlayerSession.Reset();
         BackendServices.Reset();
 
-        _bootGO = new GameObject("Boot");
-        _boot = _bootGO.AddComponent<BootManager>();
         _sceneLoader = new FakeSceneLoader();
         _backend = new BootFakeBackendAuth();
         _store = new BootFakeCloudStore();
@@ -32,13 +30,19 @@ public class BootCloudTests
     [TearDown]
     public void TearDown()
     {
-        UnityEngine.Object.Destroy(_bootGO);
+        if (_bootGO != null) UnityEngine.Object.Destroy(_bootGO);
         PlayerSession.Reset();
         BackendServices.Reset();
     }
 
+    /// <summary>
+    /// Creates the BootManager and injects everything in the same frame, before its Start runs.
+    /// (Created in SetUp, Unity can run Start before the test body: it would boot with the real services.)
+    /// </summary>
     private void Init(IAuthProvider auth, float timeout = 2f, bool enabled = true)
     {
+        _bootGO = new GameObject("Boot");
+        _boot = _bootGO.AddComponent<BootManager>();
         _boot.Initialize(_sceneLoader, auth, new FakeBootLocalization());
         _boot.InitializeCloud(_backend, _store, _profiles, timeout, enabled);
     }
@@ -147,6 +151,12 @@ public class BootFakeBackendAuth : IBackendAuthService
         IsSignedIn = true;
         return Task.CompletedTask;
     }
+
+    public Task DeleteAccountAsync()
+    {
+        IsSignedIn = false;
+        return Task.CompletedTask;
+    }
 }
 
 public class BootFakeCloudStore : ICloudSaveStore
@@ -160,6 +170,8 @@ public class BootFakeCloudStore : ICloudSaveStore
         LastSaved = value;
         return Task.CompletedTask;
     }
+
+    public Task DeleteAsync(string key) => Task.CompletedTask;
 }
 
 public class BootFakeProfiles : IProfileRepository

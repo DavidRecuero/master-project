@@ -12,6 +12,8 @@ public class FakeCloudSaveStore : ICloudSaveStore
     public int SaveCount { get; private set; }
     public bool FailLoads { get; set; }
     public bool FailSaves { get; set; }
+    public bool FailDeletes { get; set; }
+    public int DeleteCount { get; private set; }
     public bool HoldSaves { get; set; }
 
     private readonly Queue<TaskCompletionSource<bool>> _heldSaves = new Queue<TaskCompletionSource<bool>>();
@@ -36,6 +38,15 @@ public class FakeCloudSaveStore : ICloudSaveStore
         var held = new TaskCompletionSource<bool>();
         _heldSaves.Enqueue(held);
         return held.Task;
+    }
+
+    public Task DeleteAsync(string key)
+    {
+        if (FailDeletes) return Task.FromException(new Exception("delete failed"));
+
+        DeleteCount++;
+        Data.Remove(key);
+        return Task.CompletedTask;
     }
 
     /// <summary>Finishes the oldest held save.</summary>
@@ -80,6 +91,8 @@ public class FakeBackendAuthService : IBackendAuthService
     public bool SignInCalled { get; private set; }
     public bool FailInitialize { get; set; }
     public bool FailSignIn { get; set; }
+    public bool FailDelete { get; set; }
+    public bool AccountDeleted { get; private set; }
 
     public string PlayerId => IsSignedIn ? AccountId : "";
 
@@ -98,4 +111,16 @@ public class FakeBackendAuthService : IBackendAuthService
         IsSignedIn = true;
         return Task.CompletedTask;
     }
+
+    public Task DeleteAccountAsync()
+    {
+        if (FailDelete) return Task.FromException(new Exception("delete failed"));
+
+        AccountDeleted = true;
+        IsSignedIn = false;
+        return Task.CompletedTask;
+    }
+
+    /// <summary>Signs in without going through InitializeAsync/SignInAsync.</summary>
+    public void SignInNow() => IsSignedIn = true;
 }

@@ -19,4 +19,9 @@ public class UgsCloudSaveStore : ICloudSaveStore
         var data = new Dictionary<string, object> { { key, value } };
         await CloudSaveService.Instance.Data.Player.SaveAsync(data);
     }
+
+    public async Task DeleteAsync(string key)
+    {
+        await CloudSaveService.Instance.Data.Player.DeleteAsync(key);
+    }
 }

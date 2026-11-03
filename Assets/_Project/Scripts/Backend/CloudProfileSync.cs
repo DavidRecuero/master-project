@@ -28,6 +28,9 @@ public class CloudProfileSync
     /// <summary>True once the boot download went well: from then on, saves are uploaded.</summary>
     public bool CanUpload { get; private set; }
 
+    /// <summary>True while stopped (the account is being deleted): nothing is uploaded.</summary>
+    public bool IsStopped { get; private set; }
+
     /// <summary>True when the last upload failed (the cloud is behind the device until the next one works).</summary>
     public bool HasPendingChanges { get; private set; }
 
@@ -75,10 +78,20 @@ public class CloudProfileSync
         return winner;
     }
 
-    /// <summary>Uploads the device copy now. Does nothing before a successful PullAsync. Never throws.</summary>
+    /// <summary>Stops the uploads (account deletion: the saves that follow must not recreate the cloud copy).</summary>
+    public void Stop() => IsStopped = true;
+
+    /// <summary>Uploads again, starting with the current device copy (the account deletion failed).</summary>
+    public async Task ResumeAsync()
+    {
+        IsStopped = false;
+        await UploadAsync();
+    }
+
+    /// <summary>Uploads the device copy now. Does nothing before a successful PullAsync or while stopped. Never throws.</summary>
     public async Task UploadAsync()
     {
-        if (!CanUpload) return;
+        if (!CanUpload || IsStopped) return;
 
         if (_uploading)
         {

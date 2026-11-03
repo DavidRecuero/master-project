@@ -21,4 +21,10 @@ public interface IBackendAuthService
     /// Without it: anonymous sign-in, which reuses the account cached on this device.
     /// </summary>
     Task SignInAsync(string playGamesAuthCode);
+
+    /// <summary>
+    /// Deletes the signed-in account on the backend for good and forgets its session on this device.
+    /// The next sign-in creates a new account.
+    /// </summary>
+    Task DeleteAccountAsync();
 }

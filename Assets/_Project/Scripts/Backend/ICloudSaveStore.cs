@@ -11,4 +11,6 @@ public interface ICloudSaveStore
     Task<string> LoadAsync(string key);
 
     Task SaveAsync(string key, string value);
+
+    Task DeleteAsync(string key);
 }

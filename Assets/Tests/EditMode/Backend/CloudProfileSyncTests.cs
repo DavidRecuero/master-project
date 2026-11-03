@@ -167,4 +167,44 @@ public class CloudProfileSyncTests
         Assert.AreEqual(6, CloudCopy().CurrentLevel);
         Assert.AreEqual(10, CloudCopy().Coins);
     }
+
+    [Test]
+    public void Pull_WhenTheCloudIsAhead_BringsItsBoosters()
+    {
+        var cloud = new UserProfile { CurrentLevel = 5 };
+        cloud.SetBoosterCount(BoosterType.Shuffle, 4);
+        PutInCloud(cloud);
+
+        Pull();
+
+        Assert.AreEqual(4, _profiles.Profile.GetBoosterCount(BoosterType.Shuffle));
+    }
+
+    // --- Stop / resume (account deletion) ---
+
+    [Test]
+    public void Stopped_SavesAreNotUploaded()
+    {
+        Pull();
+        int savesAfterPull = _store.SaveCount;
+
+        _sync.Stop();
+        _profiles.SimulateGameSave(p => p.CurrentLevel = 1);
+
+        Assert.AreEqual(savesAfterPull, _store.SaveCount);
+    }
+
+    [Test]
+    public void Resume_UploadsTheCurrentDeviceCopy()
+    {
+        Pull();
+        _sync.Stop();
+        _store.Data.Remove(CloudProfileSync.ProfileKey);
+        _profiles.SimulateGameSave(p => p.CurrentLevel = 3);
+
+        _sync.ResumeAsync().GetAwaiter().GetResult();
+
+        Assert.IsFalse(_sync.IsStopped);
+        Assert.AreEqual(3, CloudCopy().CurrentLevel);
+    }
 }

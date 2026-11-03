@@ -66,7 +66,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 2300536848384
-    m_Localized: "CR\xC8DITS"
+    m_Localized: "Cr\xE8dits"
     m_Metadata:
       m_Items: []
   - m_Id: 102293733376
@@ -120,6 +120,34 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 347740696379392
     m_Localized: "Pol\xEDtica de privacitat"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000001
+    m_Localized: Esborrar el compte
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000002
+    m_Localized: ESBORRAR EL COMPTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000003
+    m_Localized: "S'esborraran el teu progr\xE9s, les teves monedes i els teus potenciadors d'aquest dispositiu i dels nostres servidors. No es pot desfer."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000004
+    m_Localized: "MANT\xC9N PER ESBORRAR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000005
+    m_Localized: "S'est\xE0 esborrant el compte..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000006
+    m_Localized: "Necessites connexi\xF3 a internet per esborrar el compte. Connecta't i torna a obrir el joc."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000007
+    m_Localized: "No s'ha pogut esborrar el compte. Torna-ho a provar."
     m_Metadata:
       m_Items: []
   references:

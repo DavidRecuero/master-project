@@ -115,6 +115,34 @@ MonoBehaviour:
     m_Key: settings.privacy
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000001
+    m_Key: settings.delete_account
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000002
+    m_Key: delete.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000003
+    m_Key: delete.warning
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000004
+    m_Key: delete.confirm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000005
+    m_Key: delete.deleting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000006
+    m_Key: delete.offline
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000007
+    m_Key: delete.failed
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

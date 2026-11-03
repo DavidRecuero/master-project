@@ -66,7 +66,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 2300536848384
-    m_Localized: "CR\xC9DITOS"
+    m_Localized: "Cr\xE9ditos"
     m_Metadata:
       m_Items: []
   - m_Id: 102293733376
@@ -120,6 +120,34 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 347740696379392
     m_Localized: "Pol\xEDtica de privacidad"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000001
+    m_Localized: Borrar cuenta
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000002
+    m_Localized: BORRAR CUENTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000003
+    m_Localized: "Se borrar\xE1n tu progreso, tus monedas y tus potenciadores de este dispositivo y de nuestros servidores. No se puede deshacer."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000004
+    m_Localized: "MANT\xC9N PARA BORRAR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000005
+    m_Localized: Borrando tu cuenta...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000006
+    m_Localized: "Necesitas conexi\xF3n a internet para borrar la cuenta. Con\xE9ctate y vuelve a abrir el juego."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000007
+    m_Localized: "No se ha podido borrar la cuenta. Int\xE9ntalo de nuevo."
     m_Metadata:
       m_Items: []
   references:

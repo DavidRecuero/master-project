@@ -39,4 +39,13 @@ public class UgsBackendAuthService : IBackendAuthService
 
         await AuthenticationService.Instance.SignInAnonymouslyAsync();
     }
+
+    public async Task DeleteAccountAsync()
+    {
+        await AuthenticationService.Instance.DeleteAccountAsync();
+
+        // Deleting signs the player out; the cached session would point to an account that no longer exists
+        if (!AuthenticationService.Instance.IsSignedIn && AuthenticationService.Instance.SessionTokenExists)
+            AuthenticationService.Instance.ClearSessionToken();
+    }
 }

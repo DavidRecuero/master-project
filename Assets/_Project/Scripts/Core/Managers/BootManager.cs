@@ -143,7 +143,7 @@ public class BootManager : MonoBehaviour
         }
 
         var sync = new CloudProfileSync(_cloudStore, _profiles);
-        BackendServices.Set(_backendAuth, sync);
+        BackendServices.Set(_backendAuth, _cloudStore, sync);
 
         Task<bool> cloud = new CloudBootstrap(_backendAuth, sync, BackendEnvironment.Current).RunAsync(code);
         yield return new WaitUntil(() => cloud.IsCompleted || Time.realtimeSinceStartup >= deadline);

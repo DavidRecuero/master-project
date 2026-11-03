@@ -6,7 +6,8 @@ using UnityEngine.UI;
 /// <summary>
 /// Settings popup: music and SFX on/off, the language selector, the button that opens the credits
 /// on top, the button that opens the privacy policy in the browser (Google Play requires it to be
-/// reachable from inside the game), and a footer with the game version and the player ID (for
+/// reachable from inside the game), the button that opens the "delete account" confirmation (Google Play
+/// requires it for apps that create accounts), and a footer with the game version and the player ID (for
 /// support and bug reports).
 /// It only talks to IAudioService, which already saves the audio choices on the device.
 /// The language selector is its own component (LanguageDropdown) inside the popup.
@@ -29,6 +30,11 @@ public class SettingsPopup : PopupView
     [Header("Privacy")]
     [Tooltip("Opens LegalLinks.PrivacyPolicy in the browser, in the language on screen")]
     [SerializeField] private Button privacyButton;
+
+    [Header("Account")]
+    [SerializeField] private Button deleteAccountButton;
+    [Tooltip("DeleteAccountPopup prefab, opened on top of this one")]
+    [SerializeField] private DeleteAccountPopup deleteAccountPopupPrefab;
 
     [Header("Info")]
     [Tooltip("LocalizeStringEvent of the small text at the bottom. Leave its String Reference empty: the popup sets it.")]
@@ -63,6 +69,7 @@ public class SettingsPopup : PopupView
         if (sfxToggle != null) sfxToggle.onValueChanged.AddListener(OnSfxToggled);
         if (creditsButton != null) creditsButton.onClick.AddListener(OnCreditsClicked);
         if (privacyButton != null) privacyButton.onClick.AddListener(OnPrivacyClicked);
+        if (deleteAccountButton != null) deleteAccountButton.onClick.AddListener(OnDeleteAccountClicked);
     }
 
     private void OnDestroy()
@@ -71,6 +78,7 @@ public class SettingsPopup : PopupView
         if (sfxToggle != null) sfxToggle.onValueChanged.RemoveListener(OnSfxToggled);
         if (creditsButton != null) creditsButton.onClick.RemoveListener(OnCreditsClicked);
         if (privacyButton != null) privacyButton.onClick.RemoveListener(OnPrivacyClicked);
+        if (deleteAccountButton != null) deleteAccountButton.onClick.RemoveListener(OnDeleteAccountClicked);
     }
 
     protected override void OnOpened()
@@ -134,5 +142,17 @@ public class SettingsPopup : PopupView
     {
         _urlOpener ??= new UnityUrlOpener();
         _urlOpener.Open(LegalLinks.PrivacyPolicyUrl(_localization?.CurrentLanguage));
+    }
+
+    /// <summary>Opens the confirmation on top. Nothing is deleted until the player confirms there.</summary>
+    public void OnDeleteAccountClicked()
+    {
+        if (deleteAccountPopupPrefab == null)
+        {
+            Debug.LogWarning("[SettingsPopup] No DeleteAccountPopup prefab assigned.");
+            return;
+        }
+
+        Service?.Open(deleteAccountPopupPrefab);
     }
 }

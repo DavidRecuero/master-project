@@ -51,6 +51,86 @@ public class DeleteAccountPopupTests
     }
 
     [Test]
+    public void OpenedOffline_ConnectsFirst_ThenAsksForConfirmation()
+    {
+        _deletion.IsAvailable = false;
+        var connection = new FakeCloudConnection { ConnectsOnNextTry = true };
+        connection.OnConnected = () => _deletion.IsAvailable = true;
+
+        _popup.Initialize(_deletion, _sceneLoader, connection);
+
+        Assert.AreEqual(1, connection.ConnectCalls);
+        Assert.AreEqual(DeleteAccountPopup.State.Confirm, _popup.CurrentState);
+        Assert.IsTrue(_confirmButton.gameObject.activeSelf);
+    }
+
+    [Test]
+    public void OpenedOffline_StillNoNetwork_ShowsOffline()
+    {
+        _deletion.IsAvailable = false;
+        var connection = new FakeCloudConnection { ConnectsOnNextTry = false };
+
+        _popup.Initialize(_deletion, _sceneLoader, connection);
+
+        Assert.AreEqual(DeleteAccountPopup.State.Offline, _popup.CurrentState);
+        Assert.IsFalse(_confirmButton.gameObject.activeSelf);
+    }
+
+    [Test]
+    public void WhileConnecting_TheButtonIsHidden_AndNothingIsDeleted()
+    {
+        _deletion.IsAvailable = false;
+        var connection = new FakeCloudConnection { Pending = new TaskCompletionSource<bool>() };
+
+        _popup.Initialize(_deletion, _sceneLoader, connection);
+        _popup.OnConfirmClicked();
+
+        Assert.AreEqual(DeleteAccountPopup.State.Connecting, _popup.CurrentState);
+        Assert.IsFalse(_confirmButton.gameObject.activeSelf);
+        Assert.AreEqual(0, _deletion.Calls);
+    }
+
+    [Test]
+    public void WhileOffline_ARetryThatConnects_ShowsTheConfirmation()
+    {
+        _deletion.IsAvailable = false;
+        var connection = new FakeCloudConnection { ConnectsOnNextTry = false };
+        _popup.Initialize(_deletion, _sceneLoader, connection);
+        Assert.AreEqual(DeleteAccountPopup.State.Offline, _popup.CurrentState);
+
+        connection.ConnectsOnNextTry = true;   // the network is back a few seconds later
+        connection.OnConnected = () => _deletion.IsAvailable = true;
+        _popup.TryReconnectAsync().GetAwaiter().GetResult();
+
+        Assert.AreEqual(DeleteAccountPopup.State.Confirm, _popup.CurrentState);
+        Assert.IsTrue(_confirmButton.gameObject.activeSelf);
+    }
+
+    [Test]
+    public void WhileOffline_ARetryWithoutNetwork_StaysOffline()
+    {
+        _deletion.IsAvailable = false;
+        var connection = new FakeCloudConnection { ConnectsOnNextTry = false };
+        _popup.Initialize(_deletion, _sceneLoader, connection);
+
+        _popup.TryReconnectAsync().GetAwaiter().GetResult();
+
+        Assert.AreEqual(DeleteAccountPopup.State.Offline, _popup.CurrentState);
+        Assert.AreEqual(2, connection.ConnectCalls);
+    }
+
+    [Test]
+    public void AlreadyConnected_DoesNotTryToConnectAgain()
+    {
+        var connection = new FakeCloudConnection { IsConnected = true };
+
+        _popup.Initialize(_deletion, _sceneLoader, connection);
+
+        Assert.AreEqual(0, connection.ConnectCalls);
+        Assert.AreEqual(DeleteAccountPopup.State.Confirm, _popup.CurrentState);
+    }
+
+    [Test]
     public void Confirm_DeletesAndRestartsFromBoot()
     {
         _popup.Initialize(_deletion, _sceneLoader);

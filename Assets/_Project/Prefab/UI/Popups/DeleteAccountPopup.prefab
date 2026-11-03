@@ -354,6 +354,15 @@ MonoBehaviour:
   confirmButton: {fileID: 4417092288345001001}
   confirmHold: {fileID: 4417092288345003002}
   bodyLabel: {fileID: 4417092288345001002}
+  connectingText:
+    m_TableReference:
+      m_TableCollectionName: GUID:c09834c581dc3604b84448cb41c7a534
+    m_TableEntryReference:
+      m_KeyId: 348100000000008
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
   warningText:
     m_TableReference:
       m_TableCollectionName: GUID:c09834c581dc3604b84448cb41c7a534

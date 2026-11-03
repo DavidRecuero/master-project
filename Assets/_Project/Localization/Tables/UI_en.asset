@@ -145,11 +145,15 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000006
-    m_Localized: You need an internet connection to delete your account. Connect and open the game again.
+    m_Localized: You need an internet connection to delete your account. Waiting for connection...
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000007
     m_Localized: "Your account couldn't be deleted. Please try again."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000008
+    m_Localized: Connecting...
     m_Metadata:
       m_Items: []
   references:

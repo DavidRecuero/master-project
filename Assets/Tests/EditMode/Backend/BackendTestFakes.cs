@@ -89,6 +89,10 @@ public class FakeBackendAuthService : IBackendAuthService
     public string Environment { get; private set; }
     public string CodeUsed { get; private set; }
     public bool SignInCalled { get; private set; }
+    public int SignInCount { get; private set; }
+
+    /// <summary>Set it to keep the next sign-ins waiting until the test completes it.</summary>
+    public TaskCompletionSource<bool> HoldSignIn { get; set; }
     public bool FailInitialize { get; set; }
     public bool FailSignIn { get; set; }
     public bool FailDelete { get; set; }
@@ -105,11 +109,20 @@ public class FakeBackendAuthService : IBackendAuthService
     public Task SignInAsync(string playGamesAuthCode)
     {
         SignInCalled = true;
+        SignInCount++;
         CodeUsed = playGamesAuthCode;
         if (FailSignIn) return Task.FromException(new Exception("sign-in failed"));
 
+        if (HoldSignIn != null) return FinishWhenReleased(HoldSignIn.Task);
+
         IsSignedIn = true;
         return Task.CompletedTask;
+    }
+
+    private async Task FinishWhenReleased(Task release)
+    {
+        await release;
+        IsSignedIn = true;
     }
 
     public Task DeleteAccountAsync()
@@ -123,4 +136,49 @@ public class FakeBackendAuthService : IBackendAuthService
 
     /// <summary>Signs in without going through InitializeAsync/SignInAsync.</summary>
     public void SignInNow() => IsSignedIn = true;
+}
+
+/// <summary>Play Games sign-in that also hands out a server code (or null, like when offline).</summary>
+public class FakeCodeAuthProvider : FakeAuthProvider, IServerAuthCodeProvider
+{
+    public string Code { get; set; } = "one-time-code";
+    public int CodeRequests { get; private set; }
+
+    public void RequestServerAuthCode(Action<string> onCode)
+    {
+        CodeRequests++;
+        onCode?.Invoke(Code);
+    }
+}
+
+/// <summary>Cloud connection whose result the test decides.</summary>
+public class FakeCloudConnection : ICloudConnection
+{
+    public bool IsConnected { get; set; }
+    public bool ConnectsOnNextTry { get; set; }
+    public TaskCompletionSource<bool> Pending { get; set; }
+    public int ConnectCalls { get; private set; }
+    public int FlushCalls { get; private set; }
+
+    /// <summary>Called when a connection attempt succeeds (e.g. to make the account deletion available).</summary>
+    public Action OnConnected { get; set; }
+
+    public Task<bool> ConnectAsync()
+    {
+        ConnectCalls++;
+        if (Pending != null) return Pending.Task;
+
+        if (ConnectsOnNextTry)
+        {
+            IsConnected = true;
+            OnConnected?.Invoke();
+        }
+        return Task.FromResult(IsConnected);
+    }
+
+    public Task FlushAsync()
+    {
+        FlushCalls++;
+        return Task.CompletedTask;
+    }
 }

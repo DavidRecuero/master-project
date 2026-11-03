@@ -143,6 +143,10 @@ MonoBehaviour:
     m_Key: delete.failed
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000008
+    m_Key: delete.connecting
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

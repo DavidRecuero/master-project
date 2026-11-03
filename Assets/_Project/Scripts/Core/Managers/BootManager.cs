@@ -115,48 +115,29 @@ public class BootManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Signs in on the backend and syncs the profile, waiting at most cloudTimeout seconds in total.
-    /// Play Games players sign in with their server code; guests sign in anonymously.
-    /// A Play Games player without a code stays offline this session (never as a guest, see UgsBackendAuthService).
+    /// Creates the cloud session for the whole game and waits for its first connection, at most cloudTimeout
+    /// seconds. Whatever happens, the menu then opens with the profile in use locked (a late or later cloud copy
+    /// never replaces it mid-session), and the CloudReconnector keeps trying when the game comes back from the
+    /// background. See CloudSession for the sign-in rules (Play Games code, guests, never a guest for Play Games).
     /// </summary>
     private IEnumerator CloudStep()
     {
+        var session = new CloudSession(_authProvider, _backendAuth, _cloudStore, _profiles, BackendEnvironment.Current, cloudTimeout);
+        BackendServices.Set(_backendAuth, _cloudStore, session);
+        if (Application.isPlaying) CloudReconnector.Watch(session);
+
         float deadline = Time.realtimeSinceStartup + cloudTimeout;
+        Task<bool> connection = session.ConnectAsync();
+        yield return new WaitUntil(() => connection.IsCompleted || Time.realtimeSinceStartup >= deadline);
 
-        string code = null;
-        if (_authProvider.IsSignedIn && _authProvider is IServerAuthCodeProvider codeProvider)
-        {
-            bool codeReady = false;
-            codeProvider.RequestServerAuthCode(c =>
-            {
-                code = c;
-                codeReady = true;
-            });
+        // From now on the player is using this profile
+        session.Sync.ProfileInUse = true;
 
-            yield return new WaitUntil(() => codeReady || Time.realtimeSinceStartup >= deadline);
-
-            if (string.IsNullOrEmpty(code))
-            {
-                Debug.LogWarning("[BOOT] No Play Games server code. Cloud off for this session, using the data on this device.");
-                yield break;
-            }
-        }
-
-        var sync = new CloudProfileSync(_cloudStore, _profiles);
-        BackendServices.Set(_backendAuth, _cloudStore, sync);
-
-        Task<bool> cloud = new CloudBootstrap(_backendAuth, sync, BackendEnvironment.Current).RunAsync(code);
-        yield return new WaitUntil(() => cloud.IsCompleted || Time.realtimeSinceStartup >= deadline);
-
-        if (!cloud.IsCompleted)
-        {
-            sync.BootDeadlinePassed = true;
+        if (!connection.IsCompleted)
             Debug.LogWarning($"[BOOT] Cloud not ready in {cloudTimeout} s. Opening the menu with the data on this device.");
-            yield break;
-        }
-
-        Debug.Log(cloud.Result
-            ? $"[BOOT] Cloud ready (PlayerId: {_backendAuth.PlayerId})"
-            : "[BOOT] Cloud unavailable. Using the data on this device.");
+        else if (connection.Result)
+            Debug.Log($"[BOOT] Cloud ready (PlayerId: {_backendAuth.PlayerId})");
+        else
+            Debug.Log("[BOOT] Cloud unavailable. Using the data on this device; it will retry when the game comes back from the background.");
     }
 }

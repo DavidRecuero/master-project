@@ -73,11 +73,11 @@ public class CloudProfileSyncTests
     }
 
     [Test]
-    public void Pull_ThatArrivesAfterTheBootDeadline_DoesNotSwapTheProfileInUse()
+    public void Pull_WhileTheProfileIsInUse_DoesNotSwapIt()
     {
         _profiles.Profile = new UserProfile { CurrentLevel = 1 };
         PutInCloud(new UserProfile { CurrentLevel = 7 });
-        _sync.BootDeadlinePassed = true;
+        _sync.ProfileInUse = true;
 
         Pull();
 

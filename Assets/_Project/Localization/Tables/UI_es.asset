@@ -143,11 +143,15 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000006
-    m_Localized: "Necesitas conexi\xF3n a internet para borrar la cuenta. Con\xE9ctate y vuelve a abrir el juego."
+    m_Localized: "Necesitas conexi\xF3n a internet para borrar la cuenta. Esperando conexi\xF3n..."
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000007
     m_Localized: "No se ha podido borrar la cuenta. Int\xE9ntalo de nuevo."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000008
+    m_Localized: Conectando...
     m_Metadata:
       m_Items: []
   references:

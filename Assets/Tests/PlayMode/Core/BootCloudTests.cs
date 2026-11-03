@@ -31,6 +31,8 @@ public class BootCloudTests
     public void TearDown()
     {
         if (_bootGO != null) UnityEngine.Object.Destroy(_bootGO);
+        var reconnector = UnityEngine.Object.FindFirstObjectByType<CloudReconnector>();
+        if (reconnector != null) UnityEngine.Object.Destroy(reconnector.gameObject);
         PlayerSession.Reset();
         BackendServices.Reset();
     }
@@ -95,7 +97,36 @@ public class BootCloudTests
 
         yield return new WaitForSeconds(0.4f);
         Assert.AreEqual(1, _sceneLoader.LoadedSceneIndex, "Menu opens with the data on the device");
-        Assert.IsTrue(BackendServices.ProfileSync.BootDeadlinePassed);
+        Assert.IsTrue(BackendServices.ProfileSync.ProfileInUse);
+    }
+
+    [UnityTest]
+    public IEnumerator AfterTheBoot_TheProfileInUseIsLocked()
+    {
+        Init(new FakeAuthProvider());
+
+        yield return new WaitForSeconds(0.2f);
+
+        Assert.IsTrue(BackendServices.ProfileSync.ProfileInUse, "A later cloud copy must never replace the profile mid-session");
+    }
+
+    [UnityTest]
+    public IEnumerator StartedOffline_TheSessionConnectsLater()
+    {
+        var playGames = new FakePlayGamesAuth { Code = null };   // offline: Play Games gives no code
+        Init(playGames);
+
+        yield return new WaitForSeconds(0.2f);
+        Assert.AreEqual(1, _sceneLoader.LoadedSceneIndex);
+        Assert.IsFalse(_backend.SignInCalled);
+
+        playGames.Code = "code-later";   // network is back
+        var reconnect = BackendServices.Session.ConnectAsync();
+        yield return new WaitUntil(() => reconnect.IsCompleted);
+
+        Assert.IsTrue(reconnect.Result);
+        Assert.AreEqual("code-later", _backend.CodeUsed);
+        Assert.IsNotNull(_store.LastSaved, "The progress made offline is uploaded");
     }
 
     [UnityTest]

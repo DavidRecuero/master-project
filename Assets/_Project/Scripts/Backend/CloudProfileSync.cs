@@ -35,10 +35,12 @@ public class CloudProfileSync
     public bool HasPendingChanges { get; private set; }
 
     /// <summary>
-    /// Set by the Boot when it stops waiting. A cloud copy that arrives later is not applied over
-    /// the profile the player is already using (and nothing is uploaded, so the cloud keeps it for the next boot).
+    /// True once the player is using the profile on the device (the Boot sets it when it opens the menu).
+    /// From then on, a cloud copy that is ahead is not applied over it (it would change the game mid-session)
+    /// and nothing is uploaded, so the cloud keeps it for the next start. Applies to a slow boot download
+    /// and to a reconnection later in the session.
     /// </summary>
-    public bool BootDeadlinePassed { get; set; }
+    public bool ProfileInUse { get; set; }
 
     public CloudProfileSync(ICloudSaveStore store, IProfileRepository profiles)
     {
@@ -58,9 +60,9 @@ public class CloudProfileSync
 
         if (winner == ProfileSource.Cloud)
         {
-            if (BootDeadlinePassed)
+            if (ProfileInUse)
             {
-                Debug.LogWarning("[Cloud] The cloud copy is ahead, but it arrived after the menu opened. It will be used on the next start.");
+                Debug.LogWarning("[Cloud] The cloud copy is ahead, but the game is already using the device copy. It will be used on the next start.");
                 return winner;
             }
 

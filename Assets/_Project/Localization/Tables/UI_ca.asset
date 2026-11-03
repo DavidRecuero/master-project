@@ -143,11 +143,15 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000006
-    m_Localized: "Necessites connexi\xF3 a internet per esborrar el compte. Connecta't i torna a obrir el joc."
+    m_Localized: "Necessites connexi\xF3 a internet per esborrar el compte. Esperant connexi\xF3..."
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000007
     m_Localized: "No s'ha pogut esborrar el compte. Torna-ho a provar."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000008
+    m_Localized: "S'est\xE0 connectant..."
     m_Metadata:
       m_Items: []
   references:

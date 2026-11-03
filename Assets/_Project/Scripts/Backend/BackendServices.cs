@@ -9,13 +9,15 @@ public static class BackendServices
 {
     public static IBackendAuthService Auth { get; private set; }
     public static ICloudSaveStore CloudStore { get; private set; }
-    public static CloudProfileSync ProfileSync { get; private set; }
+    public static CloudSession Session { get; private set; }
 
-    public static void Set(IBackendAuthService auth, ICloudSaveStore cloudStore, CloudProfileSync profileSync)
+    public static CloudProfileSync ProfileSync => Session?.Sync;
+
+    public static void Set(IBackendAuthService auth, ICloudSaveStore cloudStore, CloudSession session)
     {
         Auth = auth;
         CloudStore = cloudStore;
-        ProfileSync = profileSync;
+        Session = session;
     }
 
     // With "Enter Play Mode Options" (no domain reload) statics survive between Play sessions

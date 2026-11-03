@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Services.CloudSave;
+using PlayerDeleteOptions = Unity.Services.CloudSave.Models.Data.Player.DeleteOptions;
 
 /// <summary>
 /// ICloudSaveStore on top of Cloud Save (Player Data, default access class: only the player can read it).
@@ -22,6 +23,7 @@ public class UgsCloudSaveStore : ICloudSaveStore
 
     public async Task DeleteAsync(string key)
     {
-        await CloudSaveService.Instance.Data.Player.DeleteAsync(key);
+        // With the options of Models.Data.Player: the overload without them is obsolete in Cloud Save 3.x
+        await CloudSaveService.Instance.Data.Player.DeleteAsync(key, new PlayerDeleteOptions());
     }
 }

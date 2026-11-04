@@ -160,6 +160,26 @@ MonoBehaviour:
     m_Localized: Your account has been deleted. The game will now close.
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000010
+    m_Localized: Abandon level
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000011
+    m_Localized: "ABANDON LEVEL?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000012
+    m_Localized: "If you leave now, you will lose this level. Boosters you have already used won't be given back."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000013
+    m_Localized: ABANDON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000014
+    m_Localized: KEEP PLAYING
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

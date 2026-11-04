@@ -158,6 +158,26 @@ MonoBehaviour:
     m_Localized: "Tu cuenta se ha borrado. El juego se cerrar\xE1."
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000010
+    m_Localized: Abandonar partida
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000011
+    m_Localized: "\xBFABANDONAR PARTIDA?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000012
+    m_Localized: "Si sales ahora, perder\xE1s esta partida. Los potenciadores que ya hayas usado no se recuperan."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000013
+    m_Localized: ABANDONAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000014
+    m_Localized: SEGUIR JUGANDO
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

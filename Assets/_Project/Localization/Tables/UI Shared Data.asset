@@ -151,6 +151,26 @@ MonoBehaviour:
     m_Key: delete.done
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000010
+    m_Key: settings.abandon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000011
+    m_Key: abandon.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000012
+    m_Key: abandon.warning
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000013
+    m_Key: abandon.confirm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000014
+    m_Key: abandon.keep_playing
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

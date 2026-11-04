@@ -19,7 +19,7 @@ public class InputManager : MonoBehaviour
     // Event subscribed to by other components
     public static event Action<Item> OnItemClicked;
 
-    // Board taps are ignored once the level has ended (the result popup is up)
+    // Board taps are ignored once the level has ended (the result popup is up, or it was abandoned)
     private bool _levelEnded;
 
     private void Awake()
@@ -32,6 +32,7 @@ public class InputManager : MonoBehaviour
         Item.Pressed += HandleItemPressed;
         GameEvents.OnLevelCleared += HandleLevelEnded;
         GameEvents.OnLevelFailed += HandleLevelEnded;
+        GameEvents.OnLevelAbandoned += HandleLevelEnded;
     }
 
     private void OnDisable()
@@ -39,6 +40,7 @@ public class InputManager : MonoBehaviour
         Item.Pressed -= HandleItemPressed;
         GameEvents.OnLevelCleared -= HandleLevelEnded;
         GameEvents.OnLevelFailed -= HandleLevelEnded;
+        GameEvents.OnLevelAbandoned -= HandleLevelEnded;
     }
 
     private void HandleLevelEnded() => _levelEnded = true;

@@ -158,6 +158,26 @@ MonoBehaviour:
     m_Localized: "El teu compte s'ha esborrat. El joc es tancar\xE0."
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000010
+    m_Localized: Abandonar la partida
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000011
+    m_Localized: "ABANDONAR LA PARTIDA?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000012
+    m_Localized: "Si surts ara, perdr\xE0s aquesta partida. Els potenciadors que ja hagis fet servir no es recuperen."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000013
+    m_Localized: ABANDONAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000014
+    m_Localized: CONTINUAR JUGANT
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

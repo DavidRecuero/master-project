@@ -9,6 +9,9 @@ using UnityEngine.UI;
 /// reachable from inside the game), the button that opens the "delete account" confirmation (Google Play
 /// requires it for apps that create accounts), and a footer with the game version and the player ID (for
 /// support and bug reports).
+/// The same component drives the gameplay Settings (GameplaySettingsPopup prefab): there it only has the audio
+/// toggles, the language selector and the "Abandon level" button, which opens the confirmation on top. Every
+/// section is optional: a prefab without that button simply doesn't show it.
 /// It only talks to IAudioService, which already saves the audio choices on the device.
 /// The language selector is its own component (LanguageDropdown) inside the popup.
 /// Every fixed label of the prefab uses a LocalizeStringEvent; only the footer is filled from here.
@@ -35,6 +38,12 @@ public class SettingsPopup : PopupView
     [SerializeField] private Button deleteAccountButton;
     [Tooltip("DeleteAccountPopup prefab, opened on top of this one")]
     [SerializeField] private DeleteAccountPopup deleteAccountPopupPrefab;
+
+    [Header("Level (gameplay only)")]
+    [Tooltip("Abandon level button. Only in the gameplay Settings")]
+    [SerializeField] private Button abandonButton;
+    [Tooltip("AbandonLevelPopup prefab, opened on top of this one")]
+    [SerializeField] private AbandonLevelPopup abandonLevelPopupPrefab;
 
     [Header("Info")]
     [Tooltip("LocalizeStringEvent of the small text at the bottom. Leave its String Reference empty: the popup sets it.")]
@@ -70,6 +79,7 @@ public class SettingsPopup : PopupView
         if (creditsButton != null) creditsButton.onClick.AddListener(OnCreditsClicked);
         if (privacyButton != null) privacyButton.onClick.AddListener(OnPrivacyClicked);
         if (deleteAccountButton != null) deleteAccountButton.onClick.AddListener(OnDeleteAccountClicked);
+        if (abandonButton != null) abandonButton.onClick.AddListener(OnAbandonClicked);
     }
 
     private void OnDestroy()
@@ -79,6 +89,7 @@ public class SettingsPopup : PopupView
         if (creditsButton != null) creditsButton.onClick.RemoveListener(OnCreditsClicked);
         if (privacyButton != null) privacyButton.onClick.RemoveListener(OnPrivacyClicked);
         if (deleteAccountButton != null) deleteAccountButton.onClick.RemoveListener(OnDeleteAccountClicked);
+        if (abandonButton != null) abandonButton.onClick.RemoveListener(OnAbandonClicked);
     }
 
     protected override void OnOpened()
@@ -100,12 +111,15 @@ public class SettingsPopup : PopupView
             if (sfxToggle != null) sfxToggle.SetIsOnWithoutNotify(_audio.SfxEnabled);
         }
 
+        // The gameplay Settings has no footer
+        if (infoLabel == null) return;
+
         // The full ID is shown (not cut) so the player can send it with a bug report.
         // Variables first, then the string: it is never formatted without them.
         infoText.SetVariable(VersionVariable, SafeValue(_version ?? Application.version));
         infoText.SetVariable(IdVariable, SafeValue(_userData?.UserId));
 
-        if (infoLabel != null && !ReferenceEquals(infoLabel.StringReference, infoText))
+        if (!ReferenceEquals(infoLabel.StringReference, infoText))
             infoLabel.StringReference = infoText;
     }
 
@@ -154,5 +168,17 @@ public class SettingsPopup : PopupView
         }
 
         Service?.Open(deleteAccountPopupPrefab);
+    }
+
+    /// <summary>Opens the "abandon level?" confirmation on top. Nothing happens until the player confirms there.</summary>
+    public void OnAbandonClicked()
+    {
+        if (abandonLevelPopupPrefab == null)
+        {
+            Debug.LogWarning("[SettingsPopup] No AbandonLevelPopup prefab assigned.");
+            return;
+        }
+
+        Service?.Open(abandonLevelPopupPrefab);
     }
 }

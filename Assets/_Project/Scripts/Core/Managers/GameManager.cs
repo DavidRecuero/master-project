@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class GameManager : MonoBehaviour, IGameStateController
+public class GameManager : MonoBehaviour, IGameStateController, ILevelAbandoner
 {
     public static GameManager Instance { get; private set; }
 
@@ -102,6 +102,19 @@ public class GameManager : MonoBehaviour, IGameStateController
         _sceneLoader.LoadScene(1);
     }
 
+    /// <summary>
+    /// Called by "Abandon level" (gameplay Settings, after the confirmation).
+    /// The level counts as lost: nothing is saved (no level, no coins; the boosters already used stay spent)
+    /// and the player goes back to the main menu. Only while playing: once the level is won or lost it does nothing.
+    /// </summary>
+    public bool AbandonLevel()
+    {
+        if (!TrySetState(GameState.Abandoned)) return false;
+
+        BackToMenu();
+        return true;
+    }
+
     private void LoadCorrectLevel()
     {
         //Will be different in case of choosing a random level (if user has gone beyond last designed level)
@@ -145,6 +158,11 @@ public class GameManager : MonoBehaviour, IGameStateController
             case GameState.Defeat:
                 Debug.Log("[GAME STATE] DEFEAT");
                 GameEvents.TriggerLevelFailed();
+                break;
+
+            case GameState.Abandoned:
+                Debug.Log("[GAME STATE] ABANDONED");
+                GameEvents.TriggerLevelAbandoned();
                 break;
         }
 

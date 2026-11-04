@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// Single source of truth for the draw order of everything on the board.
 /// Each pipe layer gets its own band of LayerStride orders, so a higher layer always covers a lower one,
-/// and inside a band: shadow, tube, platform, item, mouth, counter.
+/// and inside a band: shadow, tube, platform, item, glass, mouth, counter.
 /// Things that must cover the whole board (fog, crate debris) use AboveBoard, which grows with the level's layers.
 /// Tray items use 100, so levels must stay under 10 layers.
 /// </summary>
@@ -17,9 +17,11 @@ public static class BoardSortingOrder
     public const int Tube = 2;
     public const int Platform = 3;
     public const int Item = 4;
-    public const int Mouth = 5;
-    public const int Counter = 6;
-    public const int CounterText = 7;
+    /// <summary>The glass over the tube: covers the items inside it, not the one on the exit platform.</summary>
+    public const int Glass = 5;
+    public const int Mouth = 6;
+    public const int Counter = 7;
+    public const int CounterText = 8;
 
     public static int For(int layer, int element) => layer * LayerStride + element;
 

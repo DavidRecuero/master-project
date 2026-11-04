@@ -29,6 +29,34 @@ public class BoardSortingOrderTests
     }
 
     [Test]
+    public void Glass_CoversTheItemsInTheTube_ButNotTheMouths()
+    {
+        Assert.Greater(BoardSortingOrder.Glass, BoardSortingOrder.Item);
+        Assert.Greater(BoardSortingOrder.Glass, BoardSortingOrder.Platform);
+        Assert.Less(BoardSortingOrder.Glass, BoardSortingOrder.Mouth);
+        Assert.Less(BoardSortingOrder.CounterText, BoardSortingOrder.LayerStride, "Everything of a layer fits in its band");
+    }
+
+    [Test]
+    public void TileSet_HasAGlassForEveryTubePiece()
+    {
+        var set = UnityEngine.ScriptableObject.CreateInstance<PipeTileSet>();
+        try
+        {
+            var sprite = UnityEngine.Sprite.Create(new UnityEngine.Texture2D(2, 2), new UnityEngine.Rect(0, 0, 2, 2), UnityEngine.Vector2.zero);
+            set.glassStraightVertical = set.glassStraightHorizontal = sprite;
+            set.glassCornerUpRight = set.glassCornerUpLeft = set.glassCornerDownRight = set.glassCornerDownLeft = sprite;
+
+            foreach (PipePieceType type in System.Enum.GetValues(typeof(PipePieceType)))
+                Assert.AreSame(sprite, set.GetGlass(type), type.ToString());
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(set);
+        }
+    }
+
+    [Test]
     public void AboveBoard_WithoutPipes_IsAboveLayerZero()
     {
         Assert.AreEqual(10, BoardSortingOrder.AboveBoard(new LevelData()));

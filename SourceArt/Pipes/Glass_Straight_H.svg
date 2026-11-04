@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Glass over the tube interior: a thin white layer (15 %), a reflection near the upper-left wall and a soft shade on the lower-right wall.
+       Same interior shape as Pipe_Straight_H.svg, so the pieces join up. -->
+  <defs>
+    <clipPath id="canvasStraightH"><rect width="256" height="256"/></clipPath>
+    <clipPath id="insideStraightH"><rect x="-400" y="28.44" width="528.00" height="199.11"/><rect x="128.00" y="28.44" width="656" height="199.11"/></clipPath>
+    <mask id="glintStraightH" maskUnits="userSpaceOnUse" x="-500" y="-500" width="1300" height="1300">
+      <g fill="#fff" transform="translate(12,12)"><rect x="-400" y="28.44" width="528.00" height="199.11"/><rect x="128.00" y="28.44" width="656" height="199.11"/></g><g fill="#000" transform="translate(28,28)"><rect x="-400" y="28.44" width="528.00" height="199.11"/><rect x="128.00" y="28.44" width="656" height="199.11"/></g>
+    </mask>
+    <mask id="shadeStraightH" maskUnits="userSpaceOnUse" x="-500" y="-500" width="1300" height="1300">
+      <g fill="#fff"><rect x="-400" y="28.44" width="528.00" height="199.11"/><rect x="128.00" y="28.44" width="656" height="199.11"/></g><g fill="#000" transform="translate(-22,-22)"><rect x="-400" y="28.44" width="528.00" height="199.11"/><rect x="128.00" y="28.44" width="656" height="199.11"/></g>
+    </mask>
+  </defs>
+  <g clip-path="url(#canvasStraightH)"><g clip-path="url(#insideStraightH)">
+    <g fill="#FFFFFF" opacity="0.15"><rect x="-400" y="28.44" width="528.00" height="199.11"/><rect x="128.00" y="28.44" width="656" height="199.11"/></g>
+    <rect x="-500" y="-500" width="1300" height="1300" fill="#FFFFFF" fill-opacity="0.85" mask="url(#glintStraightH)"/>
+    <rect x="-500" y="-500" width="1300" height="1300" fill="#22304A" fill-opacity="0.12" mask="url(#shadeStraightH)"/>
+  </g></g>
+</svg>

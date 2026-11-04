@@ -24,6 +24,15 @@ public class PipeTileSet : ScriptableObject
     [Tooltip("Moves the outlet mouth back into the tube, in cells. 0.09 makes its lower edge touch the top of the exit platform.")]
     public float outletMouthInset = 0.09f;
 
+    [Header("Glass (over the items inside the tube)")]
+    [Tooltip("Thin glass drawn over each tube piece, above the items and below the mouths, so the items inside read as \"behind glass\" and only the one on the exit platform looks tappable. Same shape as the tube pieces. Empty: no glass.")]
+    public Sprite glassStraightVertical;
+    public Sprite glassStraightHorizontal;
+    public Sprite glassCornerUpRight;
+    public Sprite glassCornerUpLeft;
+    public Sprite glassCornerDownRight;
+    public Sprite glassCornerDownLeft;
+
     [Header("Exit platform")]
     public Sprite platformActive;
     public Sprite platformOff;
@@ -70,6 +79,20 @@ public class PipeTileSet : ScriptableObject
             case PipePieceType.CornerUpLeft: return cornerUpLeft;
             case PipePieceType.CornerDownRight: return cornerDownRight;
             default: return cornerDownLeft;
+        }
+    }
+
+    /// <summary>Glass sprite for that tube piece, or null if the tile set has no glass.</summary>
+    public Sprite GetGlass(PipePieceType type)
+    {
+        switch (type)
+        {
+            case PipePieceType.StraightVertical: return glassStraightVertical;
+            case PipePieceType.StraightHorizontal: return glassStraightHorizontal;
+            case PipePieceType.CornerUpRight: return glassCornerUpRight;
+            case PipePieceType.CornerUpLeft: return glassCornerUpLeft;
+            case PipePieceType.CornerDownRight: return glassCornerDownRight;
+            default: return glassCornerDownLeft;
         }
     }
 

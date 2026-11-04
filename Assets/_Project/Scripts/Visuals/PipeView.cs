@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 
 /// <summary>
-/// Draws one pipe: tube pieces (with their shadow), inlet and outlet mouths, the exit platform and the
+/// Draws one pipe: tube pieces (with their shadow and the glass over the items), inlet and outlet mouths, the exit platform and the
 /// inlet counter with the number of elements still waiting in the queue.
 /// Dumb view: it only reads the Pipe it was built for; PipeBoardRenderer tells it when to refresh.
 /// </summary>
@@ -59,6 +59,13 @@ public class PipeView : MonoBehaviour
                     BoardSortingOrder.For(layer, BoardSortingOrder.Shadow), tileSet.shadowColor, tileSet.pieceOverlapScale);
                 CreateRenderer($"Tube_{piece.Cell.x}_{piece.Cell.y}", sprite, pos,
                     BoardSortingOrder.For(layer, BoardSortingOrder.Tube), tint, tileSet.pieceOverlapScale);
+
+                // Glass over the items in this piece. Scale 1 (no overlap): the glass is see-through,
+                // so overlapping pieces would draw a brighter line at every joint.
+                Sprite glass = tileSet.GetGlass(piece.Type);
+                if (glass != null)
+                    CreateRenderer($"Glass_{piece.Cell.x}_{piece.Cell.y}", glass, pos,
+                        BoardSortingOrder.For(layer, BoardSortingOrder.Glass), Color.white, 1f);
             }
 
             PipeMouth inlet = PipePieceResolver.InletMouth(path);

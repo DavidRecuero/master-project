@@ -24,6 +24,24 @@ MonoBehaviour:
   outletMouthInset: 0.09
   platformActive: {fileID: 21300000, guid: 8092a12d22e3502aaaac4aec14dc11bd, type: 3}
   platformOff: {fileID: 21300000, guid: bff8fc411ec15ada88951ca4417ce070, type: 3}
+  platformActiveFrames:
+  - {fileID: 4641603982383516983, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 1445363681616962640, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 8574918311415852851, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 1868196408185819179, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 6375270654777870840, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 2980241222855773941, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 1792723338049442008, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 4856957380441106266, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 3219724388333390735, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 6082513832886728665, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 1545198181100374566, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 6215389816265151663, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 6816497446257569881, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 6377197318101497525, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 1570576685538020777, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  - {fileID: 6400666402170143951, guid: b1319733388044e6a175b9f4e2eb55f2, type: 3}
+  platformFramesPerSecond: 12
   counterPlate: {fileID: 21300000, guid: 2588be768c5e53b4b81512971c647fac, type: 3}
   counterPost: {fileID: 21300000, guid: aafcf9d2ab79565291f661ab4c72b234, type: 3}
   counterPostDistance: 0.19

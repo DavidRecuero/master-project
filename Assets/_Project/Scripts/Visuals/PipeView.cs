@@ -14,6 +14,7 @@ public class PipeView : MonoBehaviour
     private PipeTileSet tileSet;
 
     private SpriteRenderer platformRenderer;
+    private PlatformStripesFx platformFx;
     private GameObject counterRoot;
     private TextMeshPro counterText;
 
@@ -72,6 +73,13 @@ public class PipeView : MonoBehaviour
         platformRenderer = CreateRenderer("Platform", tileSet.platformActive, gridToWorld(pipe.ExitPosition),
             BoardSortingOrder.For(layer, BoardSortingOrder.Platform), Color.white, 1f);
 
+        // Moving stripes while there is something to collect (only if the tile set has the frames)
+        if (tileSet.platformActiveFrames != null && tileSet.platformActiveFrames.Length > 0)
+        {
+            platformFx = platformRenderer.gameObject.AddComponent<PlatformStripesFx>();
+            platformFx.Initialize(platformRenderer, tileSet.platformActiveFrames, tileSet.platformFramesPerSecond);
+        }
+
         Refresh();
     }
 
@@ -81,7 +89,11 @@ public class PipeView : MonoBehaviour
         if (pipe == null || tileSet == null) return;
 
         if (platformRenderer != null)
-            platformRenderer.sprite = IsPlatformActive(pipe) ? tileSet.platformActive : tileSet.platformOff;
+        {
+            bool active = IsPlatformActive(pipe);
+            platformRenderer.sprite = active ? tileSet.platformActive : tileSet.platformOff;
+            if (platformFx != null) platformFx.SetPlaying(active);
+        }
 
         if (counterRoot != null)
         {

@@ -27,6 +27,10 @@ public class PipeTileSet : ScriptableObject
     [Header("Exit platform")]
     public Sprite platformActive;
     public Sprite platformOff;
+    [Tooltip("Active platform with the stripes moving, one stripe period (Platform_Active_Anim). Empty: platformActive stays still")]
+    public Sprite[] platformActiveFrames;
+    [Tooltip("Frames per second of the moving stripes. 16 frames at 20 fps = one stripe every 0.8 s")]
+    public float platformFramesPerSecond = 20f;
 
     [Header("Inlet counter")]
     public Sprite counterPlate;

@@ -272,7 +272,7 @@ public class TrayManager : MonoBehaviour
 
         // The new item flies in an arc to its slot; the ones it pushes aside slide over
         Dictionary<Item, int> layout = ComputeLayout();
-        item.Motion.FlyTo(SlotPosition(layout[item]), startScale, () => OnItemLanded(item));
+        item.Motion.FlyTo(SlotPosition(layout[item]), startScale, item.defaultScale, () => OnItemLanded(item));
         UpdateTrayLayout(layout);
         CheckForMatches(item.colorID);
 

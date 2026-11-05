@@ -366,6 +366,8 @@ public class Item : MonoBehaviour, IPointerDownHandler
     {
         ItemMotion m = Motion;
         m.SetPulse(false, pulseSpeed, pulseAmount);
-        if (!m.IsGrowing) m.SetBaseScale(BaseScale);
+        // Always, even in the middle of the growth to the platform size: an item tapped while it was still
+        // growing has to end at its tray size, not at the platform size the growth was heading to
+        m.SetBaseScale(BaseScale);
     }
 }

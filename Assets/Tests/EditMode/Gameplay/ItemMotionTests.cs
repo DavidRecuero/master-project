@@ -90,12 +90,37 @@ public class ItemMotionTests
         int landed = 0;
         _motion.SetBaseScale(0.86f);
 
-        _motion.FlyTo(new Vector3(-1f, -4f, 0f), 1f, () => landed++);
+        _motion.FlyTo(new Vector3(-1f, -4f, 0f), 1f, 0.86f, () => landed++);
         _motion.Complete();
 
         Assert.AreEqual(new Vector3(-1f, -4f, 0f), _go.transform.position);
         Assert.AreEqual(1, landed);
         Assert.AreEqual(0.86f, _go.transform.localScale.x, 1e-5f, "Lands at its tray size");
+    }
+
+    [Test]
+    public void InTheTray_TheSizeStaysFixed()
+    {
+        _motion.FlyTo(Vector3.zero, 1.006f, 0.86f, null);
+
+        UnityEngine.TestTools.LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex("ignored"));
+        _motion.SetBaseScale(1.006f);
+        _motion.GrowTo(0.86f, 1.006f, 0f);
+        _motion.SetPulse(true, 14f, 0.02f);
+
+        Assert.AreEqual(0.86f, _motion.BaseScale, 1e-5f);
+        Assert.AreEqual(0.86f, _go.transform.localScale.x, 1e-5f);
+    }
+
+    [Test]
+    public void BackToThePool_TheSizeCanChangeAgain()
+    {
+        _motion.FlyTo(Vector3.zero, 1.006f, 0.86f, null);
+        _motion.ResetMotion();
+
+        _motion.SetBaseScale(1.006f);
+
+        Assert.AreEqual(1.006f, _motion.BaseScale, 1e-5f);
     }
 
     [Test]

@@ -37,6 +37,9 @@ public class ItemMotion : MonoBehaviour
     private float _pulseSpeed;
     private float _pulseAmount;
 
+    // ---- Tray: once it flies to the tray its size is fixed (no growth, no pulse, no other size)
+    private bool _sizeLocked;
+
     public ItemMotionSettings Settings => _settings != null ? _settings : ItemMotionSettings.Defaults;
 
     /// <summary>True while it slides or flies (the landing squash doesn't count).</summary>
@@ -61,6 +64,12 @@ public class ItemMotion : MonoBehaviour
     /// <summary>New resting size, at once (no growth).</summary>
     public void SetBaseScale(float scale)
     {
+        if (_sizeLocked)
+        {
+            WarnLocked(scale);
+            return;
+        }
+
         _baseScale = scale;
         _growStart = -1f;
         if (!IsMoving || _path != Path.Arc) ApplyScale(scale, 1f, 1f);
@@ -69,6 +78,12 @@ public class ItemMotion : MonoBehaviour
     /// <summary>Grows (or shrinks) from one size to the resting size, with the overshoot of the settings.</summary>
     public void GrowTo(float from, float to, float delay)
     {
+        if (_sizeLocked)
+        {
+            WarnLocked(to);
+            return;
+        }
+
         _growFrom = from;
         _baseScale = to;
         _growStart = Time.time + Mathf.Max(0f, delay);
@@ -78,6 +93,7 @@ public class ItemMotion : MonoBehaviour
     /// <summary>Idle pulse on top of the resting size (the item waiting on the platform).</summary>
     public void SetPulse(bool on, float speed, float amount)
     {
+        if (_sizeLocked) on = false;
         _pulse = on;
         _pulseSpeed = speed;
         _pulseAmount = amount;
@@ -100,14 +116,18 @@ public class ItemMotion : MonoBehaviour
     }
 
     /// <summary>
-    /// Flies in an arc to a tray slot. startScale: the size it leaves with; it ends at the current base scale.
+    /// Flies in an arc to a tray slot. startScale: the size it leaves with; endScale: its tray size, which
+    /// stays fixed from now on (no growth, no pulse) until the item goes back to the pool.
     /// onLanded runs once, when it reaches the slot (or at once if it can't animate).
     /// </summary>
-    public void FlyTo(Vector3 target, float startScale, Action onLanded)
+    public void FlyTo(Vector3 target, float startScale, float endScale, Action onLanded)
     {
         ItemMotionSettings s = Settings;
         _flyScaleFrom = startScale;
+        _baseScale = endScale;
         _growStart = -1f;
+        _pulse = false;
+        _sizeLocked = true;
         StartMove(Path.Arc, transform.position, target, 0f, s.flyDuration, onLanded);
         _stretchWhileMoving = true;
         _landSquash = s.trayLandSquash;
@@ -137,6 +157,7 @@ public class ItemMotion : MonoBehaviour
     /// <summary>Back to rest, for the pool (no callback: the item is leaving the game).</summary>
     public void ResetMotion()
     {
+        _sizeLocked = false;
         _onArrived = null;
         _path = Path.None;
         _growStart = -1f;
@@ -205,6 +226,13 @@ public class ItemMotion : MonoBehaviour
     }
 
     // ---------- Helpers ----------
+
+    // A tray item was asked for another size: ignored. Logged (with the call stack) to find who asked.
+    private void WarnLocked(float requested)
+    {
+        if (Mathf.Abs(requested - _baseScale) > 0.001f)
+            Debug.LogWarning($"[ItemMotion] {name}: size {requested:0.###} ignored, it is in the tray ({_baseScale:0.###}).", this);
+    }
 
     private void StartMove(Path path, Vector3 from, Vector3 to, float delay, float duration, Action onArrived)
     {

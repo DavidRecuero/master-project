@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79054d1bed3744a4bb87782755fdd5c0, type: 3}
+  m_Name: ItemMotionSettings
+  m_EditorClassIdentifier: GameScripts::ItemMotionSettings
+  stepDuration: 0.17
+  stepStagger: 0.045
+  stepStartDelay: 0.06
+  stepStretch: 0.08
+  stepLandSquash: 0.12
+  stepLandDuration: 0.14
+  inletOffset: 0.5
+  growDuration: 0.26
+  growStartAt: 0.55
+  growOvershoot: 1.9
+  flyDuration: 0.42
+  flyArcHeight: 1.25
+  flyScaleBoost: 0.14
+  flyStretch: 0.10
+  flyTilt: 12
+  trayLandSquash: 0.21
+  trayLandDuration: 0.16
+  traySlideDuration: 0.18
+  matchMaxWait: 1

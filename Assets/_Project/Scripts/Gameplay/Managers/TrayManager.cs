@@ -9,9 +9,11 @@ public class TrayManager : MonoBehaviour
     public int matchSize = 3;           //# of items to match them
     [Tooltip("Distance between slot centres (world units). 0.944 = 46 pt slot + 5 pt gap, with a cell of 54 pt = 1 unit")]
     public float slotSpacing = 0.944f;
-    public float moveSpeed = 15f;
-    public float snapDistance = 0.01f;
     public float matchDestroyDelay = 0.25f;
+
+    [Header("Animation")]
+    [Tooltip("Flight to the tray, landing and sliding between slots. Use the same asset as the BoardManager. Empty: the defaults")]
+    public ItemMotionSettings itemMotion;
 
     [Header("Sorting Layers")]
     public int slotSortingOrder = -10;
@@ -44,6 +46,12 @@ public class TrayManager : MonoBehaviour
     public float popScale = 1.3f;
 
     private List<Item> trayItems = new List<Item>();
+    // Slot each tray item is drawn in (from the last layout)
+    private readonly Dictionary<Item, int> slotOf = new Dictionary<Item, int>();
+    // Matched items still popping, and the slot they keep. A match frees its slots at once for the logic
+    // (trayItems), but on screen they stay taken until the pop ends, so an item arriving meanwhile
+    // never lands on top of a popping one, and the gap only closes when they are gone.
+    private readonly Dictionary<Item, int> poppingSlots = new Dictionary<Item, int>();
     private readonly List<GameObject> trayVisuals = new List<GameObject>();
     // Items flying into the tray that haven't reached their slot yet (they announce the landing once)
     private readonly HashSet<Item> arrivingItems = new HashSet<Item>();
@@ -177,8 +185,8 @@ public class TrayManager : MonoBehaviour
     {
         if (item == null || !trayItems.Remove(item)) return;
 
+        slotOf.Remove(item);
         arrivingItems.Remove(item);
-        item.StopAllCoroutines();
         _itemPool.ReleaseItem(item);
 
         UpdateTrayLayout();
@@ -243,9 +251,13 @@ public class TrayManager : MonoBehaviour
         Collider2D col = item.GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 
+        // Size it leaves the board with (platform size), before it becomes a tray item
+        float startScale = item.CurrentVisualScale;
+
         // To stop the tappeable animation
         item.inTray = true;
         item.StopPulse();
+        if (itemMotion != null) item.SetMotionSettings(itemMotion);
 
         SpriteRenderer itemSr = item.GetComponent<SpriteRenderer>();
         if (itemSr != null) itemSr.sortingOrder = itemInTraySortingOrder;
@@ -258,7 +270,10 @@ public class TrayManager : MonoBehaviour
         trayItems.Insert(insertIndex, item);
         arrivingItems.Add(item);
 
-        UpdateTrayLayout();
+        // The new item flies in an arc to its slot; the ones it pushes aside slide over
+        Dictionary<Item, int> layout = ComputeLayout();
+        item.Motion.FlyTo(SlotPosition(layout[item]), startScale, () => OnItemLanded(item));
+        UpdateTrayLayout(layout);
         CheckForMatches(item.colorID);
 
         GameEvents.TriggerTrayChanged();
@@ -272,37 +287,57 @@ public class TrayManager : MonoBehaviour
         return true;
     }
 
-    // Updates the positions of all items in the tray to ensure they are evenly spaced and centered
-    private void UpdateTrayLayout()
+    /// <summary>World position of a tray slot (slots fill from the left: 0, 1, 2...).</summary>
+    public Vector3 SlotPosition(int index)
     {
-        // Match the visuals: Calculate startX based on maxCapacity, just like the empty slots
+        // Match the visuals: startX comes from maxCapacity, just like the empty slots
         float startX = -((maxCapacity - 1) * slotSpacing) / 2f;
-        Vector3 centerPos = GetTrayCenterPosition();
+        return GetTrayCenterPosition() + new Vector3(startX + (index * slotSpacing), 0, 0);
+    }
 
-        for (int i = 0; i < trayItems.Count; i++)
+    /// <summary>
+    /// Slot of every tray item, in tray order, skipping the slots of the items still popping.
+    /// If they don't all fit (very fast taps right after a match), the popping slots are ignored.
+    /// </summary>
+    private Dictionary<Item, int> ComputeLayout()
+    {
+        var layout = new Dictionary<Item, int>();
+        bool keepPoppingSlots = trayItems.Count + poppingSlots.Count <= maxCapacity;
+        var taken = new HashSet<int>(poppingSlots.Values);
+
+        int slot = 0;
+        foreach (Item item in trayItems)
         {
-            // Items fill from the left side (index 0, 1, 2...)
-            Vector3 targetPos = centerPos + new Vector3(startX + (i * slotSpacing), 0, 0);
+            while (keepPoppingSlots && taken.Contains(slot)) slot++;
+            layout[item] = slot++;
+        }
+        return layout;
+    }
 
-            trayItems[i].StopAllCoroutines();
-            trayItems[i].StartCoroutine(AnimateToPosition(trayItems[i], targetPos));
+    // Sends every tray item to its slot: the ones still flying just change their landing point, the rest slide.
+    // Popping items stay where they are.
+    private void UpdateTrayLayout(Dictionary<Item, int> layout = null)
+    {
+        float slide = (itemMotion != null ? itemMotion : ItemMotionSettings.Defaults).traySlideDuration;
+        layout ??= ComputeLayout();
+
+        foreach (KeyValuePair<Item, int> entry in layout)
+        {
+            Item item = entry.Key;
+            if (item == null) continue;
+
+            slotOf[item] = entry.Value;
+            Vector3 target = SlotPosition(entry.Value);
+            ItemMotion motion = item.Motion;
+
+            if (arrivingItems.Contains(item) && motion.IsMoving) motion.Retarget(target);
+            else if ((item.transform.position - target).sqrMagnitude > 0.0001f) motion.SlideTo(target, 0f, slide, false, 0f, 0f);
         }
     }
 
-    // Smoothly animates an item to its target position in the tray
-    private IEnumerator AnimateToPosition(Item item, Vector3 targetPos)
+    // The flight reached its slot: the landing sound, once per item (not for an item that already matched)
+    private void OnItemLanded(Item item)
     {
-        while (item != null && Vector3.Distance(item.transform.position, targetPos) > snapDistance)
-        {
-            item.transform.position = Vector3.MoveTowards(item.transform.position, targetPos, moveSpeed * Time.deltaTime);
-            yield return null;
-        }
-
-        if (item == null) yield break;
-
-        item.transform.position = targetPos;
-
-        // Re-layouts restart this coroutine for every item; only the first arrival of a new item counts
         if (arrivingItems.Remove(item)) GameEvents.TriggerItemLandedInTray(item);
     }
 
@@ -313,18 +348,37 @@ public class TrayManager : MonoBehaviour
 
         if (matchingItems.Count >= matchSize)
         {
-            GameEvents.TriggerMatchCompleted(colorIDToCheck);
-            StartCoroutine(HandleMatch3Visuals(matchingItems));
+            StartCoroutine(HandleMatch3Visuals(matchingItems, colorIDToCheck));
         }
     }
 
     // Handles the visual effects and removal of matched items from the tray
-    private IEnumerator HandleMatch3Visuals(List<Item> matchedItems)
+    private IEnumerator HandleMatch3Visuals(List<Item> matchedItems, int colorId)
     {
+        // The tray contents change at once (the next tap already sees the free slots)
         foreach (Item item in matchedItems)
         {
             trayItems.Remove(item);
+            poppingSlots[item] = slotOf.TryGetValue(item, out int slot) ? slot : -1;   // keeps its slot on screen until the pop ends
+            slotOf.Remove(item);
             arrivingItems.Remove(item);   // The match sound covers it, no landing sound on top
+        }
+
+        // The pop (and its sound) waits for the last item to land in its slot
+        float maxWait = (itemMotion != null ? itemMotion : ItemMotionSettings.Defaults).matchMaxWait;
+        float waited = 0f;
+        while (waited < maxWait && matchedItems.Exists(i => i != null && i.Motion.IsMoving))
+        {
+            waited += Time.deltaTime;
+            yield return null;
+        }
+
+        GameEvents.TriggerMatchCompleted(colorId);
+
+        // From here the pop scales the items itself
+        foreach (Item item in matchedItems)
+        {
+            if (item != null) item.Motion.enabled = false;
         }
 
         if (popOnMatch) yield return PopItems(matchedItems, matchDestroyDelay);
@@ -332,9 +386,11 @@ public class TrayManager : MonoBehaviour
 
         foreach (Item item in matchedItems)
         {
+            poppingSlots.Remove(item);
             _itemPool.ReleaseItem(item);
         }
 
+        // Now the gap closes
         UpdateTrayLayout();
 
         // After items dissolve, check if the board and tray are completely cleared

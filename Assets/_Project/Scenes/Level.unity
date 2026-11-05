@@ -1366,9 +1366,8 @@ MonoBehaviour:
   maxCapacity: 7
   matchSize: 3
   slotSpacing: 0.944
-  moveSpeed: 15
-  snapDistance: 0.01
   matchDestroyDelay: 0.25
+  itemMotion: {fileID: 11400000, guid: 5c9fff1447774d9a8d397a9bb032bc05, type: 2}
   slotSortingOrder: -10
   itemInTraySortingOrder: 100
   slotSprite: {fileID: 21300000, guid: 0b2370186b315f0cb029c68956830750, type: 3}
@@ -1546,6 +1545,7 @@ MonoBehaviour:
   traySpace: 2
   pipeBoardRenderer: {fileID: 704164162}
   itemPalette: {fileID: 11400000, guid: 5fa9eeed0c9357c796e6fbaf26f06eb2, type: 2}
+  itemMotion: {fileID: 11400000, guid: 5c9fff1447774d9a8d397a9bb032bc05, type: 2}
   defaultBarrelLives: 3
   barrelDamageSprites:
   - {fileID: 21300000, guid: 9ee386ea6f9b551585ac6dc57fa3f60f, type: 3}

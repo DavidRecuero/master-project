@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -33,7 +32,7 @@ public class Item : MonoBehaviour, IPointerDownHandler
     [HideInInspector] public bool inTray = false;
 
     private SpriteRenderer spriteRenderer;
-    private Coroutine pulseCoroutine;
+    private ItemMotion motion;
 
     // Finished sprite per color, plus the hidden sprite. Every look comes from here.
     private ItemPalette palette;
@@ -71,9 +70,23 @@ public class Item : MonoBehaviour, IPointerDownHandler
     /// <summary>The palette this item uses to pick its sprite. Set it before Init.</summary>
     public ItemPalette Palette => palette;
 
+    /// <summary>Draws the movement of this item (pipe, platform, flight to the tray). Created on first use.</summary>
+    public ItemMotion Motion
+    {
+        get
+        {
+            if (motion == null && !TryGetComponent(out motion)) motion = gameObject.AddComponent<ItemMotion>();
+            return motion;
+        }
+    }
+
+    /// <summary>Size the item has on screen right now (platform size, tube size or in between).</summary>
+    public float CurrentVisualScale => Motion.CurrentScale;
+
     private void Awake()
     {
         EnsureSpriteRenderer();
+        _ = Motion;
     }
 
     private void OnEnable()
@@ -84,8 +97,8 @@ public class Item : MonoBehaviour, IPointerDownHandler
 
     private void OnDisable()
     {
-        // Stops the courrotine if the GameObject is disabled
-        StopPulse();
+        // No pulse while hidden (the motion snaps any movement to its end on its own)
+        if (motion != null) StopPulse();
     }
 
     // Press (not click): the item reacts as soon as the finger touches it, without waiting for the release
@@ -106,6 +119,39 @@ public class Item : MonoBehaviour, IPointerDownHandler
     public void SetPalette(ItemPalette itemPalette)
     {
         palette = itemPalette;
+    }
+
+    /// <summary>Timings of the movement animations (null: the defaults of ItemMotionSettings).</summary>
+    public void SetMotionSettings(ItemMotionSettings settings)
+    {
+        Motion.Configure(settings);
+    }
+
+    /// <summary>
+    /// Slides the drawing to its new cell of the pipe (call it after UpdateGridPosition).
+    /// Arriving on the exit platform it grows to the platform size with a small bounce.
+    /// </summary>
+    /// <param name="from">Where it slides from (null = where it is now). A new item comes in from the inlet:
+    /// it stays invisible until it starts moving and then pops out of the mouth.</param>
+    /// <param name="shownScale">The size it had before UpdateGridPosition (that call already sets the platform size as the resting one).</param>
+    public void MoveAlongPipe(Vector3 target, float delay, Vector3? from = null, float? shownScale = null)
+    {
+        ItemMotion m = Motion;
+        ItemMotionSettings s = m.Settings;
+        float startScale = shownScale ?? m.CurrentScale;
+
+        if (from.HasValue)
+        {
+            m.SlideFrom(from.Value, target, delay, s.stepDuration, true, s.stepLandSquash, s.stepLandDuration);
+            m.GrowTo(0f, BaseScale, delay);
+            return;
+        }
+
+        m.SlideTo(target, delay, s.stepDuration, true, s.stepLandSquash, s.stepLandDuration);
+
+        // Reaching the platform: from the tube size to the platform size, with a bounce
+        if (!inTray && IsAtExit && BaseScale > startScale + 0.001f)
+            m.GrowTo(startScale, BaseScale, delay + s.stepDuration * s.growStartAt);
     }
 
     /// <summary>Convenience overload for plain colored items.</summary>
@@ -238,9 +284,10 @@ public class Item : MonoBehaviour, IPointerDownHandler
         spriteRenderer.color = Color.white;
     }
 
+    // Resting size, through the motion (the only writer of the item's scale)
     private void SetScale(float scale)
     {
-        transform.localScale = new Vector3(scale, scale, 1f);
+        Motion.SetBaseScale(scale);
     }
 
     /// <summary>
@@ -249,6 +296,9 @@ public class Item : MonoBehaviour, IPointerDownHandler
     /// </summary>
     public void ResetForPool()
     {
+        ItemMotion m = Motion;
+        m.ResetMotion();
+        m.enabled = true;   // the match pop turns it off to scale the item itself
         StopPulse();
         inTray = false;
         itemType = ItemType.Normal;
@@ -307,27 +357,15 @@ public class Item : MonoBehaviour, IPointerDownHandler
 
     public void StartPulse()
     {
-        if (pulseCoroutine != null || !gameObject.activeInHierarchy) return;
-        pulseCoroutine = StartCoroutine(PulseRoutine());
+        ItemMotion m = Motion;
+        if (!m.IsGrowing) m.SetBaseScale(BaseScale);   // a growth in progress already ends at this size
+        m.SetPulse(true, pulseSpeed, pulseAmount);
     }
 
     public void StopPulse()
     {
-        if (pulseCoroutine != null)
-        {
-            StopCoroutine(pulseCoroutine);
-            pulseCoroutine = null;
-        }
-        SetScale(BaseScale);
-    }
-
-    private IEnumerator PulseRoutine()
-    {
-        while (!inTray)
-        {
-            SetScale(BaseScale + Mathf.Sin(Time.time * pulseSpeed) * pulseAmount);
-            yield return null;
-        }
-        StopPulse();
+        ItemMotion m = Motion;
+        m.SetPulse(false, pulseSpeed, pulseAmount);
+        if (!m.IsGrowing) m.SetBaseScale(BaseScale);
     }
 }

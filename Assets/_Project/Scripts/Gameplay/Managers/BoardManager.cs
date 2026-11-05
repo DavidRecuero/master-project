@@ -33,6 +33,9 @@ public class BoardManager : MonoBehaviour
     [Tooltip("Finished sprite and color for each colorId, plus the hidden sprite")]
     public ItemPalette itemPalette;
 
+    [Tooltip("Timings of the item animations (pipe, platform, tray). Empty: the defaults")]
+    public ItemMotionSettings itemMotion;
+
     [Header("Barrel Settings")]
     public int defaultBarrelLives = 3;
     [Tooltip("Crate sprites: [0] = intact, each next one more damaged")]
@@ -189,6 +192,7 @@ public class BoardManager : MonoBehaviour
         itemObj.transform.position = GridToWorld(pos);
 
         itemComponent.SetPalette(itemPalette);
+        itemComponent.SetMotionSettings(itemMotion);
         itemComponent.Init(data, GetItemColor(data.colorId), pos, pipe);
 
         //Hides hidden items
@@ -207,26 +211,47 @@ public class BoardManager : MonoBehaviour
         return itemComponent;
     }
 
-    // Moves an already spawned item to a new cell of its pipe, updating its visibility
-    private void PlaceItem(Item item, Pipe pipe, Vector2Int pos)
+    private ItemMotionSettings MotionSettings => itemMotion != null ? itemMotion : ItemMotionSettings.Defaults;
+
+    /// <summary>
+    /// Moves an already spawned item to a new cell of its pipe, updating its visibility.
+    /// The grid position changes at once; the drawing slides there after 'delay' seconds (the chain).
+    /// An item hidden under a higher pipe just jumps.
+    /// </summary>
+    private void PlaceItem(Item item, Pipe pipe, Vector2Int pos, float delay = 0f)
     {
+        float shownScale = item.CurrentVisualScale;   // before the grid change sets the platform size
         item.UpdateGridPosition(pos);
-        item.transform.position = GridToWorld(pos);
 
         // Only visible if no higher layer pipe covers this cell
         Pipe topPipe = GetHighestLayerPipeAt(pos);
-        item.gameObject.SetActive(topPipe == pipe);
+        bool visible = topPipe == pipe;
+        item.gameObject.SetActive(visible);
+
+        if (visible) item.MoveAlongPipe(GridToWorld(pos), delay, null, shownScale);
+        else item.transform.position = GridToWorld(pos);
+    }
+
+    /// <summary>Where a new item comes in from: behind the first cell of the pipe, at the inlet mouth.</summary>
+    public Vector3 InletWorldPosition(Pipe pipe)
+    {
+        Vector3 first = GridToWorld(pipe.path[0]);
+        Vector3 before = GridToWorld(PipePieceResolver.VirtualInletCell(pipe.path));
+        return Vector3.LerpUnclamped(first, before, MotionSettings.inletOffset);
     }
 
     /// <summary>
     /// Spawns queued elements into the free cells of the pipe until the path is full
     /// or the queue runs out. activeItems[i] always sits at path[pathLen - 1 - i].
     /// </summary>
-    private void FillPipe(Pipe pipe)
+    /// <param name="animate">New items slide in through the inlet (false when the level is built: they are just there).</param>
+    /// <param name="firstDelay">Delay of the first new item; each next one waits one more stagger step.</param>
+    private void FillPipe(Pipe pipe, bool animate = false, float firstDelay = 0f)
     {
         if (!pipe.HasPath) return;
 
         int pathLen = pipe.path.Count;
+        float delay = firstDelay;
         while (pipe.activeItems.Count < pathLen && pipe.activeItems.Count < pipe.itemsQueue.Count)
         {
             int index = pipe.activeItems.Count;
@@ -234,6 +259,12 @@ public class BoardManager : MonoBehaviour
 
             Item newItem = SpawnItemObject(pos, pipe.itemsQueue[index], pipe);
             pipe.activeItems.Add(newItem);
+
+            if (animate && newItem.gameObject.activeSelf && pipe.path.Count >= 2)
+            {
+                newItem.MoveAlongPipe(GridToWorld(pos), delay, InletWorldPosition(pipe));
+                delay += MotionSettings.stepStagger;
+            }
         }
     }
 
@@ -250,13 +281,16 @@ public class BoardManager : MonoBehaviour
 
         int pathLen = pipe.path.Count;
 
-        // Shift every item that was behind the removed one forward by one step
+        // Shift every item that was behind the removed one forward by one step.
+        // The one closest to the exit moves first and each next one a bit later: a wave up the pipe.
+        ItemMotionSettings motion = MotionSettings;
         for (int i = index; i < pipe.activeItems.Count; i++)
         {
-            PlaceItem(pipe.activeItems[i], pipe, pipe.path[pathLen - 1 - i]);
+            PlaceItem(pipe.activeItems[i], pipe, pipe.path[pathLen - 1 - i], motion.StepDelay(i - index));
         }
 
-        FillPipe(pipe);
+        // The next one from the queue comes in through the inlet at the end of the wave
+        FillPipe(pipe, true, motion.StepDelay(pipe.activeItems.Count - index));
 
         // Every item that leaves the board (tap or Match booster) can damage neighbor barrels
         GameEvents.TriggerItemRemovedFromBoard(removedItem, pipe, removedCell);
@@ -432,8 +466,8 @@ public class BoardManager : MonoBehaviour
         Pipe targetPipe = eligiblePipes[Random.Range(0, eligiblePipes.Count)];
         targetPipe.itemsQueue.Add(ItemSpawnData.Normal(colorId));
 
-        // If the pipe still has a free spot on its path, the new item appears right away
-        FillPipe(targetPipe);
+        // If the pipe still has a free spot on its path, the new item comes in right away
+        FillPipe(targetPipe, true);
 
         GameEvents.TriggerBoardChanged();
     }

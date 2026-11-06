@@ -6,8 +6,6 @@ public class GameManager : MonoBehaviour, IGameStateController, ILevelAbandoner
 
     public GameState CurrentState { get; private set; }
 
-    [Header("Level Settings")]
-    public int totalLevels = 5;
     private int playerLevel;
     private bool isDebugOverride; // True when Tools > Level Loader forced the level (editor only)
     public int CurrentLevelIndex { get; private set; }
@@ -82,7 +80,7 @@ public class GameManager : MonoBehaviour, IGameStateController, ILevelAbandoner
         if (coinsView != null) coinsView.Initialize(_userDataProvider);
 
         //Called on Start instead of Awake to wait for the BoardManager initialisation
-        LoadCorrectLevel();
+        LoadCorrectLevel(levelLoader);
     }
 
     ///<summary> 
@@ -115,17 +113,9 @@ public class GameManager : MonoBehaviour, IGameStateController, ILevelAbandoner
         return true;
     }
 
-    private void LoadCorrectLevel()
+    private void LoadCorrectLevel(ILevelLoader levelLoader)
     {
-        //Will be different in case of choosing a random level (if user has gone beyond last designed level)
-        int levelToLoad = playerLevel;
-
-        // Check if the player has gone beyond the last designed level
-        if (!isDebugOverride && playerLevel > totalLevels)
-        {
-            levelToLoad = Random.Range(1, totalLevels + 1);
-            Debug.Log($"Level {playerLevel} dont exist. Loading random level: {levelToLoad}");
-        }
+        int levelToLoad = ResolveLevelToLoad(levelLoader);
 
         // Final level to load
         if (boardManager != null)
@@ -136,6 +126,33 @@ public class GameManager : MonoBehaviour, IGameStateController, ILevelAbandoner
         {
             Debug.LogError("❌ [GameManager] No BoardManager assigned to editor.");
         }
+    }
+
+    /// <summary>
+    /// Level file to play for the player's level. Designed levels are played in order; past the last one,
+    /// LevelSequence picks a board from the loop, always the same one for the same level number.
+    /// </summary>
+    private int ResolveLevelToLoad(ILevelLoader levelLoader)
+    {
+        // Tools > Level Loader plays exactly the file it was asked for
+        if (isDebugOverride) return playerLevel;
+
+        int designedLevels = levelLoader.CountLevels();
+        if (designedLevels < 1)
+        {
+            Debug.LogError("❌ [GameManager] No level_XXX.json found in Resources.");
+            return playerLevel;
+        }
+
+        LevelSequence sequence = new LevelSequence(designedLevels);
+        int levelToLoad = sequence.ResolveLevelFile(playerLevel);
+
+        if (sequence.IsLoopLevel(playerLevel))
+        {
+            Debug.Log($"[GameManager] Level {playerLevel} is past the last designed level ({designedLevels}). Loop board: level {levelToLoad}");
+        }
+
+        return levelToLoad;
     }
 
     /// <summary>

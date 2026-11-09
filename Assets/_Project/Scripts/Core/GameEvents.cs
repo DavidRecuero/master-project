@@ -28,6 +28,8 @@ public static class GameEvents
     public static event Action OnFogMoved;
     /// <summary>The player tried a booster with no free stock and not enough coins.</summary>
     public static event Action<BoosterType> OnBoosterDenied;
+    /// <summary>The player got the reward of the level just won. The int is the coins given (already added and saved).</summary>
+    public static event Action<int> OnLevelRewarded;
 
     public static void TriggerLevelCleared() => OnLevelCleared?.Invoke();
     public static void TriggerLevelFailed() => OnLevelFailed?.Invoke();
@@ -46,4 +48,5 @@ public static class GameEvents
     public static void TriggerHiddenItemRevealed(Item item) => OnHiddenItemRevealed?.Invoke(item);
     public static void TriggerFogMoved() => OnFogMoved?.Invoke();
     public static void TriggerBoosterDenied(BoosterType type) => OnBoosterDenied?.Invoke(type);
+    public static void TriggerLevelRewarded(int coins) => OnLevelRewarded?.Invoke(coins);
 }

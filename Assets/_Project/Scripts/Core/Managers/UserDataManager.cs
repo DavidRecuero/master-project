@@ -7,10 +7,13 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
 
     [Tooltip("Numbers of the lives system (Data/LivesConfig). Without it the defaults are used: 5 lives, 30 minutes, 20 coins.")]
     [SerializeField] private LivesConfig livesConfig;
+    [Tooltip("Coins for winning a level (Data/RewardsConfig). Without it: 4.")]
+    [SerializeField] private RewardsConfig rewardsConfig;
 
     public UserProfile Profile { get; private set; }
     private IUserDataService _dataService;
     private LivesService _lives;
+    private LevelRewards _rewards;
 
     /// <summary>The player's lives, kept in this profile (so they are saved and synced with it).</summary>
     public ILivesService Lives => _lives;
@@ -39,6 +42,7 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
 
         LivesRules rules = livesConfig != null ? livesConfig.Rules : LivesRules.Default;
         _lives = new LivesService(rules, () => Profile, this, () => Save(), new SystemClock());
+        _rewards = LevelRewards.From(rewardsConfig);
     }
 
     private void OnEnable()
@@ -51,12 +55,22 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
         GameEvents.OnLevelCleared -= AddLevelAndCoins;
     }
 
+    /// <summary>
+    /// Level won: next level and the coin reward, saved together right away (closing the app on the win
+    /// popup doesn't lose them, and there is nothing to "collect").
+    /// </summary>
     private void AddLevelAndCoins()
     {
+        int coins = (_rewards ?? LevelRewards.From(rewardsConfig)).CoinsForWin(Profile.CurrentLevel);
+
         Profile.CurrentLevel++;
+        Profile.Coins += coins;
 
         Save();
-        Debug.Log($"Saved. CurrentLvl: {Profile.CurrentLevel}, Coins: {Profile.Coins}");
+        Debug.Log($"Saved. CurrentLvl: {Profile.CurrentLevel}, Coins: {Profile.Coins} (+{coins})");
+
+        if (coins > 0) GameEvents.TriggerCoinsChanged(Profile.Coins);
+        GameEvents.TriggerLevelRewarded(coins);
     }
 
     /// <summary>

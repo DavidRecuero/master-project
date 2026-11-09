@@ -128,4 +128,25 @@ public class UserDataManagerTests
         Assert.AreEqual("ugs-1", _dataManager.UserId, "The backend account owns the profile once the cloud sync runs");
     }
 
+    // --- Level rewards ---
+
+    [UnityTest]
+    public IEnumerator WinningALevel_GivesTheCoinsAndSavesThem()
+    {
+        yield return null;
+
+        int rewarded = -1;
+        System.Action<int> listener = coins => rewarded = coins;
+        GameEvents.OnLevelRewarded += listener;
+
+        GameEvents.TriggerLevelCleared();
+        GameEvents.OnLevelRewarded -= listener;
+
+        Assert.AreEqual(2, _dataManager.CurrentLevel);
+        Assert.AreEqual(250 + RewardsConfig.DefaultCoinsPerWin, _dataManager.Coins, "No config on this test object: the default");
+        Assert.AreEqual(RewardsConfig.DefaultCoinsPerWin, rewarded);
+
+        UserProfile onDisk = new LocalJsonUserDataService().LoadProfile();
+        Assert.AreEqual(250 + RewardsConfig.DefaultCoinsPerWin, onDisk.Coins);
+    }
 }

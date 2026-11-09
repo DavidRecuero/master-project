@@ -13,8 +13,6 @@ public class UIManager : MonoBehaviour
     public LocalizeStringEvent resultTitleLabel;
     [Tooltip("Optional line under the title (LocalizeStringEvent, String Reference empty)")]
     public LocalizeStringEvent resultSubtitleLabel;
-    [Tooltip("Shown only when the level is cleared (the three drops)")]
-    public GameObject resultWinArt;
     [Tooltip("Shown only when the level is lost (the full grey tray)")]
     public GameObject resultLoseArt;
     [Tooltip("Seconds between the end of the level and the popup, so the last match can finish its animation")]
@@ -24,6 +22,10 @@ public class UIManager : MonoBehaviour
     public Button playButton;
     [Tooltip("LocalizeStringEvent of the button text (String Reference empty)")]
     public LocalizeStringEvent playButtonLabel;
+
+    [Header("Reward")]
+    [Tooltip("Reward row of the result popup (coin + amount). Shown only on a win.")]
+    public RewardView rewardView;
 
     [Header("Lives")]
     [Tooltip("NoLivesPopup prefab: Retry opens it instead of the level when the player has no lives left")]
@@ -55,6 +57,7 @@ public class UIManager : MonoBehaviour
     private Coroutine _resultRoutine;
     private ILivesService _lives;
     private IPopupService _popups;
+    private int _reward;
 
     public void Initialize(int currentLevelIndex, Action onPlayAgainAction, ILivesService lives = null, IPopupService popups = null)
     {
@@ -69,13 +72,18 @@ public class UIManager : MonoBehaviour
     {
         GameEvents.OnLevelCleared += ShowWinScreen;
         GameEvents.OnLevelFailed += ShowLoseScreen;
+        GameEvents.OnLevelRewarded += OnLevelRewarded;
     }
 
     private void OnDisable()
     {
         GameEvents.OnLevelCleared -= ShowWinScreen;
         GameEvents.OnLevelFailed -= ShowLoseScreen;
+        GameEvents.OnLevelRewarded -= OnLevelRewarded;
     }
+
+    // Raised by the UserDataManager when the win is saved, before the popup shows up
+    private void OnLevelRewarded(int coins) => _reward = coins;
 
     private void Start()
     {
@@ -123,8 +131,12 @@ public class UIManager : MonoBehaviour
 
     private void ApplyResult(bool won)
     {
-        if (resultWinArt != null) resultWinArt.SetActive(won);
         if (resultLoseArt != null) resultLoseArt.SetActive(!won);
+        if (rewardView != null)
+        {
+            if (won) rewardView.Show(_reward);
+            else rewardView.Hide();
+        }
 
         if (won) SetupResultScreen(winTitle, winSubtitle, nextLevelButton, () => _onPlayAgainAction?.Invoke());
         else SetupResultScreen(loseTitle, loseSubtitle, retryButton, Retry);

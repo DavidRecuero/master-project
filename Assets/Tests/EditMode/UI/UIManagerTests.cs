@@ -29,13 +29,11 @@ public class UIManagerTests
         typeof(LevelPillView).GetField("label", BindingFlags.NonPublic | BindingFlags.Instance)?.SetValue(_levelPill, _levelLabel);
         _uiManager.levelPills = new[] { _levelPill };
         _uiManager.resultSubtitleLabel = AddLabel("Subtitle");
-        _uiManager.resultWinArt = new GameObject("WinArt");
         _uiManager.resultLoseArt = new GameObject("LoseArt");
         _uiManager.resultDelay = 0f;   // Coroutines don't run in EditMode tests
         _uiManager.playButton = new GameObject("PlayButton").AddComponent<Button>();
 
         _levelPill.transform.SetParent(_gameObject.transform);
-        _uiManager.resultWinArt.transform.SetParent(_gameObject.transform);
         _uiManager.resultLoseArt.transform.SetParent(_gameObject.transform);
         _uiManager.playButton.transform.SetParent(_gameObject.transform);
 
@@ -85,7 +83,6 @@ public class UIManagerTests
         Assert.IsTrue(_uiManager.resultPanel.activeSelf);
         Assert.AreSame(_uiManager.winTitle, _uiManager.resultTitleLabel.StringReference);
         Assert.AreSame(_uiManager.winSubtitle, _uiManager.resultSubtitleLabel.StringReference);
-        Assert.IsTrue(_uiManager.resultWinArt.activeSelf, "Win art on");
         Assert.IsFalse(_uiManager.resultLoseArt.activeSelf, "Lose art off");
         Assert.AreSame(_uiManager.nextLevelButton, _uiManager.playButtonLabel.StringReference);
     }
@@ -100,7 +97,6 @@ public class UIManagerTests
         Assert.IsTrue(_uiManager.resultPanel.activeSelf);
         Assert.AreSame(_uiManager.loseTitle, _uiManager.resultTitleLabel.StringReference);
         Assert.AreSame(_uiManager.loseSubtitle, _uiManager.resultSubtitleLabel.StringReference);
-        Assert.IsFalse(_uiManager.resultWinArt.activeSelf, "Win art off");
         Assert.IsTrue(_uiManager.resultLoseArt.activeSelf, "Lose art on");
         Assert.AreSame(_uiManager.retryButton, _uiManager.playButtonLabel.StringReference);
     }
@@ -172,5 +168,40 @@ public class UIManagerTests
         GameEvents.TriggerLevelFailed();
 
         CollectionAssert.AreEqual(new[] { true, false }, shown);
+    }
+
+    private RewardView AddRewardView()
+    {
+        var go = new GameObject("Reward", typeof(RectTransform));
+        go.transform.SetParent(_gameObject.transform);
+        var view = go.AddComponent<RewardView>();
+        go.SetActive(false);
+        _uiManager.rewardView = view;
+        return view;
+    }
+
+    [Test]
+    public void Win_ShowsTheRewardOfTheLevel()
+    {
+        RewardView reward = AddRewardView();
+        _uiManager.Initialize(1, null);
+
+        GameEvents.TriggerLevelRewarded(4);   // the UserDataManager pays it when the win is saved
+        GameEvents.TriggerLevelCleared();
+
+        Assert.IsTrue(reward.gameObject.activeSelf);
+        Assert.AreEqual(4, reward.Coins);
+    }
+
+    [Test]
+    public void Defeat_HidesTheReward()
+    {
+        RewardView reward = AddRewardView();
+        reward.Show(4);
+        _uiManager.Initialize(1, null);
+
+        GameEvents.TriggerLevelFailed();
+
+        Assert.IsFalse(reward.gameObject.activeSelf);
     }
 }

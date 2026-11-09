@@ -374,17 +374,53 @@ public class BoardManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Finds and removes the first active item of the given color from anywhere in any
-    /// pipe (not just its exit), collapsing the gap it leaves and spawning a replacement
-    /// from that pipe's queue if one is waiting. Returns null if no such item exists.
-    /// Used by the Match booster, which can reach into any pipe.
+    /// Finds and removes the first item of the given color, for the Match booster, which can reach into any pipe.
+    /// First on the board, anywhere in any pipe (not just its exit): the gap it leaves collapses and a replacement
+    /// comes in from that pipe's queue. If the board has none, it is taken from a queue (elements not spawned yet,
+    /// only counted by the "+N" at the inlet): it is created at that inlet and the counter goes down.
+    /// In each place, normal items first, then hidden ones, then barrels (broken open).
+    /// Returns null if there is none left anywhere.
     /// </summary>
     public Item ExtractAnyItemOfColor(int colorId)
     {
         Item extracted = TryExtractFirst(i => i.HasKnownColor && i.colorID == colorId);
         if (extracted == null) extracted = TryExtractFirst(i => i.IsHidden && i.colorID == colorId);
         if (extracted == null) extracted = TryExtractFirst(i => i.IsBarrel && i.colorID == colorId);
+        if (extracted == null) extracted = TryExtractFromQueue(d => d.type == ItemType.Normal && d.colorId == colorId);
+        if (extracted == null) extracted = TryExtractFromQueue(d => d.type == ItemType.Hidden && d.colorId == colorId);
+        if (extracted == null) extracted = TryExtractFromQueue(d => d.type == ItemType.Barrel && d.colorId == colorId);
         return extracted;
+    }
+
+    // Takes the first waiting (not spawned) queue entry that matches the condition: removes it from the queue and
+    // creates its item at the pipe's inlet, so it flies to the tray from there. Nothing on the board moves.
+    private Item TryExtractFromQueue(System.Predicate<ItemSpawnData> condition)
+    {
+        foreach (Pipe pipe in pipes)
+        {
+            if (!pipe.HasPath) continue;
+
+            // Entries from activeItems.Count on are still waiting outside the board
+            for (int i = pipe.activeItems.Count; i < pipe.itemsQueue.Count; i++)
+            {
+                ItemSpawnData data = pipe.itemsQueue[i];
+                if (!condition(data)) continue;
+
+                pipe.itemsQueue.RemoveAt(i);
+
+                Item item = SpawnItemObject(pipe.path[0], data, pipe);
+                item.gameObject.SetActive(true);   // even if a higher pipe covers the first cell
+                // From the inlet mouth; a one-cell pipe has no tube nor inlet, so from its only cell
+                item.transform.position = PipePieceResolver.HasTube(pipe.path) ? InletWorldPosition(pipe) : GridToWorld(pipe.path[0]);
+
+                if (item.IsBarrel) item.BreakOpen();
+
+                GameEvents.TriggerBoardChanged();   // the inlet counter goes down
+                return item;
+            }
+        }
+
+        return null;
     }
 
     // Removes the first active item (searching pipe by pipe) that matches the condition

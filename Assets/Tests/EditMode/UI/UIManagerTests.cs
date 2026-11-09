@@ -160,4 +160,17 @@ public class UIManagerTests
         Assert.AreSame(prefab, popups.Top);
         Object.DestroyImmediate(prefab.gameObject);
     }
+
+    [Test]
+    public void ResultShown_SaysWhetherTheLevelWasWon()
+    {
+        var shown = new System.Collections.Generic.List<bool>();
+        _uiManager.ResultShown += shown.Add;
+        _uiManager.Initialize(1, null);
+
+        GameEvents.TriggerLevelCleared();
+        GameEvents.TriggerLevelFailed();
+
+        CollectionAssert.AreEqual(new[] { true, false }, shown);
+    }
 }

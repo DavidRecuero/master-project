@@ -10,6 +10,9 @@ public class GameManager : MonoBehaviour, IGameStateController, ILevelAbandoner
     private bool isDebugOverride; // True when Tools > Level Loader forced the level (editor only)
     public int CurrentLevelIndex { get; private set; }
 
+    /// <summary>True when Tools > Level Loader forced the level (editor only): it doesn't use lives or count for Rate Us.</summary>
+    public bool IsDebugLevel => isDebugOverride;
+
     [Header("Scene References")]
 
     [SerializeField] private BoardManager boardManager;

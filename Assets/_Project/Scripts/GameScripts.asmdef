@@ -10,7 +10,9 @@
         "Unity.Services.Core",
         "Unity.Services.Core.Environments",
         "Unity.Services.Authentication",
-        "Unity.Services.CloudSave"
+        "Unity.Services.CloudSave",
+        "Google.Play.Review",
+        "Google.Play.Common"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -19,6 +21,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.google.play.review",
+            "expression": "0.0.1",
+            "define": "PLAY_REVIEW"
+        }
+    ],
     "noEngineReferences": false
 }

@@ -2,6 +2,7 @@
   "dependencies": {
     "com.google.external-dependency-manager": "https://github.com/googlesamples/unity-jar-resolver.git?path=upm",
     "com.google.play.games": "https://github.com/AlexZonov/play-games-plugin-for-unity.git?path=/Assets/Public/GooglePlayGames/com.google.play.games#v2.3.0-no-auto-init",
+    "com.google.play.review": "1.8.4",
     "com.unity.2d.animation": "13.0.5",
     "com.unity.2d.aseprite": "3.0.2",
     "com.unity.2d.psdimporter": "12.0.2",
@@ -58,5 +59,16 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
-  }
+  },
+  "scopedRegistries": [
+    {
+      "name": "package.openupm.com",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.google.play.common",
+        "com.google.play.core",
+        "com.google.play.review"
+      ]
+    }
+  ]
 }

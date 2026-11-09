@@ -47,6 +47,9 @@ public class UIManager : MonoBehaviour
     [Tooltip("result.retry")]
     public LocalizedString retryButton = new LocalizedString();
 
+    /// <summary>The result popup is on screen. True when the level was won (the Rate Us prompt listens to it).</summary>
+    public event Action<bool> ResultShown;
+
     private Action _onPlayAgainAction;
     private int _currentLevelIndex = 1;
     private Coroutine _resultRoutine;
@@ -125,6 +128,8 @@ public class UIManager : MonoBehaviour
 
         if (won) SetupResultScreen(winTitle, winSubtitle, nextLevelButton, () => _onPlayAgainAction?.Invoke());
         else SetupResultScreen(loseTitle, loseSubtitle, retryButton, Retry);
+
+        ResultShown?.Invoke(won);
     }
 
     /// <summary>

@@ -127,4 +127,37 @@ public class UIManagerTests
 
         Assert.IsFalse(_uiManager.resultPanel.activeSelf, "The last match finishes before the popup appears");
     }
+
+    [Test]
+    public void Retry_WithALife_PlaysAgain()
+    {
+        bool played = false;
+        var lives = new FakeLivesService { Lives = 2 };
+        var popups = new FakePopupService();
+        _uiManager.Initialize(1, () => played = true, lives, popups);
+
+        GameEvents.TriggerLevelFailed();
+        _uiManager.playButton.onClick.Invoke();
+
+        Assert.IsTrue(played);
+        Assert.AreEqual(0, popups.Count);
+    }
+
+    [Test]
+    public void Retry_WithoutLives_OpensTheOutOfLivesPopupInstead()
+    {
+        bool played = false;
+        var lives = new FakeLivesService { Lives = 0 };
+        var popups = new FakePopupService();
+        NoLivesPopup prefab = PopupTestUtils.MakePrefab<NoLivesPopup>("NoLivesPopup");
+        _uiManager.noLivesPopupPrefab = prefab;
+        _uiManager.Initialize(1, () => played = true, lives, popups);
+
+        GameEvents.TriggerLevelFailed();
+        _uiManager.playButton.onClick.Invoke();
+
+        Assert.IsFalse(played);
+        Assert.AreSame(prefab, popups.Top);
+        Object.DestroyImmediate(prefab.gameObject);
+    }
 }

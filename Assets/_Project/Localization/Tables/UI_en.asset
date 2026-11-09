@@ -169,7 +169,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000012
-    m_Localized: "If you leave now, you will lose this level. Boosters you have already used won't be given back."
+    m_Localized: "If you leave now, you will lose this level and a life. Boosters you have already used won't be given back."
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000013
@@ -180,6 +180,49 @@ MonoBehaviour:
     m_Localized: KEEP PLAYING
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000015
+    m_Localized: "LIVES"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000016
+    m_Localized: "Full"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000017
+    m_Localized: "You have all your lives!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000018
+    m_Localized: "Next life in {time}"
+    m_Metadata:
+      m_Items:
+      - rid: 3524684200313618700
+  - m_Id: 348100000000019
+    m_Localized: "REFILL FOR {price}"
+    m_Metadata:
+      m_Items:
+      - rid: 3524684200313618700
+  - m_Id: 348100000000020
+    m_Localized: "Not enough coins."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000021
+    m_Localized: "You have a life again!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000022
+    m_Localized: "OUT OF LIVES"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000023
+    m_Localized: "Wait for your next life or buy one to keep playing."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000024
+    m_Localized: "1 LIFE FOR {price}"
+    m_Metadata:
+      m_Items:
+      - rid: 3524684200313618700
   references:
     version: 2
     RefIds:
@@ -191,3 +234,6 @@ MonoBehaviour:
         - id: 102285344771
         - id: 102285344772
         - id: 102293733376
+        - id: 348100000000018
+        - id: 348100000000019
+        - id: 348100000000024

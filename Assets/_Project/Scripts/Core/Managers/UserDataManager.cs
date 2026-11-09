@@ -5,8 +5,15 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
 {
     public static UserDataManager Instance { get; private set; }
 
+    [Tooltip("Numbers of the lives system (Data/LivesConfig). Without it the defaults are used: 5 lives, 30 minutes, 20 coins.")]
+    [SerializeField] private LivesConfig livesConfig;
+
     public UserProfile Profile { get; private set; }
     private IUserDataService _dataService;
+    private LivesService _lives;
+
+    /// <summary>The player's lives, kept in this profile (so they are saved and synced with it).</summary>
+    public ILivesService Lives => _lives;
 
     public int CurrentLevel => Profile != null ? Profile.CurrentLevel : 1;
     public int Coins => Profile != null ? Profile.Coins : 0;
@@ -29,6 +36,9 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
         // The device copy is always the one the game uses; CloudProfileSync keeps the cloud one equal
         _dataService = new LocalJsonUserDataService();
         Profile = _dataService.LoadProfile();
+
+        LivesRules rules = livesConfig != null ? livesConfig.Rules : LivesRules.Default;
+        _lives = new LivesService(rules, () => Profile, this, () => Save(), new SystemClock());
     }
 
     private void OnEnable()
@@ -125,6 +135,7 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
         Profile = profile;
         Save(touch: false);
         GameEvents.TriggerCoinsChanged(Profile.Coins);
+        _lives?.NotifyChanged();
     }
 
     public void SetOwner(string playerId)
@@ -142,6 +153,7 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
 
         Save();
         GameEvents.TriggerCoinsChanged(Profile.Coins);
+        _lives?.NotifyChanged();
 
         Debug.Log($"[DataReset] CurrentLvl: {Profile.CurrentLevel}, Coins: {Profile.Coins}");
     }

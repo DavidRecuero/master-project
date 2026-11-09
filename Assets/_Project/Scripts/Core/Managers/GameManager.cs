@@ -22,11 +22,16 @@ public class GameManager : MonoBehaviour, IGameStateController, ILevelAbandoner
 
     private IUserDataProvider _userDataProvider;
     private ISceneLoader _sceneLoader;
+    private ILivesService _lives;
 
-    public void Initialize(IUserDataProvider userDataProvider, ISceneLoader sceneLoader)
+    /// <summary>True while this level holds a life: it is given back if the level is won.</summary>
+    public bool LifeInPlay { get; private set; }
+
+    public void Initialize(IUserDataProvider userDataProvider, ISceneLoader sceneLoader, ILivesService lives = null)
     {
         _userDataProvider = userDataProvider;
         _sceneLoader = sceneLoader;
+        if (lives != null) _lives = lives;
     }
 
     private void Awake()
@@ -41,6 +46,7 @@ public class GameManager : MonoBehaviour, IGameStateController, ILevelAbandoner
         // Assign default dependencies if not injected before
         _userDataProvider ??= UserDataManager.Instance;
         _sceneLoader ??= new UnitySceneLoader();
+        if (_lives == null && UserDataManager.Instance != null) _lives = UserDataManager.Instance.Lives;
 
         // UserDataManager validator
         if (_userDataProvider == null)
@@ -79,8 +85,25 @@ public class GameManager : MonoBehaviour, IGameStateController, ILevelAbandoner
         if (boosterManager != null) boosterManager.Initialize(_userDataProvider as IBoosterInventory ?? UserDataManager.Instance, _userDataProvider);
         if (coinsView != null) coinsView.Initialize(_userDataProvider);
 
+        TakeLevelLife();
+
         //Called on Start instead of Awake to wait for the BoardManager initialisation
         LoadCorrectLevel(levelLoader);
+    }
+
+    /// <summary>
+    /// Starting the level uses a life (given back on Victory). Using it at the start, and not when the level
+    /// is lost, is what makes closing the game mid-level cost the life too.
+    /// The menus only open the level with a life (LivesGate); if there is none anyway, the level is played
+    /// for free rather than blocked. Levels forced with Tools > Level Loader don't use lives.
+    /// </summary>
+    public bool TakeLevelLife()
+    {
+        if (LifeInPlay || isDebugOverride || _lives == null) return false;
+
+        LifeInPlay = _lives.TryUseLife();
+        if (!LifeInPlay) Debug.LogWarning("[GameManager] Level started with no lives left: it is played without using one.");
+        return LifeInPlay;
     }
 
     ///<summary> 
@@ -169,16 +192,21 @@ public class GameManager : MonoBehaviour, IGameStateController, ILevelAbandoner
         {
             case GameState.Victory:
                 Debug.Log("[GAME STATE] VICTORY");
+                // Winning gives the life back (before the event, so the result screen already sees it)
+                if (LifeInPlay) _lives.ReturnLife();
+                LifeInPlay = false;
                 GameEvents.TriggerLevelCleared();
                 break;
 
             case GameState.Defeat:
                 Debug.Log("[GAME STATE] DEFEAT");
+                LifeInPlay = false;   // the life is lost
                 GameEvents.TriggerLevelFailed();
                 break;
 
             case GameState.Abandoned:
                 Debug.Log("[GAME STATE] ABANDONED");
+                LifeInPlay = false;   // abandoning counts as losing: the life is lost
                 GameEvents.TriggerLevelAbandoned();
                 break;
         }

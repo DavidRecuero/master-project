@@ -22,6 +22,15 @@ public class UserProfile
     /// </summary>
     public long UpdatedAtTicks;
 
+    /// <summary>
+    /// Lives the player is missing (0 = full). Stored as missing, not as lives, so profiles saved before the
+    /// lives system existed load full. Read the lives through ILivesService, never from here.
+    /// </summary>
+    public int MissingLives;
+
+    /// <summary>When the countdown of the next life started, in UTC ticks. 0 when full. See LivesService.</summary>
+    public long NextLifeStartTicks;
+
     public UserProfile()
     {
         CurrentLevel = 1;       //starting values

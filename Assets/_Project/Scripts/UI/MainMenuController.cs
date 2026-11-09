@@ -14,6 +14,8 @@ public class MainMenuController : MonoBehaviour
     [Header("UI References")]
     [Tooltip("CoinsPill prefab: shows and keeps the balance in sync")]
     [SerializeField] private CoinsView coinsView;
+    [Tooltip("LivesPill prefab: lives and time to the next one. Tapping it opens the lives popup.")]
+    [SerializeField] private LivesView livesView;
     [Tooltip("LevelPill prefab above the Play button")]
     [SerializeField] private LevelPillView levelPill;
     [Tooltip("Name text of the ProfilePill prefab (Play Games name, or Guest)")]
@@ -34,18 +36,22 @@ public class MainMenuController : MonoBehaviour
     [Header("Popups")]
     [Tooltip("SettingsPopup prefab, opened by the Settings button")]
     [SerializeField] private SettingsPopup settingsPopupPrefab;
+    [Tooltip("NoLivesPopup prefab: Play opens it instead of the level when the player has no lives left")]
+    [SerializeField] private NoLivesPopup noLivesPopupPrefab;
 
     private bool _avatarLoading;
 
     private IUserDataProvider _userDataProvider;
     private ISceneLoader _sceneLoader;
     private IPopupService _popupService;
+    private ILivesService _lives;
 
-    public void Initialize(IUserDataProvider userDataProvider, ISceneLoader sceneLoader, IPopupService popupService = null)
+    public void Initialize(IUserDataProvider userDataProvider, ISceneLoader sceneLoader, IPopupService popupService = null, ILivesService lives = null)
     {
         _userDataProvider = userDataProvider;
         _sceneLoader = sceneLoader;
         if (popupService != null) _popupService = popupService;
+        if (lives != null) _lives = lives;
         UpdateUI();
     }
 
@@ -53,6 +59,7 @@ public class MainMenuController : MonoBehaviour
     {
         _userDataProvider ??= UserDataManager.Instance;
         _sceneLoader ??= new UnitySceneLoader();
+        if (_lives == null && UserDataManager.Instance != null) _lives = UserDataManager.Instance.Lives;
     }
 
     private void Start()
@@ -71,6 +78,9 @@ public class MainMenuController : MonoBehaviour
 
         // Coins indicator: same view (and same injection) as in the gameplay HUD
         if (coinsView != null) coinsView.Initialize(_userDataProvider);
+
+        // Lives pill (it also opens the lives popup on its own)
+        if (livesView != null && _lives != null) livesView.Initialize(_lives, _popupService);
 
         // Current level, on the shared LevelPill
         if (levelPill != null) levelPill.SetLevel(_userDataProvider.CurrentLevel);
@@ -164,8 +174,14 @@ public class MainMenuController : MonoBehaviour
         avatarImage.gameObject.SetActive(true);
     }
 
-    // Play button function
+    /// <summary>Play button: opens the level if there is a life, otherwise the "out of lives" popup (LivesGate).</summary>
     public void OnPlayButtonClicked()
+    {
+        IPopupService popups = _popupService ?? PopupService.Instance;
+        new LivesGate(_lives, popups, noLivesPopupPrefab).TryEnter(LoadLevel);
+    }
+
+    private void LoadLevel()
     {
         Debug.Log("Loading Gameplay...");
 

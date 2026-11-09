@@ -171,6 +171,46 @@ MonoBehaviour:
     m_Key: abandon.keep_playing
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000015
+    m_Key: lives.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000016
+    m_Key: lives.full_short
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000017
+    m_Key: lives.full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000018
+    m_Key: lives.next_life
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000019
+    m_Key: lives.refill
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000020
+    m_Key: lives.no_coins
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000021
+    m_Key: lives.ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000022
+    m_Key: nolives.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000023
+    m_Key: nolives.body
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000024
+    m_Key: nolives.buy
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

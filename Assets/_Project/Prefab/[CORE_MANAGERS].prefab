@@ -44,3 +44,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: acefc8e68030cb0479ec8f45f42a1a10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UserDataManager
+  livesConfig: {fileID: 11400000, guid: 4d8f90333ca14f86a11a11a33e003b68, type: 2}

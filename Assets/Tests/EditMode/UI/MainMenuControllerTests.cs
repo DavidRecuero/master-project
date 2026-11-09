@@ -81,6 +81,33 @@ public class MainMenuControllerTests
         Assert.AreEqual(2, _sceneLoader.LoadedSceneIndex);
     }
 
+    [Test]
+    public void OnPlayButtonClicked_WithoutLives_OpensTheOutOfLivesPopupInstead()
+    {
+        var lives = new FakeLivesService { Lives = 0 };
+        var popups = new FakePopupService();
+        NoLivesPopup prefab = PopupTestUtils.MakePrefab<NoLivesPopup>("NoLivesPopup");
+        SetField("noLivesPopupPrefab", prefab);
+        _controller.Initialize(_userDataProvider, _sceneLoader, popups, lives);
+
+        _controller.OnPlayButtonClicked();
+
+        Assert.AreEqual(-1, _sceneLoader.LoadedSceneIndex, "The level doesn't load");
+        Assert.AreSame(prefab, popups.Top);
+        Object.DestroyImmediate(prefab.gameObject);
+    }
+
+    [Test]
+    public void OnPlayButtonClicked_WithALife_LoadsTheLevel()
+    {
+        var lives = new FakeLivesService { Lives = 1 };
+        _controller.Initialize(_userDataProvider, _sceneLoader, new FakePopupService(), lives);
+
+        _controller.OnPlayButtonClicked();
+
+        Assert.AreEqual(2, _sceneLoader.LoadedSceneIndex);
+    }
+
     private void SetField(string name, object value)
     {
         typeof(MainMenuController)

@@ -167,7 +167,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000012
-    m_Localized: "Si sales ahora, perder\xE1s esta partida. Los potenciadores que ya hayas usado no se recuperan."
+    m_Localized: "Si sales ahora, perder\xE1s esta partida y una vida. Los potenciadores que ya hayas usado no se recuperan."
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000013
@@ -178,6 +178,49 @@ MonoBehaviour:
     m_Localized: SEGUIR JUGANDO
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000015
+    m_Localized: "VIDAS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000016
+    m_Localized: "Llenas"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000017
+    m_Localized: "\xA1Tienes todas tus vidas!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000018
+    m_Localized: "Pr\xF3xima vida en {time}"
+    m_Metadata:
+      m_Items:
+      - rid: 3524684200313618701
+  - m_Id: 348100000000019
+    m_Localized: "RECARGAR POR {price}"
+    m_Metadata:
+      m_Items:
+      - rid: 3524684200313618701
+  - m_Id: 348100000000020
+    m_Localized: "No tienes suficientes monedas."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000021
+    m_Localized: "\xA1Ya tienes una vida!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000022
+    m_Localized: "\xA1SIN VIDAS!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000023
+    m_Localized: "Espera a la pr\xF3xima vida o compra una para seguir jugando."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000024
+    m_Localized: "1 VIDA POR {price}"
+    m_Metadata:
+      m_Items:
+      - rid: 3524684200313618701
   references:
     version: 2
     RefIds:
@@ -189,3 +232,6 @@ MonoBehaviour:
         - id: 102285344771
         - id: 102285344772
         - id: 102293733376
+        - id: 348100000000018
+        - id: 348100000000019
+        - id: 348100000000024

@@ -167,7 +167,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000012
-    m_Localized: "Si surts ara, perdr\xE0s aquesta partida. Els potenciadors que ja hagis fet servir no es recuperen."
+    m_Localized: "Si surts ara, perdr\xE0s aquesta partida i una vida. Els potenciadors que ja hagis fet servir no es recuperen."
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000013
@@ -178,6 +178,49 @@ MonoBehaviour:
     m_Localized: CONTINUAR JUGANT
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000015
+    m_Localized: "VIDES"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000016
+    m_Localized: "Plenes"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000017
+    m_Localized: "Tens totes les vides!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000018
+    m_Localized: "Propera vida en {time}"
+    m_Metadata:
+      m_Items:
+      - rid: 3524684200313618699
+  - m_Id: 348100000000019
+    m_Localized: "RECARREGAR PER {price}"
+    m_Metadata:
+      m_Items:
+      - rid: 3524684200313618699
+  - m_Id: 348100000000020
+    m_Localized: "No tens prou monedes."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000021
+    m_Localized: "Ja tens una vida!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000022
+    m_Localized: "SENSE VIDES!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000023
+    m_Localized: "Espera la propera vida o compra'n una per continuar jugant."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000024
+    m_Localized: "1 VIDA PER {price}"
+    m_Metadata:
+      m_Items:
+      - rid: 3524684200313618699
   references:
     version: 2
     RefIds:
@@ -189,3 +232,6 @@ MonoBehaviour:
         - id: 102285344771
         - id: 102285344772
         - id: 102293733376
+        - id: 348100000000018
+        - id: 348100000000019
+        - id: 348100000000024

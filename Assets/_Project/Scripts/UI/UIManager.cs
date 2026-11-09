@@ -25,6 +25,10 @@ public class UIManager : MonoBehaviour
     [Tooltip("LocalizeStringEvent of the button text (String Reference empty)")]
     public LocalizeStringEvent playButtonLabel;
 
+    [Header("Lives")]
+    [Tooltip("NoLivesPopup prefab: Retry opens it instead of the level when the player has no lives left")]
+    public NoLivesPopup noLivesPopupPrefab;
+
     [Header("Indicators")]
     [Tooltip("Every LevelPill that shows the current level (gameplay HUD, result popup)")]
     public LevelPillView[] levelPills;
@@ -46,11 +50,15 @@ public class UIManager : MonoBehaviour
     private Action _onPlayAgainAction;
     private int _currentLevelIndex = 1;
     private Coroutine _resultRoutine;
+    private ILivesService _lives;
+    private IPopupService _popups;
 
-    public void Initialize(int currentLevelIndex, Action onPlayAgainAction)
+    public void Initialize(int currentLevelIndex, Action onPlayAgainAction, ILivesService lives = null, IPopupService popups = null)
     {
         _currentLevelIndex = currentLevelIndex;
         _onPlayAgainAction = onPlayAgainAction;
+        if (lives != null) _lives = lives;
+        if (popups != null) _popups = popups;
         UpdateLevelIndicator();
     }
 
@@ -116,7 +124,21 @@ public class UIManager : MonoBehaviour
         if (resultLoseArt != null) resultLoseArt.SetActive(!won);
 
         if (won) SetupResultScreen(winTitle, winSubtitle, nextLevelButton, () => _onPlayAgainAction?.Invoke());
-        else SetupResultScreen(loseTitle, loseSubtitle, retryButton, () => _onPlayAgainAction?.Invoke());
+        else SetupResultScreen(loseTitle, loseSubtitle, retryButton, Retry);
+    }
+
+    /// <summary>
+    /// Retry after losing: the level only starts again if there is a life. Without one, the "out of lives"
+    /// popup opens on top of the result (closing it leaves the result as it was).
+    /// "Next level" doesn't need the check: winning gives the life back.
+    /// Looked up on click: the lives and the PopupService come from the Boot scene.
+    /// </summary>
+    public void Retry()
+    {
+        ILivesService lives = _lives ?? (UserDataManager.Instance != null ? UserDataManager.Instance.Lives : null);
+        IPopupService popups = _popups ?? PopupService.Instance;
+
+        new LivesGate(lives, popups, noLivesPopupPrefab).TryEnter(() => _onPlayAgainAction?.Invoke());
     }
 
     /// <summary>

@@ -244,6 +244,7 @@ MonoBehaviour:
   resultDelay: 0.3
   playButton: {fileID: 109406317}
   playButtonLabel: {fileID: 109406316}
+  noLivesPopupPrefab: {fileID: 8152616081741770524, guid: 7e2a9b4c6d1f4a3b8c5e0d2f1a6b9c42, type: 3}
   levelPills:
   - {fileID: 1547790059}
   - {fileID: 109406314}

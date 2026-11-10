@@ -30,6 +30,8 @@ public static class GameEvents
     public static event Action<BoosterType> OnBoosterDenied;
     /// <summary>The player got the reward of the level just won. The int is the coins given (already added and saved).</summary>
     public static event Action<int> OnLevelRewarded;
+    /// <summary>The player changed a privacy choice (consent popup, Settings, debug reset). The bool is the new "may use".</summary>
+    public static event Action<ConsentPurpose, bool> OnConsentChanged;
 
     public static void TriggerLevelCleared() => OnLevelCleared?.Invoke();
     public static void TriggerLevelFailed() => OnLevelFailed?.Invoke();
@@ -49,4 +51,5 @@ public static class GameEvents
     public static void TriggerFogMoved() => OnFogMoved?.Invoke();
     public static void TriggerBoosterDenied(BoosterType type) => OnBoosterDenied?.Invoke(type);
     public static void TriggerLevelRewarded(int coins) => OnLevelRewarded?.Invoke(coins);
+    public static void TriggerConsentChanged(ConsentPurpose purpose, bool granted) => OnConsentChanged?.Invoke(purpose, granted);
 }

@@ -20,4 +20,13 @@ public class GameTools
 
         Debug.Log("🔧 User data reset");
     }
+
+    /// <summary>Forgets the privacy choices, so the consent popup shows again on the next visit to the menu.</summary>
+    [MenuItem("Tools/Reset Privacy Consent")]
+    public static void ResetConsent()
+    {
+        // Through the shared service while playing, so whatever was using the data stops now
+        ConsentServices.Current.Reset();
+        Debug.Log("🔧 Privacy consent reset");
+    }
 }

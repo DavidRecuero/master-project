@@ -479,6 +479,7 @@ MonoBehaviour:
   creditsButton: {fileID: 6288045546463495578}
   creditsPopupPrefab: {fileID: 6813814804172693822, guid: 34333605ccfcda843ac9770a46b0a6c7, type: 3}
   privacyButton: {fileID: 5003876523213781175}
+  privacySettingsPopupPrefab: {fileID: 6813814804172693822, guid: 3767583beafd4b1195c4cd71289da1db, type: 3}
   deleteAccountButton: {fileID: 7864030980489648926}
   deleteAccountPopupPrefab: {fileID: 6813814804172693822, guid: 1bf41c5d7b174bae83e88901cb9c8c3a, type: 3}
   infoLabel: {fileID: 1602530551463501566}
@@ -2444,7 +2445,7 @@ MonoBehaviour:
     m_TableReference:
       m_TableCollectionName: GUID:c09834c581dc3604b84448cb41c7a534
     m_TableEntryReference:
-      m_KeyId: 347740696379392
+      m_KeyId: 348100000000029
       m_Key: 
     m_FallbackState: 0
     m_WaitForCompletion: 0

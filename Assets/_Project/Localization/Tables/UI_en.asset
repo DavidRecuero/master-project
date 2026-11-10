@@ -228,7 +228,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000026
-    m_Localized: "With your permission, we use analytics to see how the game is played, improve the levels and find errors. This sends gameplay and device data (never your name or email) to our analytics provider, GameAnalytics. You can change your choice at any time in Settings."
+    m_Localized: "With your permission, we use analytics to see how the game is played, improve the levels and find errors. This sends gameplay and device data (never your name or email) to our analytics provider. You can change your choice at any time in Settings."
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000027
@@ -237,6 +237,22 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 348100000000028
     m_Localized: "REJECT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000029
+    m_Localized: "Privacy"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000030
+    m_Localized: "PRIVACY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000031
+    m_Localized: "We use analytics to see how the game is played, improve the levels and find errors. You can turn them on or off at any time."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000032
+    m_Localized: "Analytics"
     m_Metadata:
       m_Items: []
   references:

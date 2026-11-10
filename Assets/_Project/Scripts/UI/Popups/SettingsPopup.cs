@@ -5,8 +5,8 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Settings popup: music and SFX on/off, the language selector, the button that opens the credits
-/// on top, the button that opens the privacy policy in the browser (Google Play requires it to be
-/// reachable from inside the game), the button that opens the "delete account" confirmation (Google Play
+/// on top, the Privacy button (opens the privacy preferences on top: analytics switch and the privacy policy,
+/// which Google Play requires to be reachable from inside the game), the button that opens the "delete account" confirmation (Google Play
 /// requires it for apps that create accounts), and a footer with the game version and the player ID (for
 /// support and bug reports).
 /// The same component drives the gameplay Settings (GameplaySettingsPopup prefab): there it only has the audio
@@ -31,8 +31,10 @@ public class SettingsPopup : PopupView
     [SerializeField] private CreditsPopup creditsPopupPrefab;
 
     [Header("Privacy")]
-    [Tooltip("Opens LegalLinks.PrivacyPolicy in the browser, in the language on screen")]
+    [Tooltip("Opens the privacy preferences on top. Without a PrivacySettingsPopup prefab it opens the privacy policy in the browser instead.")]
     [SerializeField] private Button privacyButton;
+    [Tooltip("PrivacySettingsPopup prefab, opened on top of this one")]
+    [SerializeField] private PrivacySettingsPopup privacySettingsPopupPrefab;
 
     [Header("Account")]
     [SerializeField] private Button deleteAccountButton;
@@ -151,9 +153,18 @@ public class SettingsPopup : PopupView
         Service?.Open(creditsPopupPrefab);
     }
 
-    /// <summary>Opens the privacy policy in the browser, at the section of the language on screen.</summary>
+    /// <summary>
+    /// Opens the privacy preferences on top (analytics switch and policy link). Without that prefab, opens the
+    /// privacy policy in the browser, at the section of the language on screen, as before.
+    /// </summary>
     public void OnPrivacyClicked()
     {
+        if (privacySettingsPopupPrefab != null)
+        {
+            Service?.Open(privacySettingsPopupPrefab);
+            return;
+        }
+
         _urlOpener ??= new UnityUrlOpener();
         _urlOpener.Open(LegalLinks.PrivacyPolicyUrl(_localization?.CurrentLanguage));
     }

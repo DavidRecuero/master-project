@@ -226,7 +226,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000026
-    m_Localized: "Con tu permiso, usamos anal\xEDticas para ver c\xF3mo se juega, mejorar los niveles y encontrar errores. Para ello se env\xEDan datos de juego y del dispositivo (nunca tu nombre ni tu email) a nuestro proveedor de anal\xEDticas, GameAnalytics. Puedes cambiar tu elecci\xF3n cuando quieras en Ajustes."
+    m_Localized: "Con tu permiso, usamos anal\xEDticas para ver c\xF3mo se juega, mejorar los niveles y encontrar errores. Para ello se env\xEDan datos de juego y del dispositivo (nunca tu nombre ni tu email) a nuestro proveedor de anal\xEDticas. Puedes cambiar tu elecci\xF3n cuando quieras en Ajustes."
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000027
@@ -235,6 +235,22 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 348100000000028
     m_Localized: "RECHAZAR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000029
+    m_Localized: "Privacidad"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000030
+    m_Localized: "PRIVACIDAD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000031
+    m_Localized: "Usamos anal\xEDticas para ver c\xF3mo se juega, mejorar los niveles y encontrar errores. Puedes activarlas o desactivarlas cuando quieras."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000032
+    m_Localized: "Anal\xEDticas"
     m_Metadata:
       m_Items: []
   references:

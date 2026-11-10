@@ -226,7 +226,7 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000026
-    m_Localized: "Amb el teu perm\xEDs, fem servir anal\xEDtiques per veure com es juga, millorar els nivells i trobar errors. Per fer-ho, s'envien dades de joc i del dispositiu (mai el teu nom ni el teu correu) al nostre prove\xEFdor d'anal\xEDtiques, GameAnalytics. Pots canviar la teva elecci\xF3 quan vulguis a Configuraci\xF3."
+    m_Localized: "Amb el teu perm\xEDs, fem servir anal\xEDtiques per veure com es juga, millorar els nivells i trobar errors. Per fer-ho, s'envien dades de joc i del dispositiu (mai el teu nom ni el teu correu) al nostre prove\xEFdor d'anal\xEDtiques. Pots canviar la teva elecci\xF3 quan vulguis a Configuraci\xF3."
     m_Metadata:
       m_Items: []
   - m_Id: 348100000000027
@@ -235,6 +235,22 @@ MonoBehaviour:
       m_Items: []
   - m_Id: 348100000000028
     m_Localized: "REBUTJAR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000029
+    m_Localized: "Privacitat"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000030
+    m_Localized: "PRIVACITAT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000031
+    m_Localized: "Fem servir anal\xEDtiques per veure com es juga, millorar els nivells i trobar errors. Les pots activar o desactivar quan vulguis."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000032
+    m_Localized: "Anal\xEDtiques"
     m_Metadata:
       m_Items: []
   references:

@@ -227,6 +227,22 @@ MonoBehaviour:
     m_Key: consent.reject
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000029
+    m_Key: settings.privacy_menu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000030
+    m_Key: privacy.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000031
+    m_Key: privacy.body
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000032
+    m_Key: privacy.analytics
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

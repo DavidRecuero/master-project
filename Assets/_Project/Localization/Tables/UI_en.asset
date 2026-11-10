@@ -223,6 +223,22 @@ MonoBehaviour:
     m_Metadata:
       m_Items:
       - rid: 3524684200313618700
+  - m_Id: 348100000000025
+    m_Localized: "YOUR PRIVACY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000026
+    m_Localized: "With your permission, we use analytics to see how the game is played, improve the levels and find errors. This sends gameplay and device data (never your name or email) to our analytics provider, GameAnalytics. You can change your choice at any time in Settings."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000027
+    m_Localized: "ACCEPT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000028
+    m_Localized: "REJECT"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

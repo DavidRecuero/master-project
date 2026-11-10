@@ -211,6 +211,22 @@ MonoBehaviour:
     m_Key: nolives.buy
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000025
+    m_Key: consent.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000026
+    m_Key: consent.body
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000027
+    m_Key: consent.accept
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000028
+    m_Key: consent.reject
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

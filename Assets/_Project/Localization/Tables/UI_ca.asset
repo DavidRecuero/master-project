@@ -221,6 +221,22 @@ MonoBehaviour:
     m_Metadata:
       m_Items:
       - rid: 3524684200313618699
+  - m_Id: 348100000000025
+    m_Localized: "LA TEVA PRIVACITAT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000026
+    m_Localized: "Amb el teu perm\xEDs, fem servir anal\xEDtiques per veure com es juga, millorar els nivells i trobar errors. Per fer-ho, s'envien dades de joc i del dispositiu (mai el teu nom ni el teu correu) al nostre prove\xEFdor d'anal\xEDtiques, GameAnalytics. Pots canviar la teva elecci\xF3 quan vulguis a Configuraci\xF3."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000027
+    m_Localized: "ACCEPTAR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 348100000000028
+    m_Localized: "REBUTJAR"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

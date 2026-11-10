@@ -13,6 +13,10 @@ public class BootManager : MonoBehaviour
     [Tooltip("Longest wait (seconds) for the cloud sign-in and the save download. After that the menu opens with the data on the device.")]
     [SerializeField] private float cloudTimeout = 5f;
 
+    [Header("Privacy")]
+    [Tooltip("ConsentPopup prefab. On the first launch (or after a new consent version) the menu doesn't load until the player answers it.")]
+    [SerializeField] private ConsentPopup consentPopupPrefab;
+
     private ISceneLoader _sceneLoader;
     private IAuthProvider _authProvider;
     private ILocalizationService _localization;
@@ -20,6 +24,9 @@ public class BootManager : MonoBehaviour
     private IBackendAuthService _backendAuth;
     private ICloudSaveStore _cloudStore;
     private IProfileRepository _profiles;
+
+    private IConsentService _consent;
+    private IPopupService _popups;
 
     public void Initialize(ISceneLoader sceneLoader, IAuthProvider authProvider, ILocalizationService localization = null)
     {
@@ -42,6 +49,14 @@ public class BootManager : MonoBehaviour
         cloudEnabled = enabled;
     }
 
+    /// <summary>Optional injection of the privacy pieces (tests). Without it, the shared ConsentServices and the PopupService of the scene.</summary>
+    public void InitializeConsent(IConsentService consent, IPopupService popups, ConsentPopup popupPrefab = null)
+    {
+        _consent = consent;
+        _popups = popups;
+        if (popupPrefab != null) consentPopupPrefab = popupPrefab;
+    }
+
     private void Awake()
     {
         _sceneLoader ??= new UnitySceneLoader();
@@ -61,6 +76,8 @@ public class BootManager : MonoBehaviour
         if (_profiles == null && UserDataManager.Instance != null) _profiles = UserDataManager.Instance;
         _backendAuth ??= new UgsBackendAuthService();
         _cloudStore ??= new UgsCloudSaveStore();
+        _consent ??= ConsentServices.Current;
+        _popups ??= PopupService.Instance;
 
         StartCoroutine(StartupSequence());
     }
@@ -108,10 +125,37 @@ public class BootManager : MonoBehaviour
         else
             Debug.LogWarning("[BOOT] Localization not ready in time. Loading the menu anyway.");
 
+        // Before the menu: nothing that needs consent may start without an answer
+        yield return ConsentStep();
+
         Debug.Log("[BOOT] Everything ready, loading main menu...");
 
         // Loads the Main Menu scene
         _sceneLoader.LoadScene(1);
+    }
+
+    /// <summary>
+    /// First launch (or a new consent version): shows the consent popup and waits for the answer. After the
+    /// language tables, so it opens already translated. The sign-in and the cloud don't need consent, so they are
+    /// done by then. Without a popup or a PopupService (tests, Boot not set up) it goes on without asking.
+    /// </summary>
+    private IEnumerator ConsentStep()
+    {
+        if (_consent == null || !_consent.NeedsPrompt) yield break;
+
+        if (_popups == null || consentPopupPrefab == null)
+        {
+            Debug.LogWarning("[BOOT] Consent needed but no PopupService or ConsentPopup prefab. Loading the menu without asking.");
+            yield break;
+        }
+
+        ConsentPopup popup = _popups.Open(consentPopupPrefab);
+        if (popup == null) yield break;
+        popup.Initialize(_consent);
+
+        Debug.Log("[BOOT] Waiting for the privacy answer...");
+        // Unity's == null: the popup is destroyed when it closes
+        yield return new WaitUntil(() => popup == null || popup.Answered);
     }
 
     /// <summary>

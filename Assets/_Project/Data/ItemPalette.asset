@@ -28,4 +28,10 @@ MonoBehaviour:
   - name: Purple
     color: {r: 0.549020, g: 0.356863, b: 0.878431, a: 1}
     sprite: {fileID: 21300000, guid: 88e795ce9f6350f7bb291e027926e113, type: 3}
+  - name: Orange
+    color: {r: 1.000000, g: 0.541176, b: 0.121569, a: 1}
+    sprite: {fileID: 21300000, guid: a645cea706474de2bf2a58e5aa1ebf01, type: 3}
+  - name: Pink
+    color: {r: 0.925490, g: 0.372549, b: 0.690196, a: 1}
+    sprite: {fileID: 21300000, guid: ff2cf399bdfd4e4abc98da3271c228e4, type: 3}
   hiddenSprite: {fileID: 21300000, guid: d5cdd38da4e55eea98619a9f9ddbf0c9, type: 3}

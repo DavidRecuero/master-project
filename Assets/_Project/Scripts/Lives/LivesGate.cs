@@ -38,6 +38,7 @@ public sealed class LivesGate
             return false;
         }
 
+        GameEvents.TriggerOutOfLives();
         NoLivesPopup popup = _popups.Open(_noLivesPopupPrefab);
         if (popup != null) popup.Initialize(_lives, enterLevel);
         return false;

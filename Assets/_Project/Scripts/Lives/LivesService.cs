@@ -94,6 +94,7 @@ public sealed class LivesService : ILivesService
 
         GiveLives(p, 1);
         Commit();
+        GameEvents.TriggerLivesBought(1, LifePrice);
         return true;
     }
 
@@ -101,10 +102,13 @@ public sealed class LivesService : ILivesService
     {
         UserProfile p = Current();
         if (p == null || p.MissingLives == 0) return false;
-        if (!Pay(p.MissingLives * LifePrice)) return false;
+        int missing = p.MissingLives;
+        int price = missing * LifePrice;
+        if (!Pay(price)) return false;
 
-        GiveLives(p, p.MissingLives);
+        GiveLives(p, missing);
         Commit();
+        GameEvents.TriggerLivesBought(missing, price);
         return true;
     }
 

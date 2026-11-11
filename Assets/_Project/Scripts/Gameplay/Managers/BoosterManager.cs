@@ -116,6 +116,8 @@ public class BoosterManager : MonoBehaviour
                 // TODO: here to open the coin store/rewarded ad flow
                 return false;
             }
+
+            GameEvents.TriggerBoosterPurchased(type, price);
         }
 
         booster.Execute();

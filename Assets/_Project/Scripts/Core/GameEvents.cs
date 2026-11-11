@@ -32,6 +32,12 @@ public static class GameEvents
     public static event Action<int> OnLevelRewarded;
     /// <summary>The player changed a privacy choice (consent popup, Settings, debug reset). The bool is the new "may use".</summary>
     public static event Action<ConsentPurpose, bool> OnConsentChanged;
+    /// <summary>A booster was paid with coins (no free stock left). Raised just before OnBoosterUsed. The int is the price.</summary>
+    public static event Action<BoosterType, int> OnBoosterPurchased;
+    /// <summary>Lives were bought with coins. The ints are the lives given and the coins paid.</summary>
+    public static event Action<int, int> OnLivesBought;
+    /// <summary>The player tried to play with no lives left (the "out of lives" popup opens).</summary>
+    public static event Action OnOutOfLives;
 
     public static void TriggerLevelCleared() => OnLevelCleared?.Invoke();
     public static void TriggerLevelFailed() => OnLevelFailed?.Invoke();
@@ -52,4 +58,7 @@ public static class GameEvents
     public static void TriggerBoosterDenied(BoosterType type) => OnBoosterDenied?.Invoke(type);
     public static void TriggerLevelRewarded(int coins) => OnLevelRewarded?.Invoke(coins);
     public static void TriggerConsentChanged(ConsentPurpose purpose, bool granted) => OnConsentChanged?.Invoke(purpose, granted);
+    public static void TriggerBoosterPurchased(BoosterType type, int price) => OnBoosterPurchased?.Invoke(type, price);
+    public static void TriggerLivesBought(int lives, int price) => OnLivesBought?.Invoke(lives, price);
+    public static void TriggerOutOfLives() => OnOutOfLives?.Invoke();
 }

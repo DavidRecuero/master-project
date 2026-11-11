@@ -40,8 +40,12 @@ MonoBehaviour:
   CustomDimensions01: []
   CustomDimensions02: []
   CustomDimensions03: []
-  ResourceItemTypes: []
-  ResourceCurrencies: []
+  ResourceItemTypes:
+  - Reward
+  - Booster
+  - Life
+  ResourceCurrencies:
+  - Coins
   LastCreatedGamePlatform: 0
   Platforms: 0b000000
   UsePlayerSettingsBuildNumber: 0

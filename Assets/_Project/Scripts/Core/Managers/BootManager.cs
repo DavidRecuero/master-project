@@ -188,6 +188,9 @@ public class BootManager : MonoBehaviour
         _analytics ??= AnalyticsServices.CreateDefault(_consent);
         AnalyticsServices.Set(_analytics);
         _analytics.Start();
+
+        // Turns the game events (levels, coins, boosters, lives) into analytics events for the whole session
+        AnalyticsEventsTracker.StartShared(_analytics);
     }
 
     /// <summary>

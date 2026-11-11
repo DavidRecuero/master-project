@@ -15,7 +15,28 @@ public class FakeAnalyticsBackend : IAnalyticsBackend
         IsInitialized = true;
     }
 
-    public void SetSubmissionEnabled(bool enabled) => SubmissionChanges.Add(enabled);
+    /// <summary>Submission and session calls in order, e.g. "submission:False", "end", "start".</summary>
+    public readonly List<string> Order = new List<string>();
+
+    public void SetSubmissionEnabled(bool enabled)
+    {
+        SubmissionChanges.Add(enabled);
+        Order.Add($"submission:{enabled}");
+    }
+
+    public int StartSessionCalls, EndSessionCalls;
+
+    public void StartSession()
+    {
+        StartSessionCalls++;
+        Order.Add("start");
+    }
+
+    public void EndSession()
+    {
+        EndSessionCalls++;
+        Order.Add("end");
+    }
 
     public void Progression(AnalyticsProgressionStatus status, string progression01, string progression02 = null, int? score = null) =>
         Events.Add($"progression:{status}:{progression01}:{progression02}:{score}");
@@ -148,6 +169,127 @@ public class AnalyticsServiceTests
         _consent.Set(ConsentPurpose.Analytics, true);
 
         Assert.AreEqual(0, _backend.InitializeCalls);
+    }
+
+    // ---------- Sessions (background / foreground) ----------
+
+    [Test]
+    public void Withdraw_EndsTheSession()
+    {
+        _consent.SetAll(true);
+        _analytics.Start();
+
+        _consent.Set(ConsentPurpose.Analytics, false);
+
+        Assert.AreEqual(1, _backend.EndSessionCalls);
+    }
+
+    [Test]
+    public void Withdraw_TurnsSendingOffBeforeEndingTheSession()
+    {
+        // Otherwise the end of the session would still be sent after the player said no
+        _consent.SetAll(true);
+        _analytics.Start();
+
+        _consent.Set(ConsentPurpose.Analytics, false);
+
+        CollectionAssert.AreEqual(new[] { "submission:False", "end" }, _backend.Order);
+    }
+
+    [Test]
+    public void YesAgain_TurnsSendingOnBeforeStartingTheSession()
+    {
+        _consent.SetAll(true);
+        _analytics.Start();
+        _consent.Set(ConsentPurpose.Analytics, false);
+        _backend.Order.Clear();
+
+        _consent.Set(ConsentPurpose.Analytics, true);
+
+        CollectionAssert.AreEqual(new[] { "submission:True", "start" }, _backend.Order);
+    }
+
+    [Test]
+    public void YesAgain_StartsANewSession()
+    {
+        _consent.SetAll(true);
+        _analytics.Start();
+        _consent.Set(ConsentPurpose.Analytics, false);
+
+        _consent.Set(ConsentPurpose.Analytics, true);
+
+        Assert.AreEqual(1, _backend.StartSessionCalls);
+    }
+
+    [Test]
+    public void Background_EndsTheSession_AndForeground_StartsANewOne()
+    {
+        _consent.SetAll(true);
+        _analytics.Start();
+
+        _analytics.SetAppPaused(true);
+        _analytics.SetAppPaused(false);
+
+        Assert.AreEqual(1, _backend.EndSessionCalls);
+        Assert.AreEqual(1, _backend.StartSessionCalls);
+    }
+
+    [Test]
+    public void ForegroundAfterWithdrawing_StartsNoSession()
+    {
+        // The bug this guards against: the provider contacted its server on every return to the foreground
+        _consent.SetAll(true);
+        _analytics.Start();
+        _consent.Set(ConsentPurpose.Analytics, false);
+
+        _analytics.SetAppPaused(true);
+        _analytics.SetAppPaused(false);
+
+        Assert.AreEqual(0, _backend.StartSessionCalls);
+        Assert.AreEqual(1, _backend.EndSessionCalls, "Only the end when the consent was withdrawn");
+    }
+
+    [Test]
+    public void YesWhileInTheBackground_WaitsForTheForeground()
+    {
+        _consent.SetAll(true);
+        _analytics.Start();
+        _consent.Set(ConsentPurpose.Analytics, false);
+        _analytics.SetAppPaused(true);
+
+        _consent.Set(ConsentPurpose.Analytics, true);
+        Assert.AreEqual(0, _backend.StartSessionCalls);
+
+        _analytics.SetAppPaused(false);
+        Assert.AreEqual(1, _backend.StartSessionCalls);
+    }
+
+    [Test]
+    public void PauseWithoutConsent_TouchesNothing()
+    {
+        _analytics.Start();
+
+        _analytics.SetAppPaused(true);
+        _analytics.SetAppPaused(false);
+
+        Assert.AreEqual(0, _backend.InitializeCalls);
+        Assert.AreEqual(0, _backend.StartSessionCalls);
+        Assert.AreEqual(0, _backend.EndSessionCalls);
+    }
+
+    [Test]
+    public void RepeatedPause_CountsOnce()
+    {
+        _consent.SetAll(true);
+        _analytics.Start();
+
+        _analytics.SetAppPaused(true);
+        _analytics.SetAppPaused(true);
+        _analytics.SetAppPaused(false);
+        _analytics.SetAppPaused(false);
+
+        Assert.AreEqual(1, _backend.EndSessionCalls);
+        Assert.AreEqual(1, _backend.StartSessionCalls);
     }
 
     // ---------- Events ----------

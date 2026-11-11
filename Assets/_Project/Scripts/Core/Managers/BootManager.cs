@@ -191,6 +191,9 @@ public class BootManager : MonoBehaviour
 
         // Turns the game events (levels, coins, boosters, lives) into analytics events for the whole session
         AnalyticsEventsTracker.StartShared(_analytics);
+
+        // Tells the analytics when the app goes to the background and comes back (sessions)
+        if (Application.isPlaying) AnalyticsAppLifecycle.Ensure();
     }
 
     /// <summary>

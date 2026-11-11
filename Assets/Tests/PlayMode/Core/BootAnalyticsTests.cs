@@ -87,6 +87,7 @@ public class BootFakeAnalytics : IAnalyticsService
     public bool IsActive => StartCalls > 0;
     public void Start() => StartCalls++;
     public void Stop() { }
+    public void SetAppPaused(bool paused) { }
     public void Progression(AnalyticsProgressionStatus status, string progression01, string progression02 = null, int? score = null) { }
     public void Resource(AnalyticsResourceFlow flow, string currency, float amount, string itemType, string itemId) { }
     public void Design(string eventId, float? value = null) { }

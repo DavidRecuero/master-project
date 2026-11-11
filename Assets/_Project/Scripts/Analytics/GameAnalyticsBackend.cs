@@ -7,6 +7,16 @@ using UnityEngine;
 /// the Unity errors for "Submit Unity errors automatically") and starts the SDK with the keys of Resources/GameAnalytics/Settings.
 /// The keys are not in the repo: GameAnalyticsKeysBuildStep writes them into the settings only while building.
 /// In the editor the SDK sends nothing (unsupported platform), so playing in the editor is safe.
+///
+/// Sessions: "Manual session handling" is on in the settings. Without it, the Android SDK opens a session (and
+/// calls its server with the player ID and device data) every time the app comes back to the foreground, even with
+/// the sending turned off. With it, only AnalyticsService starts and ends sessions, and only with consent.
+/// Initialize still opens the first session.
+///
+/// Android detail: ending a session also stops the SDK's worker thread, and GameAnalytics.StartSession() only
+/// queues its work on that thread, so on its own it never runs again. StartSession therefore calls the SDK's
+/// own "app came back" step (native GameAnalytics.onResume: restarts the thread and opens the session), the same
+/// thing the SDK does by itself without manual session handling, but now only when AnalyticsService says so.
 /// </summary>
 public sealed class GameAnalyticsBackend : IAnalyticsBackend
 {
@@ -32,6 +42,31 @@ public sealed class GameAnalyticsBackend : IAnalyticsBackend
 
         // doCache false: while off, events are dropped, not stored to be sent later
         GameAnalytics.SetEnabledEventSubmission(enabled, false);
+    }
+
+    public void StartSession()
+    {
+        if (!GameAnalytics.Initialized) return;
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+        try
+        {
+            // JNI reaches the package-private method; the SDK keeps its classes (-keep com.gameanalytics.sdk.**)
+            using (var native = new AndroidJavaClass("com.gameanalytics.sdk.GameAnalytics"))
+                native.CallStatic("onResume");
+            return;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[Analytics] Native session resume failed, using StartSession: {e.Message}");
+        }
+#endif
+        GameAnalytics.StartSession();
+    }
+
+    public void EndSession()
+    {
+        if (GameAnalytics.Initialized) GameAnalytics.EndSession();
     }
 
     public void Progression(AnalyticsProgressionStatus status, string progression01, string progression02 = null, int? score = null)

@@ -17,6 +17,12 @@ public interface IAnalyticsService
     /// <summary>Stops following the consent (tests, shutdown). The sending is left as it is.</summary>
     void Stop();
 
+    /// <summary>
+    /// The app went to the background (true) or came back (false). Ends the session when it goes, and starts a new
+    /// one when it comes back only if the player still says yes. Called by AnalyticsAppLifecycle.
+    /// </summary>
+    void SetAppPaused(bool paused);
+
     void Progression(AnalyticsProgressionStatus status, string progression01, string progression02 = null, int? score = null);
     void Resource(AnalyticsResourceFlow flow, string currency, float amount, string itemType, string itemId);
     void Design(string eventId, float? value = null);

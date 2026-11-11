@@ -9,6 +9,7 @@ public class RecordingAnalyticsService : IAnalyticsService
     public bool IsActive => true;
     public void Start() { }
     public void Stop() { }
+    public void SetAppPaused(bool paused) { }
 
     public void Progression(AnalyticsProgressionStatus status, string progression01, string progression02 = null, int? score = null) =>
         Calls.Add($"progression:{status}:{progression01}");

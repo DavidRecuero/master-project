@@ -36,7 +36,7 @@ MonoBehaviour:
   InfoLogEditor: 1
   InfoLogBuild: 1
   VerboseLogBuild: 0
-  UseManualSessionHandling: 0
+  UseManualSessionHandling: 1
   CustomDimensions01: []
   CustomDimensions02: []
   CustomDimensions03: []

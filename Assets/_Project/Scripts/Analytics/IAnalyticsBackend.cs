@@ -28,6 +28,16 @@ public interface IAnalyticsBackend
     /// <summary>Turns the sending on or off. Off also drops what would be sent: nothing is kept for later.</summary>
     void SetSubmissionEnabled(bool enabled);
 
+    /// <summary>
+    /// Starts a session (the app came back to the foreground, or consent was given again). Sessions are handled by
+    /// the game, not by the provider: on its own, the provider would open a session (and contact its server) every
+    /// time the app comes back, even without consent.
+    /// </summary>
+    void StartSession();
+
+    /// <summary>Ends the session (the app went to the background, or consent was withdrawn).</summary>
+    void EndSession();
+
     /// <summary>Progression event, e.g. Start "Level_012". score: optional (only Complete/Fail).</summary>
     void Progression(AnalyticsProgressionStatus status, string progression01, string progression02 = null, int? score = null);
 

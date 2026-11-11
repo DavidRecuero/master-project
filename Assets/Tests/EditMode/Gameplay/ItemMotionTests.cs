@@ -139,4 +139,63 @@ public class ItemMotionTests
 
         Assert.AreEqual(new Vector3(5f, 0f, 0f), _go.transform.position);
     }
+
+    // ---------- Route along the pipe (fast taps follow the tube, corners included) ----------
+
+    private static readonly Vector3[] Corner =
+    {
+        new Vector3(0f, 0f, 0f), new Vector3(1f, 0f, 0f), new Vector3(1f, 1f, 0f),
+    };
+
+    [Test]
+    public void RoutePoint_StartsAndEndsOnTheRoute()
+    {
+        Assert.AreEqual(Corner[0], ItemMotion.RoutePoint(Corner, 0f));
+        Assert.AreEqual(Corner[2], ItemMotion.RoutePoint(Corner, 1f));
+    }
+
+    [Test]
+    public void RoutePoint_GoesThroughTheCorner_NotAcrossIt()
+    {
+        // Half way of an L of two cells is the corner itself (a straight line would be at 0.5, 0.5)
+        Assert.AreEqual(Corner[1], ItemMotion.RoutePoint(Corner, 0.5f));
+
+        Vector3 quarter = ItemMotion.RoutePoint(Corner, 0.25f, out Vector3 firstLeg, out int next1);
+        Assert.AreEqual(new Vector3(0.5f, 0f, 0f), quarter);
+        Assert.AreEqual(Vector3.right, firstLeg.normalized);
+        Assert.AreEqual(1, next1);
+
+        Vector3 threeQuarters = ItemMotion.RoutePoint(Corner, 0.75f, out Vector3 secondLeg, out int next2);
+        Assert.AreEqual(new Vector3(1f, 0.5f, 0f), threeQuarters);
+        Assert.AreEqual(Vector3.up, secondLeg.normalized);
+        Assert.AreEqual(2, next2);
+    }
+
+    [Test]
+    public void RoutePoint_IsMeasuredByDistance()
+    {
+        // A short leg (the rest of a cell) and a full cell: half the distance is inside the long leg
+        var route = new[] { new Vector3(0.5f, 0f, 0f), new Vector3(1f, 0f, 0f), new Vector3(1f, 1f, 0f) };
+
+        Assert.AreEqual(1.5f, ItemMotion.RouteLength(route), 1e-5f);
+        Assert.AreEqual(new Vector3(1f, 0.25f, 0f), ItemMotion.RoutePoint(route, 0.5f));
+    }
+
+    [Test]
+    public void RoutePoint_HandlesShortRoutes()
+    {
+        Assert.AreEqual(Vector3.zero, ItemMotion.RoutePoint(new Vector3[0], 0.5f));
+        Assert.AreEqual(Vector3.one, ItemMotion.RoutePoint(new[] { Vector3.one }, 0.5f));
+        Assert.AreEqual(Vector3.one, ItemMotion.RoutePoint(new[] { Vector3.one, Vector3.one }, 0.5f));
+    }
+
+    [Test]
+    public void ChainSlide_OutsidePlayMode_EndsAtTheLastTarget()
+    {
+        _motion.SlideTo(Corner[1], 0.1f, 0.17f, true, 0.12f, 0.14f, chain: true);
+        _motion.SlideTo(Corner[2], 0.1f, 0.17f, true, 0.12f, 0.14f, chain: true);
+
+        Assert.AreEqual(Corner[2], _go.transform.position);
+        Assert.IsFalse(_motion.IsMoving);
+    }
 }

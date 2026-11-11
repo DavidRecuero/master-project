@@ -21,6 +21,8 @@ public class ItemMotionSettings : ScriptableObject
     public float stepLandSquash = 0.12f;
     [Tooltip("Seconds of that squash")]
     public float stepLandDuration = 0.14f;
+    [Tooltip("Taps faster than the animation: an item with more than one cell still to go takes this part of a step for each extra cell (1 = a full step per cell, 0 = always one step). Lower catches up faster")]
+    [Range(0f, 1f)] public float chainCatchUp = 0.6f;
     [Tooltip("New items come in from this far behind the first cell, in cells (0.5 = the inlet mouth)")]
     public float inletOffset = 0.5f;
 

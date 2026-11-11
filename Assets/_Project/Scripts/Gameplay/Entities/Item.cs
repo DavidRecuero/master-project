@@ -142,12 +142,12 @@ public class Item : MonoBehaviour, IPointerDownHandler
 
         if (from.HasValue)
         {
-            m.SlideFrom(from.Value, target, delay, s.stepDuration, true, s.stepLandSquash, s.stepLandDuration);
+            m.SlideFrom(from.Value, target, delay, s.stepDuration, true, s.stepLandSquash, s.stepLandDuration, chain: true);
             m.GrowTo(0f, BaseScale, delay);
             return;
         }
 
-        m.SlideTo(target, delay, s.stepDuration, true, s.stepLandSquash, s.stepLandDuration);
+        m.SlideTo(target, delay, s.stepDuration, true, s.stepLandSquash, s.stepLandDuration, chain: true);
 
         // Reaching the platform: from the tube size to the platform size, with a bounce
         if (!inTray && IsAtExit && BaseScale > startScale + 0.001f)

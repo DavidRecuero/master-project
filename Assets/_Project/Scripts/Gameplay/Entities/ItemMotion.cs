@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -7,6 +8,9 @@ using UnityEngine;
 /// It only moves the drawing: the Item's grid position and the tray contents change at once, so
 /// the gameplay never waits for an animation. Added by Item; it is the only writer of the item's
 /// position (while moving), scale and rotation.
+/// Along the pipe the item follows a route (the cell centres it still has to go through): a tap that comes
+/// while it is still sliding adds the next cell to the route, so it keeps moving through the tube and turns
+/// the corners, never stopping half way nor cutting across to the new cell.
 /// Turned off when the item is disabled or another effect takes over the scale (the match pop):
 /// any movement left jumps to its end.
 /// </summary>
@@ -20,6 +24,10 @@ public class ItemMotion : MonoBehaviour
     private Path _path;
     private Vector3 _from;
     private Vector3 _to;
+    // Line path: the points still to go through, from where the movement started (2 points = a straight line)
+    private readonly List<Vector3> _route = new List<Vector3>(4);
+    private int _routeNext = 1;    // Index of the route point it is heading to
+    private bool _chain;           // A slide along the pipe: a new step extends the route
     private float _moveStart;      // Time.time when it starts moving (after the delay)
     private float _moveDuration;
     private bool _stretchWhileMoving;
@@ -100,19 +108,31 @@ public class ItemMotion : MonoBehaviour
     }
 
     /// <summary>Slides in a straight line to the target: one cell along the pipe, or to another tray slot.</summary>
-    public void SlideTo(Vector3 target, float delay, float duration, bool stretch, float landSquash, float landDuration)
+    /// <param name="chain">A step along the pipe. If the item is still on its way from a previous step, the
+    /// target is added to its route instead of starting again: it goes on through the cells in order.</param>
+    public void SlideTo(Vector3 target, float delay, float duration, bool stretch, float landSquash, float landDuration, bool chain = false)
     {
-        StartMove(Path.Line, transform.position, target, delay, duration, null);
+        if (chain && _chain && _path == Path.Line && CanAnimate)
+        {
+            ExtendRoute(target, duration);
+        }
+        else
+        {
+            StartMove(Path.Line, transform.position, target, delay, duration, null);
+            _chain = chain;
+        }
+
         _stretchWhileMoving = stretch;
         _landSquash = landSquash;
         _landDuration = landDuration;
     }
 
     /// <summary>Slides from a given point (a new item coming in through the inlet).</summary>
-    public void SlideFrom(Vector3 start, Vector3 target, float delay, float duration, bool stretch, float landSquash, float landDuration)
+    public void SlideFrom(Vector3 start, Vector3 target, float delay, float duration, bool stretch, float landSquash, float landDuration, bool chain = false)
     {
         transform.position = start;
-        SlideTo(target, delay, duration, stretch, landSquash, landDuration);
+        _path = Path.None;   // a fresh movement from that point, never an extension
+        SlideTo(target, delay, duration, stretch, landSquash, landDuration, chain);
     }
 
     /// <summary>
@@ -138,14 +158,20 @@ public class ItemMotion : MonoBehaviour
     /// <summary>Changes where the current flight or slide ends (the tray reordered while it was on its way).</summary>
     public void Retarget(Vector3 target)
     {
-        if (IsMoving) _to = target;
-        else transform.position = target;
+        if (!IsMoving)
+        {
+            transform.position = target;
+            return;
+        }
+
+        _to = target;
+        if (_path == Path.Line && _route.Count > 0) _route[_route.Count - 1] = target;
     }
 
     /// <summary>Ends every movement at once: final position, resting size, no squash.</summary>
     public void Complete()
     {
-        if (_path != Path.None) transform.position = _to;
+        if (_path != Path.None) transform.position = EndPoint();
         _path = Path.None;
         _growStart = -1f;
         _landStart = -1f;
@@ -188,11 +214,11 @@ public class ItemMotion : MonoBehaviour
 
             if (_path == Path.Line)
             {
-                transform.position = Vector3.LerpUnclamped(_from, _to, Easing.OutCubic(k));
+                transform.position = RoutePoint(_route, Easing.OutCubic(k), out Vector3 direction, out _routeNext);
                 if (_stretchWhileMoving && k > 0f && k < 1f)
                 {
                     float s = Mathf.Sin(Mathf.PI * k);
-                    StretchAlong(_to - _from, Settings.stepStretch * s, out sx, out sy);
+                    StretchAlong(direction, Settings.stepStretch * s, out sx, out sy);
                 }
             }
             else
@@ -245,13 +271,53 @@ public class ItemMotion : MonoBehaviour
         _moveDuration = Mathf.Max(0f, duration);
         _onArrived = onArrived;
         _landStart = -1f;
+        _chain = false;
+
+        _route.Clear();
+        if (path == Path.Line)
+        {
+            _route.Add(from);
+            _route.Add(to);
+        }
+        _routeNext = 1;
 
         if (!CanAnimate) Complete();
     }
 
+    /// <summary>
+    /// A new step while still sliding along the pipe: the route becomes "from here, through the cells still
+    /// ahead, to the new cell". An item still waiting for its turn in the wave keeps its start time; one
+    /// already moving goes on at once. More than one cell to go takes a bit longer, but less than a full
+    /// step per cell (Settings.chainCatchUp), so fast taps catch up.
+    /// </summary>
+    private void ExtendRoute(Vector3 target, float stepDuration)
+    {
+        float now = Time.time;
+        bool waiting = now < _moveStart;
+        Vector3 last = _route[_route.Count - 1];
+
+        // What is still ahead: from the point it is heading to (all of it while it waits)
+        int next = waiting ? 1 : Mathf.Clamp(_routeNext, 1, _route.Count - 1);
+        if (next > 1) _route.RemoveRange(1, next - 1);
+        _route[0] = transform.position;
+        if ((target - last).sqrMagnitude > 0.000001f) _route.Add(target);
+        _routeNext = 1;
+
+        float cell = Mathf.Max(0.0001f, (target - last).magnitude);
+        float cells = RouteLength(_route) / cell;
+
+        _to = target;
+        _from = transform.position;
+        if (!waiting) _moveStart = now;
+        _moveDuration = Mathf.Max(0f, stepDuration) * Mathf.Max(0.5f, 1f + Settings.chainCatchUp * (cells - 1f));
+        _landStart = -1f;
+    }
+
+    private Vector3 EndPoint() => _path == Path.Line && _route.Count > 0 ? _route[_route.Count - 1] : _to;
+
     private void Arrive(float now)
     {
-        transform.position = _to;
+        transform.position = EndPoint();
         _path = Path.None;
         if (_landSquash > 0f && _landDuration > 0f) _landStart = now;
         InvokeArrived();
@@ -302,6 +368,46 @@ public class ItemMotion : MonoBehaviour
         sx = vertical ? across : along;
         sy = vertical ? along : across;
     }
+
+    /// <summary>Total length of a route (sum of its straight segments).</summary>
+    public static float RouteLength(IReadOnlyList<Vector3> route)
+    {
+        float length = 0f;
+        for (int i = 1; i < route.Count; i++) length += (route[i] - route[i - 1]).magnitude;
+        return length;
+    }
+
+    /// <summary>
+    /// Point at fraction t (0 to 1) of a route, measured by distance: it goes through every point in order, so
+    /// it turns the corners of the pipe. direction: the segment it is on. nextIndex: the point it is heading to.
+    /// </summary>
+    public static Vector3 RoutePoint(IReadOnlyList<Vector3> route, float t, out Vector3 direction, out int nextIndex)
+    {
+        direction = Vector3.zero;
+        nextIndex = Mathf.Max(1, route.Count - 1);
+        if (route.Count == 0) return Vector3.zero;
+        if (route.Count == 1) return route[0];
+
+        float total = RouteLength(route);
+        direction = route[route.Count - 1] - route[route.Count - 2];
+        if (total <= 0f || t >= 1f) return route[route.Count - 1];
+
+        float target = Mathf.Max(0f, t) * total;
+        for (int i = 1; i < route.Count; i++)
+        {
+            float segment = (route[i] - route[i - 1]).magnitude;
+            if (target <= segment || i == route.Count - 1)
+            {
+                direction = route[i] - route[i - 1];
+                nextIndex = i;
+                return segment > 0f ? Vector3.LerpUnclamped(route[i - 1], route[i], target / segment) : route[i];
+            }
+            target -= segment;
+        }
+        return route[route.Count - 1];
+    }
+
+    public static Vector3 RoutePoint(IReadOnlyList<Vector3> route, float t) => RoutePoint(route, t, out _, out _);
 
     /// <summary>Point of a parabola from 'from' to 'to' that rises 'height' above the straight line in the middle.</summary>
     public static Vector3 ArcPoint(Vector3 from, Vector3 to, float height, float t)

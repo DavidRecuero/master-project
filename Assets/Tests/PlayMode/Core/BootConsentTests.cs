@@ -32,6 +32,7 @@ public class BootConsentTests
         _boot.Initialize(_sceneLoader, new FakeAuthProvider(), new FakeBootLocalization());
         _boot.InitializeCloud(null, null, null, enabled: false);
         _boot.InitializeConsent(_consent, _popups, _prefab);
+        _boot.InitializeAnalytics(null, enabled: false);   // these tests are about the popup only
     }
 
     [TearDown]

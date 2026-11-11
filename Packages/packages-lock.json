@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.gameanalytics.sdk": {
+      "version": "8.3.1",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://package.openupm.com"
+    },
     "com.google.external-dependency-manager": {
       "version": "https://github.com/googlesamples/unity-jar-resolver.git?path=upm",
       "depth": 0,

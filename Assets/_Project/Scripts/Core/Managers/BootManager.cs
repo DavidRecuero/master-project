@@ -17,6 +17,10 @@ public class BootManager : MonoBehaviour
     [Tooltip("ConsentPopup prefab. On the first launch (or after a new consent version) the menu doesn't load until the player answers it.")]
     [SerializeField] private ConsentPopup consentPopupPrefab;
 
+    [Header("Analytics")]
+    [Tooltip("Off: analytics never start, whatever the player answered. Kill switch for a broken analytics SDK.")]
+    [SerializeField] private bool analyticsEnabled = true;
+
     private ISceneLoader _sceneLoader;
     private IAuthProvider _authProvider;
     private ILocalizationService _localization;
@@ -27,6 +31,7 @@ public class BootManager : MonoBehaviour
 
     private IConsentService _consent;
     private IPopupService _popups;
+    private IAnalyticsService _analytics;
 
     public void Initialize(ISceneLoader sceneLoader, IAuthProvider authProvider, ILocalizationService localization = null)
     {
@@ -55,6 +60,13 @@ public class BootManager : MonoBehaviour
         _consent = consent;
         _popups = popups;
         if (popupPrefab != null) consentPopupPrefab = popupPrefab;
+    }
+
+    /// <summary>Optional injection of the analytics service (tests). Without it, GameAnalytics behind the player's consent.</summary>
+    public void InitializeAnalytics(IAnalyticsService analytics, bool enabled = true)
+    {
+        _analytics = analytics;
+        analyticsEnabled = enabled;
     }
 
     private void Awake()
@@ -128,6 +140,9 @@ public class BootManager : MonoBehaviour
         // Before the menu: nothing that needs consent may start without an answer
         yield return ConsentStep();
 
+        // Right after the answer, so the session is counted from the start
+        AnalyticsStep();
+
         Debug.Log("[BOOT] Everything ready, loading main menu...");
 
         // Loads the Main Menu scene
@@ -156,6 +171,23 @@ public class BootManager : MonoBehaviour
         Debug.Log("[BOOT] Waiting for the privacy answer...");
         // Unity's == null: the popup is destroyed when it closes
         yield return new WaitUntil(() => popup == null || popup.Answered);
+    }
+
+    /// <summary>
+    /// Shares the analytics service with the whole game and starts it: GameAnalytics starts now only if the player
+    /// said yes, and from then on follows the consent (Settings). With no answer or a no, nothing is created.
+    /// </summary>
+    private void AnalyticsStep()
+    {
+        if (!analyticsEnabled)
+        {
+            Debug.Log("[BOOT] Analytics off (kill switch).");
+            return;
+        }
+
+        _analytics ??= AnalyticsServices.CreateDefault(_consent);
+        AnalyticsServices.Set(_analytics);
+        _analytics.Start();
     }
 
     /// <summary>

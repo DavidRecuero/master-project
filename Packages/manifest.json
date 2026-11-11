@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.gameanalytics.sdk": "8.3.1",
     "com.google.external-dependency-manager": "https://github.com/googlesamples/unity-jar-resolver.git?path=upm",
     "com.google.play.games": "https://github.com/AlexZonov/play-games-plugin-for-unity.git?path=/Assets/Public/GooglePlayGames/com.google.play.games#v2.3.0-no-auto-init",
     "com.google.play.review": "1.8.4",
@@ -65,6 +66,7 @@
       "name": "package.openupm.com",
       "url": "https://package.openupm.com",
       "scopes": [
+        "com.gameanalytics",
         "com.google.play.common",
         "com.google.play.core",
         "com.google.play.review"

@@ -12,7 +12,8 @@
         "Unity.Services.Authentication",
         "Unity.Services.CloudSave",
         "Google.Play.Review",
-        "Google.Play.Common"
+        "Google.Play.Common",
+        "GameAnalyticsSDK"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

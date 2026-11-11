@@ -34,6 +34,7 @@ MonoBehaviour:
     m_Name: package.openupm.com
     m_Url: https://package.openupm.com
     m_Scopes:
+    - com.gameanalytics
     - com.google.play.common
     - com.google.play.core
     - com.google.play.review

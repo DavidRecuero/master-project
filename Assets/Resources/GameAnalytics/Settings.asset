@@ -34,7 +34,7 @@ MonoBehaviour:
   GameName: Pipe Mess
   EmailGA: recuero.david@gmail.com
   InfoLogEditor: 1
-  InfoLogBuild: 1
+  InfoLogBuild: 0
   VerboseLogBuild: 0
   UseManualSessionHandling: 1
   CustomDimensions01: []

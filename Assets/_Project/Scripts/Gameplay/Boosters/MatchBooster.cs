@@ -9,6 +9,8 @@ using UnityEngine;
 ///    empty) a random color among whatever is still active on the board.
 ///  - Pulls items of that color from anywhere on the board (not just pipe exits) until
 ///    the match completes, the tray fills up, or the board runs out of that color.
+///  - With fewer free slots than missing pieces (almost full tray), the pieces come together and complete the
+///    trio at once (TrayManager.TryAddMatchingGroup): one by one, the first one would fill the tray and lose.
 /// </summary>
 public class MatchBooster : IBooster
 {
@@ -38,6 +40,13 @@ public class MatchBooster : IBooster
 
         int alreadyInTray = _trayManager.TrayItems.Count(item => item.colorID == targetColor);
         int needed = Mathf.Max(0, _trayManager.matchSize - alreadyInTray);
+        int freeSlots = _trayManager.maxCapacity - _trayManager.TrayItems.Count;
+
+        if (needed > freeSlots)
+        {
+            AddAsGroup(targetColor.Value, needed);
+            return;
+        }
 
         for (int i = 0; i < needed; i++)
         {
@@ -47,6 +56,26 @@ public class MatchBooster : IBooster
             if (item == null) break; // no more of that color left on the board
 
             _trayManager.TryAddItem(item);
+        }
+    }
+
+    // Almost full tray: takes every missing piece first and adds them together, so the trio forms before the
+    // tray can count as full. If the board doesn't have them all, they go in one by one as before.
+    private void AddAsGroup(int color, int needed)
+    {
+        var pulled = new List<Item>();
+        for (int i = 0; i < needed; i++)
+        {
+            Item item = _boardManager.ExtractAnyItemOfColor(color);
+            if (item == null) break;
+            pulled.Add(item);
+        }
+
+        if (pulled.Count == 0 || _trayManager.TryAddMatchingGroup(pulled)) return;
+
+        foreach (Item item in pulled)
+        {
+            if (!_trayManager.TryAddItem(item)) break;
         }
     }
 

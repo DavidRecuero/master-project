@@ -252,4 +252,87 @@ public class MatchBoosterTests
         Assert.IsTrue(barrel.inTray);
         Assert.IsFalse(barrel.IsBarrel, "It arrives at the tray as a normal item, not as a barrel.");
     }
+
+    // ---------- Almost full tray (bug: the first piece filled the tray and lost the level) ----------
+
+    // Puts items of the given colors straight into the tray (no flight), like the other tests
+    private void FillTray(params int[] colors)
+    {
+        foreach (int color in colors)
+        {
+            var item = new GameObject($"Tray_{color}").AddComponent<Item>();
+            item.colorID = color;
+            GetTrayItemsField().Add(item);
+        }
+    }
+
+    [Test]
+    public void Execute_AlmostFullTray_CompletesTheMatchWithoutLosing()
+    {
+        // 6 of 7 slots, all different: red (0) needs 2 more pieces but only 1 slot is free
+        FillTray(0, 1, 2, 3, 4, 5);
+        var pipes = new List<Pipe> { CreateSingleItemPipe(colorId: 0), CreateSingleItemPipe(colorId: 0) };
+        SetBoardPipes(pipes);
+
+        int defeats = 0;
+        System.Action onFailed = () => defeats++;
+        GameEvents.OnLevelFailed += onFailed;
+        try
+        {
+            _booster.Execute();
+        }
+        finally
+        {
+            GameEvents.OnLevelFailed -= onFailed;
+        }
+
+        List<Item> tray = GetTrayItemsField();
+        Assert.AreEqual(0, defeats, "The trio must form before the tray counts as full");
+        Assert.AreEqual(5, tray.Count, "The 5 other colors stay; the red trio is gone");
+        Assert.AreEqual(0, tray.Count(i => i.colorID == 0));
+        Assert.AreEqual(0, pipes[0].activeItems.Count + pipes[1].activeItems.Count, "Both reds were pulled from the board");
+    }
+
+    [Test]
+    public void Execute_AlmostFullTray_UsesTheMostAbundantColor()
+    {
+        // 6 of 7: two greens (3) and four singles; green needs 1 piece and 1 slot is free (normal path)
+        FillTray(3, 3, 0, 1, 2, 4);
+        var pipes = new List<Pipe> { CreateSingleItemPipe(colorId: 3) };
+        SetBoardPipes(pipes);
+
+        _booster.Execute();
+
+        List<Item> tray = GetTrayItemsField();
+        Assert.AreEqual(4, tray.Count);
+        Assert.AreEqual(0, tray.Count(i => i.colorID == 3));
+    }
+
+    [Test]
+    public void TryAddMatchingGroup_RefusesPiecesThatDontCompleteAMatch()
+    {
+        FillTray(0, 1, 2, 3, 4, 5);
+        var lone = new GameObject("Lone").AddComponent<Item>();
+        lone.colorID = 6;   // no 6 in the tray: one piece can't make a trio
+
+        Assert.IsFalse(_trayManager.TryAddMatchingGroup(new List<Item> { lone }));
+        Assert.AreEqual(6, GetTrayItemsField().Count, "Nothing is added when it can't match");
+
+        Object.DestroyImmediate(lone.gameObject);
+    }
+
+    [Test]
+    public void TryAddMatchingGroup_RefusesMixedColors()
+    {
+        FillTray(0, 1, 2, 3, 4, 5);
+        var red = new GameObject("Red").AddComponent<Item>();
+        red.colorID = 0;
+        var blue = new GameObject("Blue").AddComponent<Item>();
+        blue.colorID = 1;
+
+        Assert.IsFalse(_trayManager.TryAddMatchingGroup(new List<Item> { red, blue }));
+
+        Object.DestroyImmediate(red.gameObject);
+        Object.DestroyImmediate(blue.gameObject);
+    }
 }

@@ -243,26 +243,7 @@ public class TrayManager : MonoBehaviour
     {
         if (IsFull) return false;
 
-        // Hidden items show their real color as soon as they land in the tray, before grouping and matching (both rely on colorID)
-        bool wasHidden = item.IsHidden;
-        item.Reveal();
-        if (wasHidden) GameEvents.TriggerHiddenItemRevealed(item);
-
-        Collider2D col = item.GetComponent<Collider2D>();
-        if (col != null) col.enabled = false;
-
-        // Size it leaves the board with (platform size), before it becomes a tray item
-        float startScale = item.CurrentVisualScale;
-
-        // To stop the tappeable animation
-        item.inTray = true;
-        item.StopPulse();
-        if (itemMotion != null) item.SetMotionSettings(itemMotion);
-
-        SpriteRenderer itemSr = item.GetComponent<SpriteRenderer>();
-        if (itemSr != null) itemSr.sortingOrder = itemInTraySortingOrder;
-
-        item.transform.SetParent(this.transform);
+        float startScale = PrepareForTray(item);
 
         int lastMatchIndex = trayItems.FindLastIndex(x => x.colorID == item.colorID);
         int insertIndex = (lastMatchIndex != -1) ? lastMatchIndex + 1 : trayItems.Count;
@@ -287,6 +268,83 @@ public class TrayManager : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Adds items that complete a match together, all at once (Match booster with an almost full tray).
+    /// One by one, the first piece could fill the tray and lose the level before the next one completes the trio.
+    /// Here the pieces fly to the slot of their color, the whole trio is resolved at once, and only then is the tray
+    /// checked for a defeat. It never goes over the real capacity: the trio leaves as soon as it is formed.
+    /// False (nothing added) if the items are not all the same color or don't complete a match with the tray.
+    /// </summary>
+    public bool TryAddMatchingGroup(IReadOnlyList<Item> items)
+    {
+        if (items == null || items.Count == 0 || items[0] == null) return false;
+
+        int color = items[0].colorID;
+        foreach (Item item in items)
+        {
+            if (item == null || item.colorID != color) return false;
+        }
+
+        int inTray = trayItems.FindAll(x => x.colorID == color).Count;
+        if (inTray == 0 || inTray + items.Count < matchSize) return false;
+
+        // The slot of the last piece of that color: the new ones gather there and pop with it
+        Dictionary<Item, int> before = ComputeLayout();
+        Item anchor = trayItems.FindLast(x => x.colorID == color);
+        int anchorSlot = before.TryGetValue(anchor, out int slot) ? slot : trayItems.Count - 1;
+
+        foreach (Item item in items)
+        {
+            float startScale = PrepareForTray(item);
+
+            int lastMatchIndex = trayItems.FindLastIndex(x => x.colorID == color);
+            trayItems.Insert(lastMatchIndex + 1, item);
+            arrivingItems.Add(item);
+            slotOf[item] = anchorSlot;
+
+            item.Motion.FlyTo(SlotPosition(anchorSlot), startScale, item.defaultScale, () => OnItemLanded(item));
+        }
+
+        // The whole trio leaves the tray now (it pops when the last piece lands); the rest slide into place
+        CheckForMatches(color);
+        UpdateTrayLayout();
+
+        GameEvents.TriggerTrayChanged();
+
+        if (IsFull) GameEvents.TriggerLevelFailed();
+
+        return true;
+    }
+
+    /// <summary>
+    /// Turns a board item into a tray item: real color shown, no taps, tray look, child of the tray.
+    /// Returns the size it leaves the board with, where its flight starts.
+    /// </summary>
+    private float PrepareForTray(Item item)
+    {
+        // Hidden items show their real color as soon as they land in the tray, before grouping and matching (both rely on colorID)
+        bool wasHidden = item.IsHidden;
+        item.Reveal();
+        if (wasHidden) GameEvents.TriggerHiddenItemRevealed(item);
+
+        Collider2D col = item.GetComponent<Collider2D>();
+        if (col != null) col.enabled = false;
+
+        // Size it leaves the board with (platform size), before it becomes a tray item
+        float startScale = item.CurrentVisualScale;
+
+        // To stop the tappeable animation
+        item.inTray = true;
+        item.StopPulse();
+        if (itemMotion != null) item.SetMotionSettings(itemMotion);
+
+        SpriteRenderer itemSr = item.GetComponent<SpriteRenderer>();
+        if (itemSr != null) itemSr.sortingOrder = itemInTraySortingOrder;
+
+        item.transform.SetParent(this.transform);
+        return startScale;
+    }
+
     /// <summary>World position of a tray slot (slots fill from the left: 0, 1, 2...).</summary>
     public Vector3 SlotPosition(int index)
     {
@@ -302,8 +360,13 @@ public class TrayManager : MonoBehaviour
     private Dictionary<Item, int> ComputeLayout()
     {
         var layout = new Dictionary<Item, int>();
-        bool keepPoppingSlots = trayItems.Count + poppingSlots.Count <= maxCapacity;
-        var taken = new HashSet<int>(poppingSlots.Values);
+        // Distinct slots only: the pieces a group match brings share the slot of their color
+        var taken = new HashSet<int>();
+        foreach (int popping in poppingSlots.Values)
+        {
+            if (popping >= 0) taken.Add(popping);
+        }
+        bool keepPoppingSlots = trayItems.Count + taken.Count <= maxCapacity;
 
         int slot = 0;
         foreach (Item item in trayItems)

@@ -34,6 +34,10 @@ public class Item : MonoBehaviour, IPointerDownHandler
     private SpriteRenderer spriteRenderer;
     private ItemMotion motion;
 
+    // Under a higher pipe: hidden while it rests there, drawn while it slides in or out (the higher pipe,
+    // drawn on top by BoardSortingOrder, covers it). The game object stays active, so its movement goes on.
+    private bool covered;
+
     // Finished sprite per color, plus the hidden sprite. Every look comes from here.
     private ItemPalette palette;
 
@@ -78,6 +82,33 @@ public class Item : MonoBehaviour, IPointerDownHandler
             if (motion == null && !TryGetComponent(out motion)) motion = gameObject.AddComponent<ItemMotion>();
             return motion;
         }
+    }
+
+    /// <summary>True while a higher pipe covers its cell.</summary>
+    public bool IsCovered => covered;
+
+    /// <summary>
+    /// A higher pipe covers (or stops covering) the cell of this item. Covered, it can't be tapped and it is not
+    /// drawn once it stops there; while it slides in or out it is drawn, under the higher pipe. Before, the item
+    /// was turned off as soon as its cell changed, so with fast taps it vanished before reaching a visible cell.
+    /// </summary>
+    public void SetCovered(bool value)
+    {
+        covered = value;
+        if (!inTray && TryGetComponent(out Collider2D col)) col.enabled = !value;
+        RefreshCoverVisibility();
+    }
+
+    private void LateUpdate()
+    {
+        if (covered) RefreshCoverVisibility();
+    }
+
+    private void RefreshCoverVisibility()
+    {
+        EnsureSpriteRenderer();
+        bool show = !covered || inTray || Motion.IsMoving;
+        if (spriteRenderer.enabled != show) spriteRenderer.enabled = show;
     }
 
     /// <summary>Size the item has on screen right now (platform size, tube size or in between).</summary>
@@ -307,6 +338,8 @@ public class Item : MonoBehaviour, IPointerDownHandler
         barrelDamageSprites = null;
         barrelContentHidden = false;
         if (TryGetComponent(out Collider2D col)) col.enabled = true;
+        covered = false;
+        if (spriteRenderer != null) spriteRenderer.enabled = true;
     }
 
     public void UpdateGridPosition(Vector2Int newPos)

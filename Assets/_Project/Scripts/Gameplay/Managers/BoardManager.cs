@@ -204,9 +204,9 @@ public class BoardManager : MonoBehaviour
             itemComponent.ApplyBarrelLook(lives, barrelDamageSprites);
         }
 
-        // Visibility Check
-        Pipe topPipe = GetHighestLayerPipeAt(pos);
-        itemObj.SetActive(topPipe == pipe);
+        // Under a higher pipe: hidden while it rests there (it stays active so it can slide out)
+        itemObj.SetActive(true);
+        itemComponent.SetCovered(GetHighestLayerPipeAt(pos) != pipe);
 
         return itemComponent;
     }
@@ -214,22 +214,18 @@ public class BoardManager : MonoBehaviour
     private ItemMotionSettings MotionSettings => itemMotion != null ? itemMotion : ItemMotionSettings.Defaults;
 
     /// <summary>
-    /// Moves an already spawned item to a new cell of its pipe, updating its visibility.
+    /// Moves an already spawned item to a new cell of its pipe.
     /// The grid position changes at once; the drawing slides there after 'delay' seconds (the chain).
-    /// An item hidden under a higher pipe just jumps.
+    /// Cells under a higher pipe too: the item slides under it (drawn below it) and is hidden only once it
+    /// rests there, so with fast taps it never vanishes before reaching a visible cell.
     /// </summary>
     private void PlaceItem(Item item, Pipe pipe, Vector2Int pos, float delay = 0f)
     {
         float shownScale = item.CurrentVisualScale;   // before the grid change sets the platform size
         item.UpdateGridPosition(pos);
 
-        // Only visible if no higher layer pipe covers this cell
-        Pipe topPipe = GetHighestLayerPipeAt(pos);
-        bool visible = topPipe == pipe;
-        item.gameObject.SetActive(visible);
-
-        if (visible) item.MoveAlongPipe(GridToWorld(pos), delay, null, shownScale);
-        else item.transform.position = GridToWorld(pos);
+        item.MoveAlongPipe(GridToWorld(pos), delay, null, shownScale);
+        item.SetCovered(GetHighestLayerPipeAt(pos) != pipe);
     }
 
     /// <summary>Where a new item comes in from: behind the first cell of the pipe, at the inlet mouth.</summary>
@@ -260,7 +256,7 @@ public class BoardManager : MonoBehaviour
             Item newItem = SpawnItemObject(pos, pipe.itemsQueue[index], pipe);
             pipe.activeItems.Add(newItem);
 
-            if (animate && newItem.gameObject.activeSelf && pipe.path.Count >= 2)
+            if (animate && pipe.path.Count >= 2)
             {
                 newItem.MoveAlongPipe(GridToWorld(pos), delay, InletWorldPosition(pipe));
                 delay += MotionSettings.stepStagger;
@@ -409,7 +405,7 @@ public class BoardManager : MonoBehaviour
                 pipe.itemsQueue.RemoveAt(i);
 
                 Item item = SpawnItemObject(pipe.path[0], data, pipe);
-                item.gameObject.SetActive(true);   // even if a higher pipe covers the first cell
+                item.SetCovered(false);   // even if a higher pipe covers the first cell: it flies to the tray
                 // From the inlet mouth; a one-cell pipe has no tube nor inlet, so from its only cell
                 item.transform.position = PipePieceResolver.HasTube(pipe.path) ? InletWorldPosition(pipe) : GridToWorld(pipe.path[0]);
 
@@ -432,7 +428,7 @@ public class BoardManager : MonoBehaviour
             if (index == -1) continue;
 
             Item target = pipe.activeItems[index];
-            target.gameObject.SetActive(true);
+            target.SetCovered(false);   // it leaves for the tray: drawn all the way, even from under a higher pipe
 
             if (target.IsBarrel) target.BreakOpen();
 

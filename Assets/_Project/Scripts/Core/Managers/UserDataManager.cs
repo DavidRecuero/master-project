@@ -40,9 +40,22 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
         _dataService = new LocalJsonUserDataService();
         Profile = _dataService.LoadProfile();
 
-        LivesRules rules = livesConfig != null ? livesConfig.Rules : LivesRules.Default;
-        _lives = new LivesService(rules, () => Profile, this, () => Save(), new SystemClock());
+        _lives = new LivesService(LocalLivesRules, () => Profile, this, () => Save(), new SystemClock());
         _rewards = LevelRewards.From(rewardsConfig);
+    }
+
+    private LivesRules LocalLivesRules => livesConfig != null ? livesConfig.Rules : LivesRules.Default;
+
+    private int LocalCoinsPerWin => rewardsConfig != null ? rewardsConfig.coinsPerWin : RewardsConfig.DefaultCoinsPerWin;
+
+    /// <summary>
+    /// Puts the remote settings over LivesConfig and RewardsConfig. Called by the Boot once, before the menu, so the
+    /// numbers never change in the middle of a session. Empty values go back to the local assets.
+    /// </summary>
+    public void ApplyRemoteConfig(RemoteValues values)
+    {
+        _lives?.SetRules(GameTuning.Lives(values, LocalLivesRules));
+        _rewards = new LevelRewards(GameTuning.CoinsPerWin(values, LocalCoinsPerWin));
     }
 
     private void OnEnable()

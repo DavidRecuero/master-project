@@ -18,7 +18,7 @@ using System;
 /// </summary>
 public sealed class LivesService : ILivesService
 {
-    private readonly LivesRules _rules;
+    private LivesRules _rules;
     private readonly Func<UserProfile> _profile;
     private readonly IUserDataProvider _wallet;
     private readonly Action _save;
@@ -36,6 +36,16 @@ public sealed class LivesService : ILivesService
         _wallet = wallet;
         _save = save;
         _clock = clock ?? new SystemClock();
+    }
+
+    /// <summary>
+    /// New numbers (Remote Config, applied by the Boot before the menu). The saved lives stay as they are: a smaller
+    /// maximum just caps them, and the countdown in progress goes on with the new time per life.
+    /// </summary>
+    public void SetRules(LivesRules rules)
+    {
+        _rules = new LivesRules(rules.MaxLives, rules.SecondsPerLife, rules.CoinsPerLife);
+        LivesChanged?.Invoke();
     }
 
     public int MaxLives => _rules.MaxLives;

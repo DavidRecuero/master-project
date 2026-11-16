@@ -12,7 +12,7 @@ using UnityEngine;
 /// </summary>
 public class RateUsTrigger : MonoBehaviour
 {
-    [Tooltip("Data/RateUsConfig. Without it the defaults are used: level 8, 3 times, 30 days, no wait.")]
+    [Tooltip("Data/RateUsConfig. Without it the defaults are used: level 8, 3 times, 30 days, no wait. Remote Config can change each number.")]
     [SerializeField] private RateUsConfig config;
     [Tooltip("UIManager of the scene: its ResultShown event says when the result popup is on screen")]
     [SerializeField] private UIManager uiManager;
@@ -32,7 +32,8 @@ public class RateUsTrigger : MonoBehaviour
     {
         if (_service == null)
         {
-            RateUsRules rules = config != null ? config.Rules : RateUsRules.Default;
+            RateUsRules local = config != null ? config.Rules : RateUsRules.Default;
+            RateUsRules rules = GameTuning.RateUs(RemoteConfigServices.Current.Values, local);
             _service = new RateUsService(rules, new RateUsStore(new PlayerPrefsStorageProvider()), ReviewPrompters.Create(), new SystemClock());
         }
 

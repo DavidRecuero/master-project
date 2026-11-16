@@ -14,12 +14,17 @@ public class BoosterManager : MonoBehaviour
     private IBoosterInventory _inventory;
     private IUserDataProvider _currency;
     private Dictionary<BoosterType, IBooster> _boosters;
+    private System.Func<RemoteValues> _remote;
 
-    public void Initialize(IBoosterInventory inventory, IUserDataProvider currency)
+    /// <param name="remote">Remote settings (tests). Without it, the ones the Boot downloaded (RemoteConfigServices).</param>
+    public void Initialize(IBoosterInventory inventory, IUserDataProvider currency, System.Func<RemoteValues> remote = null)
     {
         _inventory = inventory;
         _currency = currency;
+        if (remote != null) _remote = remote;
     }
+
+    private RemoteValues Remote => (_remote != null ? _remote() : RemoteConfigServices.Current.Values) ?? RemoteValues.Empty;
 
     private void Awake()
     {
@@ -53,7 +58,7 @@ public class BoosterManager : MonoBehaviour
         foreach (BoosterDefinition definition in boosterDefinitions)
         {
             if (definition == null) continue;
-            _inventory.EnsureStarterStock(definition.type, definition.freeStarterCount);
+            _inventory.EnsureStarterStock(definition.type, GameTuning.BoosterStarter(Remote, definition.type, definition.freeStarterCount));
         }
     }
 
@@ -70,7 +75,7 @@ public class BoosterManager : MonoBehaviour
     public int GetCoinPrice(BoosterType type)
     {
         BoosterDefinition definition = GetDefinition(type);
-        return definition != null ? definition.coinPrice : 0;
+        return definition != null ? GameTuning.BoosterPrice(Remote, type, definition.coinPrice) : 0;
     }
 
     /// <summary>

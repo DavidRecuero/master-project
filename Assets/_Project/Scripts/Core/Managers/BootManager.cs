@@ -13,6 +13,16 @@ public class BootManager : MonoBehaviour
     [Tooltip("Longest wait (seconds) for the cloud sign-in and the save download. After that the menu opens with the data on the device.")]
     [SerializeField] private float cloudTimeout = 5f;
 
+    [Header("Remote Config (Unity Gaming Services)")]
+    [Tooltip("Off: the game only uses its own config assets (LivesConfig, BoosterDefinition...). Kill switch for a broken remote config.")]
+    [SerializeField] private bool remoteConfigEnabled = true;
+    [Tooltip("Longest wait (seconds) for the remote settings. After that the game uses the last ones it downloaded (or its own assets).")]
+    [SerializeField] private float remoteConfigTimeout = 3f;
+    [Tooltip("Optional. Remote Config ID of the 'development' environment (Dashboard > Project settings > Environments). Empty: the environment of the sign-in.")]
+    [SerializeField] private string developmentEnvironmentId = "";
+    [Tooltip("Optional. Remote Config ID of the 'production' environment. Empty: the environment of the sign-in.")]
+    [SerializeField] private string productionEnvironmentId = "";
+
     [Header("Privacy")]
     [Tooltip("ConsentPopup prefab. On the first launch (or after a new consent version) the menu doesn't load until the player answers it.")]
     [SerializeField] private ConsentPopup consentPopupPrefab;
@@ -28,6 +38,8 @@ public class BootManager : MonoBehaviour
     private IBackendAuthService _backendAuth;
     private ICloudSaveStore _cloudStore;
     private IProfileRepository _profiles;
+
+    private IRemoteConfigService _remoteConfig;
 
     private IConsentService _consent;
     private IPopupService _popups;
@@ -52,6 +64,14 @@ public class BootManager : MonoBehaviour
         _profiles = profiles;
         if (timeout.HasValue) cloudTimeout = timeout.Value;
         cloudEnabled = enabled;
+    }
+
+    /// <summary>Optional injection of the remote settings (tests). Without it, Unity Remote Config with the copy saved on the device.</summary>
+    public void InitializeRemoteConfig(IRemoteConfigService remoteConfig, bool enabled = true, float? timeout = null)
+    {
+        _remoteConfig = remoteConfig;
+        remoteConfigEnabled = enabled;
+        if (timeout.HasValue) remoteConfigTimeout = timeout.Value;
     }
 
     /// <summary>Optional injection of the privacy pieces (tests). Without it, the shared ConsentServices and the PopupService of the scene.</summary>
@@ -128,6 +148,9 @@ public class BootManager : MonoBehaviour
             UserDataManager.Instance.SetUserId(_authProvider.PlayerId);
         }
 
+        // After the sign-in (the request needs it) and before anything reads a tunable number
+        yield return RemoteConfigStep();
+
         // The menu must open with its texts already translated (no flash of empty labels)
         float waitUntil = Time.realtimeSinceStartup + localizationTimeout;
         yield return new WaitUntil(() => localizationReady || Time.realtimeSinceStartup >= waitUntil);
@@ -185,6 +208,12 @@ public class BootManager : MonoBehaviour
             return;
         }
 
+        if (!GameTuning.AnalyticsEnabled(RemoteConfigServices.Current.Values, true))
+        {
+            Debug.Log("[BOOT] Analytics off (remote kill switch).");
+            return;
+        }
+
         _analytics ??= AnalyticsServices.CreateDefault(_consent);
         AnalyticsServices.Set(_analytics);
         _analytics.Start();
@@ -194,6 +223,54 @@ public class BootManager : MonoBehaviour
 
         // Tells the analytics when the app goes to the background and comes back (sessions)
         if (Application.isPlaying) AnalyticsAppLifecycle.Ensure();
+    }
+
+    /// <summary>
+    /// Shares the remote settings with the whole game and tries to download fresh ones, at most remoteConfigTimeout
+    /// seconds. Offline (or with the cloud off) it doesn't try: the last values saved on the device are used, or the
+    /// local assets if there are none. Then the values are locked for the session (a late answer is only saved for
+    /// the next launch) and applied to the systems that live in the Boot (lives, rewards). The rest (boosters,
+    /// Rate Us) read them when their scene loads.
+    /// </summary>
+    private IEnumerator RemoteConfigStep()
+    {
+        if (!remoteConfigEnabled)
+        {
+            RemoteConfigServices.Set(null);
+            Debug.Log("[BOOT] Remote config off (kill switch). Using the local config assets.");
+            yield break;
+        }
+
+        // Remote Config rides on the UGS sign-in: with another backend (tests) there is no server to ask
+        _remoteConfig ??= _backendAuth is UgsBackendAuthService
+            ? RemoteConfigServices.CreateDefault(EnvironmentIdFor(BackendEnvironment.Current))
+            : new RemoteConfigService(null, null);
+        RemoteConfigServices.Set(_remoteConfig);
+
+        bool canFetch = cloudEnabled && _backendAuth != null && _backendAuth.IsSignedIn;
+        if (canFetch)
+        {
+            float deadline = Time.realtimeSinceStartup + remoteConfigTimeout;
+            Task<bool> fetch = _remoteConfig.FetchAsync();
+            yield return new WaitUntil(() => fetch.IsCompleted || Time.realtimeSinceStartup >= deadline);
+
+            if (!fetch.IsCompleted)
+                Debug.LogWarning($"[BOOT] Remote config not ready in {remoteConfigTimeout} s. Going on without waiting more.");
+        }
+
+        // From now on the game uses these values
+        _remoteConfig.ValuesInUse = true;
+
+        Debug.Log($"[BOOT] Remote config: {_remoteConfig.Source} ({_remoteConfig.Values.Count} keys)");
+
+        // Unity's != : a destroyed UserDataManager must count as missing
+        if (UserDataManager.Instance != null) UserDataManager.Instance.ApplyRemoteConfig(_remoteConfig.Values);
+    }
+
+    private string EnvironmentIdFor(string environment)
+    {
+        string id = environment == BackendEnvironment.Production ? productionEnvironmentId : developmentEnvironmentId;
+        return string.IsNullOrWhiteSpace(id) ? null : id.Trim();
     }
 
     /// <summary>

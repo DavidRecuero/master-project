@@ -1,0 +1,37 @@
+{
+  "$schema": "https://ugs-config-schemas.unity3d.com/v1/remote-config.schema.json",
+  "entries": {
+    "lives_max": 5,
+    "lives_minutes_per_life": 30,
+    "lives_coins_per_life": 20,
+    "reward_coins_per_win": 4,
+    "rateus_first_level": 8,
+    "rateus_max_prompts": 3,
+    "rateus_days_between": 30,
+    "rateus_delay_seconds": 0.0,
+    "booster_match_price": 15,
+    "booster_match_starter": 20,
+    "booster_shuffle_price": 10,
+    "booster_shuffle_starter": 25,
+    "booster_trayclearer_price": 5,
+    "booster_trayclearer_starter": 10,
+    "analytics_enabled": true
+  },
+  "types": {
+    "lives_max": "INT",
+    "lives_minutes_per_life": "INT",
+    "lives_coins_per_life": "INT",
+    "reward_coins_per_win": "INT",
+    "rateus_first_level": "INT",
+    "rateus_max_prompts": "INT",
+    "rateus_days_between": "INT",
+    "rateus_delay_seconds": "FLOAT",
+    "booster_match_price": "INT",
+    "booster_match_starter": "INT",
+    "booster_shuffle_price": "INT",
+    "booster_shuffle_starter": "INT",
+    "booster_trayclearer_price": "INT",
+    "booster_trayclearer_starter": "INT",
+    "analytics_enabled": "BOOL"
+  }
+}

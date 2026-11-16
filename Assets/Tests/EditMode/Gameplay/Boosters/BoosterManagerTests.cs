@@ -30,7 +30,8 @@ public class BoosterManagerTests
 
         _fakeInventory = new FakeBoosterInventory();
         _fakeCurrency = new FakeUserDataProvider(); // starts with 100 Coins, see CoreTestFakes.cs
-        _boosterManager.Initialize(_fakeInventory, _fakeCurrency);
+        // No remote values: the shared ones may still hold a previous Play's settings (statics survive in the Editor)
+        _boosterManager.Initialize(_fakeInventory, _fakeCurrency, () => RemoteValues.Empty);
     }
 
     [TearDown]
@@ -116,5 +117,26 @@ public class BoosterManagerTests
 
         Assert.IsFalse(result);
         Assert.AreEqual(10, _fakeCurrency.Coins, "A failed purchase must not charge any coins.");
+    }
+
+    [Test]
+    public void GetCoinPrice_RemoteConfigOverridesTheDefinition()
+    {
+        SetDefinitions(MakeDefinition(BoosterType.Match, coinPrice: 50), MakeDefinition(BoosterType.Shuffle, coinPrice: 40));
+        _boosterManager.Initialize(_fakeInventory, _fakeCurrency, () => RemoteTestValues.Of("booster_match_price", "25"));
+
+        Assert.AreEqual(25, _boosterManager.GetCoinPrice(BoosterType.Match));
+        Assert.AreEqual(40, _boosterManager.GetCoinPrice(BoosterType.Shuffle), "Without a remote key, the definition's price");
+    }
+
+    [Test]
+    public void UseBooster_ChargesTheRemotePrice()
+    {
+        _fakeInventory.SetCount(BoosterType.Shuffle, 0);
+        SetDefinitions(MakeDefinition(BoosterType.Shuffle, coinPrice: 40));
+        _boosterManager.Initialize(_fakeInventory, _fakeCurrency, () => RemoteTestValues.Of("booster_shuffle_price", "30"));
+
+        Assert.IsTrue(_boosterManager.UseBooster(BoosterType.Shuffle));
+        Assert.AreEqual(70, _fakeCurrency.Coins);
     }
 }

@@ -29,4 +29,12 @@ public class GameTools
         ConsentServices.Current.Reset();
         Debug.Log("🔧 Privacy consent reset");
     }
+
+    /// <summary>Forgets the remote settings saved on the device: the next launch without network uses the local config assets.</summary>
+    [MenuItem("Tools/Clear Remote Config Cache")]
+    public static void ClearRemoteConfigCache()
+    {
+        new RemoteConfigCache(new PlayerPrefsStorageProvider()).Clear();
+        Debug.Log("🔧 Remote config cache cleared (takes effect on the next launch)");
+    }
 }

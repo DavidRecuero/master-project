@@ -37,9 +37,24 @@ MonoBehaviour:
   InfoLogBuild: 0
   VerboseLogBuild: 0
   UseManualSessionHandling: 1
-  CustomDimensions01: []
-  CustomDimensions02: []
-  CustomDimensions03: []
+  CustomDimensions01:
+  - default
+  - stuck
+  - returning
+  - new
+  - loop
+  - veteran
+  - active
+  - other
+  CustomDimensions02:
+  - none
+  - a
+  - b
+  - c
+  CustomDimensions03:
+  - none
+  - early
+  - mature
   ResourceItemTypes:
   - Reward
   - Booster

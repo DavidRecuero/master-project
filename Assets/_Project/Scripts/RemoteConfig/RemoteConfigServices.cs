@@ -13,8 +13,10 @@ public static class RemoteConfigServices
 
     /// <summary>The real service: Unity Remote Config, with the last values saved in PlayerPrefs.</summary>
     /// <param name="environmentId">Remote Config environment ID, or null for the environment of the sign-in.</param>
-    public static IRemoteConfigService CreateDefault(string environmentId = null) =>
-        new RemoteConfigService(new UgsRemoteConfigBackend(environmentId), new RemoteConfigCache(new PlayerPrefsStorageProvider()));
+    /// <param name="attributes">The player for the Game Overrides (segments). Null: a new player.</param>
+    public static IRemoteConfigService CreateDefault(string environmentId = null, System.Func<PlayerAttributes> attributes = null) =>
+        new RemoteConfigService(new UgsRemoteConfigBackend(environmentId), new RemoteConfigCache(new PlayerPrefsStorageProvider()),
+            null, attributes);
 
     /// <summary>Replaces the shared service (Boot, tests). Null goes back to the one with no values.</summary>
     public static void Set(IRemoteConfigService service) => _current = service;

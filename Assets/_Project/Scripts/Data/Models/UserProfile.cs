@@ -31,10 +31,26 @@ public class UserProfile
     /// <summary>When the countdown of the next life started, in UTC ticks. 0 when full. See LivesService.</summary>
     public long NextLifeStartTicks;
 
+    /// <summary>
+    /// When the player started playing, in UTC ticks (segmentation: days since install). A profile saved before this
+    /// field existed gets the time it was first loaded with this version (the constructor value is kept).
+    /// </summary>
+    public long CreatedAtTicks;
+
+    /// <summary>Levels lost or abandoned in a row since the last win (segmentation: players who are stuck).</summary>
+    public int FailStreak;
+
+    /// <summary>Last launch, in UTC ticks (segmentation: players coming back). 0 before the first one.</summary>
+    public long LastSessionTicks;
+
+    /// <summary>Different UTC days with at least one launch (segmentation: active players).</summary>
+    public int DaysPlayed;
+
     public UserProfile()
     {
         CurrentLevel = 1;       //starting values
         Coins = 250;
+        CreatedAtTicks = System.DateTime.UtcNow.Ticks;
 
         // Booster starter stock is no longer hardcoded here - BoosterManager grants it
         // from BoosterDefinition assets the first time it initializes (see EnsureStarterStock).

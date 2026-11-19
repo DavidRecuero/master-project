@@ -61,11 +61,40 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
     private void OnEnable()
     {
         GameEvents.OnLevelCleared += AddLevelAndCoins;
+        GameEvents.OnLevelFailed += AddFail;
+        GameEvents.OnLevelAbandoned += AddFail;
     }
 
     private void OnDisable()
     {
         GameEvents.OnLevelCleared -= AddLevelAndCoins;
+        GameEvents.OnLevelFailed -= AddFail;
+        GameEvents.OnLevelAbandoned -= AddFail;
+    }
+
+    /// <summary>
+    /// A launch: counts the day if it is a new one and remembers when it was. The Boot calls it once, after
+    /// Remote Config read the activity of the previous launches.
+    /// </summary>
+    public void RegisterSession(DateTime utcNow)
+    {
+        if (Profile == null) return;
+
+        long today = utcNow.Ticks / TimeSpan.TicksPerDay;
+        long lastDay = Profile.LastSessionTicks / TimeSpan.TicksPerDay;
+        if (Profile.LastSessionTicks <= 0 || today > lastDay) Profile.DaysPlayed++;
+
+        Profile.LastSessionTicks = utcNow.Ticks;
+        Save();
+    }
+
+    /// <summary>Lost or abandoned: one more in the streak (Remote Config segments the players who are stuck).</summary>
+    private void AddFail()
+    {
+        if (Profile == null) return;
+
+        Profile.FailStreak++;
+        Save();
     }
 
     /// <summary>
@@ -78,6 +107,7 @@ public class UserDataManager : MonoBehaviour, IUserDataProvider, IBoosterInvento
 
         Profile.CurrentLevel++;
         Profile.Coins += coins;
+        Profile.FailStreak = 0;
 
         Save();
         Debug.Log($"Saved. CurrentLvl: {Profile.CurrentLevel}, Coins: {Profile.Coins} (+{coins})");

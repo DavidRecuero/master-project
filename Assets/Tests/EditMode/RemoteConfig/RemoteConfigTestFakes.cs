@@ -8,6 +8,7 @@ public class FakeRemoteConfigBackend : IRemoteConfigBackend
     public RemoteValues Answer = RemoteValues.Empty;
     public bool Fail;
     public int Calls;
+    public PlayerAttributes LastAttributes;
 
     private TaskCompletionSource<RemoteValues> _pending;
 
@@ -16,9 +17,10 @@ public class FakeRemoteConfigBackend : IRemoteConfigBackend
 
     public void Release(RemoteValues values) => _pending.TrySetResult(values);
 
-    public Task<RemoteValues> FetchAsync()
+    public Task<RemoteValues> FetchAsync(PlayerAttributes attributes)
     {
         Calls++;
+        LastAttributes = attributes;
         if (_pending != null) return _pending.Task;
         if (Fail) return Task.FromException<RemoteValues>(new InvalidOperationException("No network"));
         return Task.FromResult(Answer);

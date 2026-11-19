@@ -97,6 +97,16 @@ public sealed class GameAnalyticsBackend : IAnalyticsBackend
         else GameAnalytics.NewDesignEvent(eventId);
     }
 
+    public void SetCustomDimensions(string dimension01, string dimension02, string dimension03)
+    {
+        if (!GameAnalytics.Initialized) return;
+
+        // Values not declared in the settings are refused by the SDK (with a warning): PlayerSegments only sends known ones
+        if (!string.IsNullOrEmpty(dimension01)) GameAnalytics.SetCustomDimension01(dimension01);
+        if (!string.IsNullOrEmpty(dimension02)) GameAnalytics.SetCustomDimension02(dimension02);
+        if (!string.IsNullOrEmpty(dimension03)) GameAnalytics.SetCustomDimension03(dimension03);
+    }
+
     private static GAProgressionStatus ToGa(AnalyticsProgressionStatus status)
     {
         switch (status)

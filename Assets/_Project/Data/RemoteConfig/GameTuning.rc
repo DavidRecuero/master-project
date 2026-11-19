@@ -15,7 +15,10 @@
     "booster_shuffle_starter": 25,
     "booster_trayclearer_price": 5,
     "booster_trayclearer_starter": 10,
-    "analytics_enabled": true
+    "analytics_enabled": true,
+    "segment": "default",
+    "experiment": "none",
+    "lifecycle": "none"
   },
   "types": {
     "lives_max": "INT",
@@ -32,6 +35,9 @@
     "booster_shuffle_starter": "INT",
     "booster_trayclearer_price": "INT",
     "booster_trayclearer_starter": "INT",
-    "analytics_enabled": "BOOL"
+    "analytics_enabled": "BOOL",
+    "segment": "STRING",
+    "experiment": "STRING",
+    "lifecycle": "STRING"
   }
 }

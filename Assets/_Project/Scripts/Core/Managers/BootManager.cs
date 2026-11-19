@@ -216,6 +216,10 @@ public class BootManager : MonoBehaviour
 
         _analytics ??= AnalyticsServices.CreateDefault(_consent);
         AnalyticsServices.Set(_analytics);
+
+        // Before Start: the first events of the session already carry the player's group
+        RemoteValues remote = RemoteConfigServices.Current.Values;
+        _analytics.SetSegment(PlayerSegments.Segment(remote), PlayerSegments.Experiment(remote), PlayerSegments.Lifecycle(remote));
         _analytics.Start();
 
         // Turns the game events (levels, coins, boosters, lives) into analytics events for the whole session
@@ -243,7 +247,7 @@ public class BootManager : MonoBehaviour
 
         // Remote Config rides on the UGS sign-in: with another backend (tests) there is no server to ask
         _remoteConfig ??= _backendAuth is UgsBackendAuthService
-            ? RemoteConfigServices.CreateDefault(EnvironmentIdFor(BackendEnvironment.Current))
+            ? RemoteConfigServices.CreateDefault(EnvironmentIdFor(BackendEnvironment.Current), CurrentPlayer)
             : new RemoteConfigService(null, null);
         RemoteConfigServices.Set(_remoteConfig);
 
@@ -261,11 +265,25 @@ public class BootManager : MonoBehaviour
         // From now on the game uses these values
         _remoteConfig.ValuesInUse = true;
 
-        Debug.Log($"[BOOT] Remote config: {_remoteConfig.Source} ({_remoteConfig.Values.Count} keys)");
+        RemoteValues values = _remoteConfig.Values;
+        Debug.Log($"[BOOT] Remote config: {_remoteConfig.Source} ({values.Count} keys). Segment: {PlayerSegments.Segment(values)}, " +
+                  $"experiment: {PlayerSegments.Experiment(values)}, lifecycle: {PlayerSegments.Lifecycle(values)}");
 
         // Unity's != : a destroyed UserDataManager must count as missing
-        if (UserDataManager.Instance != null) UserDataManager.Instance.ApplyRemoteConfig(_remoteConfig.Values);
+        if (UserDataManager.Instance != null)
+        {
+            UserDataManager.Instance.ApplyRemoteConfig(values);
+
+            // After the download: the server judged the activity of the previous launches, now this one counts
+            UserDataManager.Instance.RegisterSession(System.DateTime.UtcNow);
+        }
     }
+
+    // The profile after the cloud sync, read when the download starts
+    private static PlayerAttributes CurrentPlayer() =>
+        UserDataManager.Instance != null
+            ? PlayerAttributes.From(UserDataManager.Instance.Profile, System.DateTime.UtcNow, new LevelLoader().CountLevels())
+            : PlayerAttributes.NewPlayer;
 
     private string EnvironmentIdFor(string environment)
     {

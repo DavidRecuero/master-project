@@ -18,6 +18,9 @@ public sealed class AnalyticsService : IAnalyticsService
     private bool _started;
     private bool _sending;
     private bool _paused;
+    private string _segment;
+    private string _experiment;
+    private string _lifecycle;
 
     public AnalyticsService(IConsentService consent, IAnalyticsBackend backend)
     {
@@ -57,6 +60,7 @@ public sealed class AnalyticsService : IAnalyticsService
             if (!_backend.IsInitialized)
             {
                 _backend.Initialize();
+                ApplySegment();
                 Debug.Log("[Analytics] Started (consent given)");
             }
             else
@@ -97,6 +101,23 @@ public sealed class AnalyticsService : IAnalyticsService
             // Back from the background: a new session only with the yes still in place
             _backend.StartSession();
         }
+    }
+
+    public void SetSegment(string segment, string experiment, string lifecycle)
+    {
+        _segment = segment;
+        _experiment = experiment;
+        _lifecycle = lifecycle;
+        ApplySegment();
+    }
+
+    // Only once the provider runs (it runs only with consent); before that the values just wait here
+    private void ApplySegment()
+    {
+        if (_backend == null || !_backend.IsInitialized) return;
+        if (string.IsNullOrEmpty(_segment) && string.IsNullOrEmpty(_experiment) && string.IsNullOrEmpty(_lifecycle)) return;
+
+        _backend.SetCustomDimensions(_segment, _experiment, _lifecycle);
     }
 
     public void Progression(AnalyticsProgressionStatus status, string progression01, string progression02 = null, int? score = null)

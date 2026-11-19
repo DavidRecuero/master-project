@@ -13,6 +13,7 @@ public sealed class RemoteConfigService : IRemoteConfigService
     private readonly IRemoteConfigBackend _backend;
     private readonly RemoteConfigCache _cache;
     private readonly Func<DateTime> _clock;
+    private readonly Func<PlayerAttributes> _attributes;
 
     public RemoteValues Values { get; private set; }
     public RemoteConfigSource Source { get; private set; }
@@ -20,11 +21,14 @@ public sealed class RemoteConfigService : IRemoteConfigService
 
     /// <param name="backend">The server. Null: no download, only the device copy (or nothing).</param>
     /// <param name="cache">The device copy. Null: nothing is saved or read.</param>
-    public RemoteConfigService(IRemoteConfigBackend backend, RemoteConfigCache cache, Func<DateTime> clock = null)
+    /// <param name="attributes">The player as the Game Overrides see it, read at each download. Null: a new player.</param>
+    public RemoteConfigService(IRemoteConfigBackend backend, RemoteConfigCache cache, Func<DateTime> clock = null,
+        Func<PlayerAttributes> attributes = null)
     {
         _backend = backend;
         _cache = cache;
         _clock = clock ?? (() => DateTime.UtcNow);
+        _attributes = attributes ?? (() => PlayerAttributes.NewPlayer);
 
         RemoteValues saved = _cache?.Load() ?? RemoteValues.Empty;
         Values = saved;
@@ -37,7 +41,7 @@ public sealed class RemoteConfigService : IRemoteConfigService
 
         try
         {
-            RemoteValues fresh = await _backend.FetchAsync() ?? RemoteValues.Empty;
+            RemoteValues fresh = await _backend.FetchAsync(_attributes()) ?? RemoteValues.Empty;
             _cache?.Save(fresh, _clock());
 
             if (ValuesInUse)

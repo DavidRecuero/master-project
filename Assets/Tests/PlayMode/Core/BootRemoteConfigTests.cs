@@ -124,6 +124,25 @@ public class BootRemoteConfigTests
         Assert.AreEqual(0, _analytics.StartCalls);
         Assert.AreEqual(1, _sceneLoader.LoadedSceneIndex);
     }
+
+    [UnityTest]
+    public IEnumerator SegmentAndExperiment_ReachTheAnalytics()
+    {
+        _remote.Values = new RemoteValues(new System.Collections.Generic.Dictionary<string, string>
+        {
+            { RemoteKeys.Segment, "stuck" },
+            { RemoteKeys.Experiment, "b" },
+            { RemoteKeys.Lifecycle, "mature" }
+        });
+        Init(cloud: false);
+
+        yield return new WaitForSeconds(0.3f);
+
+        Assert.AreEqual(1, _analytics.StartCalls);
+        Assert.AreEqual(PlayerSegments.Stuck, _analytics.Segment);
+        Assert.AreEqual(PlayerSegments.VariantB, _analytics.Experiment);
+        Assert.AreEqual(PlayerSegments.Mature, _analytics.Lifecycle);
+    }
 }
 
 /// <summary>Remote settings with fixed values. Counts the downloads; can never answer.</summary>

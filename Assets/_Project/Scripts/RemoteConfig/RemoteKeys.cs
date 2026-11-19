@@ -22,6 +22,11 @@ public static class RemoteKeys
     // Kill switches
     public const string AnalyticsEnabled = "analytics_enabled";
 
+    // Segmentation: set by the Game Overrides, reported to analytics (see PlayerSegments)
+    public const string Segment = "segment";
+    public const string Experiment = "experiment";
+    public const string Lifecycle = "lifecycle";
+
     /// <summary>Coins one use costs once the free stock runs out, e.g. "booster_match_price".</summary>
     public static string BoosterPrice(BoosterType type) => $"booster_{Slug(type)}_price";
 

@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 public interface IRemoteConfigBackend
 {
     /// <summary>
-    /// The settings for this player, as the server resolves them (defaults + the Game Overrides they match).
-    /// Throws if there is no fresh answer (no network, not signed in, service down).
+    /// The settings for this player, as the server resolves them (defaults + the Game Overrides whose conditions
+    /// match these attributes). Throws if there is no fresh answer (no network, not signed in, service down).
     /// </summary>
-    Task<RemoteValues> FetchAsync();
+    Task<RemoteValues> FetchAsync(PlayerAttributes attributes);
 }

@@ -16,9 +16,11 @@ using UgsRemoteConfig = Unity.Services.RemoteConfig.RemoteConfigService;
 /// </summary>
 public class UgsRemoteConfigBackend : IRemoteConfigBackend
 {
-    // Attributes for the Game Overrides (segmentation). Empty for now: the segments come in the next phase.
-    private struct UserAttributes { }
-    private struct AppAttributes { }
+    // "app" attributes of the JEXL conditions (app.appVersion). The "user" ones are PlayerAttributes
+    private struct AppAttributes
+    {
+        public string appVersion;
+    }
 
     private readonly string _environmentId;
 
@@ -28,12 +30,13 @@ public class UgsRemoteConfigBackend : IRemoteConfigBackend
         _environmentId = environmentId;
     }
 
-    public async Task<RemoteValues> FetchAsync()
+    public async Task<RemoteValues> FetchAsync(PlayerAttributes attributes)
     {
         if (!string.IsNullOrWhiteSpace(_environmentId))
             UgsRemoteConfig.Instance.SetEnvironmentID(_environmentId.Trim());
 
-        RuntimeConfig config = await UgsRemoteConfig.Instance.FetchConfigsAsync(new UserAttributes(), new AppAttributes());
+        var app = new AppAttributes { appVersion = Application.version };
+        RuntimeConfig config = await UgsRemoteConfig.Instance.FetchConfigsAsync(attributes, app);
 
         // Cached / Default mean the server didn't answer: the device copy is RemoteConfigService's job
         if (config == null || config.origin != ConfigOrigin.Remote)
@@ -46,7 +49,7 @@ public class UgsRemoteConfigBackend : IRemoteConfigBackend
             if (value != null) values[key] = value;
         }
 
-        Debug.Log($"[RemoteConfig] Downloaded {values.Count} keys (environment: {config.environmentId}, assignment: {config.assignmentId}).");
+        Debug.Log($"[RemoteConfig] Downloaded {values.Count} keys for {attributes} (environment: {config.environmentId}, assignment: {config.assignmentId}).");
         return new RemoteValues(values);
     }
 

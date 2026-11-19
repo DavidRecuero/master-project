@@ -26,4 +26,10 @@ public interface IAnalyticsService
     void Progression(AnalyticsProgressionStatus status, string progression01, string progression02 = null, int? score = null);
     void Resource(AnalyticsResourceFlow flow, string currency, float amount, string itemType, string itemId);
     void Design(string eventId, float? value = null);
+
+    /// <summary>
+    /// The player's groups (Remote Config: segment, A/B variant, lifecycle), so the events can be compared by group.
+    /// Kept until there is consent; set by the Boot before Start.
+    /// </summary>
+    void SetSegment(string segment, string experiment, string lifecycle);
 }

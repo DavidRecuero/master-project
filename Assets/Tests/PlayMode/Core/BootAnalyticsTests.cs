@@ -91,4 +91,12 @@ public class BootFakeAnalytics : IAnalyticsService
     public void Progression(AnalyticsProgressionStatus status, string progression01, string progression02 = null, int? score = null) { }
     public void Resource(AnalyticsResourceFlow flow, string currency, float amount, string itemType, string itemId) { }
     public void Design(string eventId, float? value = null) { }
+
+    public string Segment, Experiment, Lifecycle;
+    public void SetSegment(string segment, string experiment, string lifecycle)
+    {
+        Segment = segment;
+        Experiment = experiment;
+        Lifecycle = lifecycle;
+    }
 }

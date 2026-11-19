@@ -26,6 +26,12 @@ public class FakeAnalyticsBackend : IAnalyticsBackend
 
     public int StartSessionCalls, EndSessionCalls;
 
+    /// <summary>Last custom dimensions set, "segment/experiment/lifecycle"; null if never set.</summary>
+    public string Dimensions;
+
+    public void SetCustomDimensions(string dimension01, string dimension02, string dimension03) =>
+        Dimensions = $"{dimension01}/{dimension02}/{dimension03}";
+
     public void StartSession()
     {
         StartSessionCalls++;

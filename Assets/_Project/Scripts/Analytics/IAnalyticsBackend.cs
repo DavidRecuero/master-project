@@ -46,4 +46,10 @@ public interface IAnalyticsBackend
 
     /// <summary>Design (custom) event, e.g. "Booster:Used:Shuffle". Up to 5 parts separated by ':'.</summary>
     void Design(string eventId, float? value = null);
+
+    /// <summary>
+    /// Custom dimensions attached to the events from now on: 01 = segment, 02 = A/B variant, 03 = lifecycle
+    /// (see PlayerSegments). The values must be declared in the provider settings. Null or empty: left as it was.
+    /// </summary>
+    void SetCustomDimensions(string dimension01, string dimension02, string dimension03);
 }

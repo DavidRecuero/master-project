@@ -6,6 +6,7 @@
         "GUID:75469ad4d38634e559750d17036d5f7c",
         "GUID:1ed07ff861e5f468287b0baef844706d",
         "Unity.Localization",
+        "Unity.Addressables",
         "Unity.ResourceManager",
         "Unity.Services.Core",
         "Unity.Services.Core.Environments",

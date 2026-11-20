@@ -73,6 +73,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e18a9f6bdbb1bfe46afc67bc1161de31, type: 2}
   - {fileID: 11400000, guid: f7a8e7c1ddcfdf446b2305860f4314ac, type: 2}
   - {fileID: 11400000, guid: cd671dc411d299e4e8591710bca9b513, type: 2}
+  - {fileID: 11400000, guid: 517e12e9c09340eb98b3bf6319075b43, type: 2}
   m_BuildSettings:
     m_LogResourceManagerExceptions: 1
     m_BundleBuildPath: Temp/com.unity.addressables/AssetBundles
@@ -117,6 +118,7 @@ MonoBehaviour:
     - Locale-en
     - Locale-es
     - Preload
+    - level
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1c1e2213d244b7941b0854e55fa5558b, type: 2}

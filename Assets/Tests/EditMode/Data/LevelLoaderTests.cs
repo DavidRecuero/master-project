@@ -1,11 +1,16 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 using UnityEngine.TestTools;
 
+/// <summary>
+/// The shipped levels: every file in the Levels folder is an Addressables entry the game can find
+/// (address "level_NNN", label "level"), the numbering has no gaps, and every level loads.
+/// </summary>
 public class LevelLoaderTests
 {
     private LevelLoader _levelLoader;
@@ -13,16 +18,18 @@ public class LevelLoaderTests
     [SetUp]
     public void SetUp()
     {
+        LevelLibrary.Reset();
         _levelLoader = new LevelLoader();
     }
+
+    [TearDown]
+    public void TearDown() => LevelLibrary.Reset();
 
     [Test]
     public void LoadLevel_ExistingLevel_ReturnsLevelData()
     {
-        // Act
         LevelData level = _levelLoader.LoadLevel(1);
 
-        // Assert
         Assert.IsNotNull(level);
         Assert.AreEqual(1, level.levelNumber);
     }
@@ -30,32 +37,22 @@ public class LevelLoaderTests
     [Test]
     public void LoadLevel_NonExistingLevel_ReturnsNull()
     {
-        // Arrange
-        LogAssert.Expect(
-            LogType.Error,
-            "Cannot find level_999.json in the Resources folder!"
-        );
+        LogAssert.Expect(LogType.Error, "Cannot find level_999 in the 'level' Addressables label!");
 
-        // Act
-        LevelData level = _levelLoader.LoadLevel(999);
-
-        // Assert
-        Assert.IsNull(level);
+        Assert.IsNull(_levelLoader.LoadLevel(999));
     }
 
     [Test]
-    public void CountLevels_MatchesEveryLevelFileInResources()
+    public void CountLevels_MatchesEveryLevelFileInTheFolder()
     {
-        List<int> numbers = LevelFileNumbersInResources();
-
-        Assert.AreEqual(numbers.Count, _levelLoader.CountLevels());
+        Assert.AreEqual(LevelFileNumbers().Count, _levelLoader.CountLevels());
     }
 
     [Test]
     public void LevelFiles_AreNumberedWithoutGaps()
     {
         // A gap (e.g. level_010 without level_009) would hide every level after it from the game
-        List<int> numbers = LevelFileNumbersInResources();
+        List<int> numbers = LevelFileNumbers();
 
         CollectionAssert.AreEqual(Enumerable.Range(1, numbers.Count), numbers);
     }
@@ -72,17 +69,46 @@ public class LevelLoaderTests
         }
     }
 
-    private static List<int> LevelFileNumbersInResources()
+    [Test]
+    public void EveryLevelFile_IsAnAddressablesEntry_WithItsAddressAndLabel()
     {
-        Regex levelName = new Regex(@"^level_(\d+)$");
+        // The game only sees what Addressables lists under the "level" label: a file that isn't an entry
+        // works in the editor tools but doesn't exist in a build
+        AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+        Assert.IsNotNull(settings, "No Addressables settings in the project");
 
-        return AssetDatabase.FindAssets("level_ t:TextAsset")
+        foreach (string path in LevelFilePaths())
+        {
+            AddressableAssetEntry entry = settings.FindAssetEntry(AssetDatabase.AssetPathToGUID(path));
+            string name = System.IO.Path.GetFileNameWithoutExtension(path);
+
+            Assert.IsNotNull(entry, $"{name} is not in Addressables (Levels group)");
+            Assert.AreEqual(name, entry.address, $"{name} has another address");
+            CollectionAssert.Contains(entry.labels, LevelLibrary.Label, $"{name} has no '{LevelLibrary.Label}' label");
+        }
+    }
+
+    [Test]
+    public void NoLevelIsLeftInResources()
+    {
+        // Resources ships everything inside the build, outside Addressables: a leftover copy would be dead weight
+        string[] leftovers = AssetDatabase.FindAssets("level_ t:TextAsset")
             .Select(AssetDatabase.GUIDToAssetPath)
             .Where(path => path.Contains("/Resources/"))
-            .Select(path => levelName.Match(System.IO.Path.GetFileNameWithoutExtension(path)))
-            .Where(match => match.Success)
-            .Select(match => int.Parse(match.Groups[1].Value))
+            .ToArray();
+
+        CollectionAssert.IsEmpty(leftovers);
+    }
+
+    private static List<string> LevelFilePaths() =>
+        AssetDatabase.FindAssets("t:TextAsset", new[] { LevelLibrary.Folder })
+            .Select(AssetDatabase.GUIDToAssetPath)
+            .Where(path => LevelCatalog.TryParseNumber(path, out _))
+            .ToList();
+
+    private static List<int> LevelFileNumbers() =>
+        LevelFilePaths()
+            .Select(path => LevelCatalog.TryParseNumber(path, out int number) ? number : 0)
             .OrderBy(number => number)
             .ToList();
-    }
 }

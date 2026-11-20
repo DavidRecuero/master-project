@@ -148,6 +148,9 @@ public class BootManager : MonoBehaviour
             UserDataManager.Instance.SetUserId(_authProvider.PlayerId);
         }
 
+        // Before Remote Config: the segments need to know where the level loop starts
+        yield return LevelsStep();
+
         // After the sign-in (the request needs it) and before anything reads a tunable number
         yield return RemoteConfigStep();
 
@@ -227,6 +230,20 @@ public class BootManager : MonoBehaviour
 
         // Tells the analytics when the app goes to the background and comes back (sessions)
         if (Application.isPlaying) AnalyticsAppLifecycle.Ensure();
+    }
+
+    /// <summary>
+    /// Loads every level from Addressables into memory, so the gameplay reads them synchronously. Local content:
+    /// it takes a moment and never blocks the Boot (on failure the first level read tries again).
+    /// </summary>
+    private IEnumerator LevelsStep()
+    {
+        Task<LevelCatalog> load = LevelLibrary.LoadAsync();
+        yield return new WaitUntil(() => load.IsCompleted);
+
+        Debug.Log(LevelLibrary.IsLoaded
+            ? $"[BOOT] Levels ready ({LevelLibrary.EnsureLoaded().Count})"
+            : "[BOOT] Levels not loaded yet. The first level read will try again.");
     }
 
     /// <summary>

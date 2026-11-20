@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Checks every designed level (Resources/level_XXX.json) against the rules the game relies on, so a broken
+/// Checks every designed level (Levels/level_XXX.json) against the rules the game relies on, so a broken
 /// or unwinnable level never reaches a build: shape of the pipes, exits, inlets, colors, matches of three,
 /// barrels and fog.
 /// </summary>

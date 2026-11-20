@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Lists every level_XXX.json in Resources and lets you play any of them directly.
+/// Lists every level_XXX.json in the Levels folder (Addressables group "Levels") and lets you play any of them directly.
 /// </summary>
 public class LevelLoaderWindow : EditorWindow
 {
@@ -50,7 +50,7 @@ public class LevelLoaderWindow : EditorWindow
         foreach (string guid in AssetDatabase.FindAssets("level_ t:TextAsset"))
         {
             string path = AssetDatabase.GUIDToAssetPath(guid);
-            if (!path.Contains("/Resources/")) continue; // LevelLoader only reads from Resources
+            if (!path.StartsWith(LevelLibrary.Folder + "/")) continue; // the game only reads the Levels folder (Addressables)
 
             TextAsset asset = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
             if (asset == null) continue;
@@ -142,7 +142,7 @@ public class LevelLoaderWindow : EditorWindow
 
         if (levels.Count == 0)
         {
-            EditorGUILayout.HelpBox("No level_XXX.json found inside a Resources folder.", MessageType.Warning);
+            EditorGUILayout.HelpBox("No level_XXX.json found in " + LevelLibrary.Folder + ".", MessageType.Warning);
             return;
         }
 

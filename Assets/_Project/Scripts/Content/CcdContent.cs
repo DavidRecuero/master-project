@@ -13,10 +13,10 @@ public static class CcdContent
     public const string ProjectId = "822f0788-c148-4aa3-bff6-9ec6384b6a0d";
 
     /// <summary>Bucket of the development environment (Dashboard > Cloud Content Delivery > Buckets). Empty: not created yet.</summary>
-    public const string DevelopmentBucketId = "";
+    public const string DevelopmentBucketId = "7ebfb021-d43f-4599-b3ef-67eb92fd0c4b";
 
     /// <summary>Bucket of the production environment. Empty: not created yet.</summary>
-    public const string ProductionBucketId = "";
+    public const string ProductionBucketId = "96af22ff-a297-472c-8c64-c66f3cbe81e4";
 
     /// <summary>The badge the game follows. Publishing content = a new release + moving this badge to it.</summary>
     public const string Badge = "latest";

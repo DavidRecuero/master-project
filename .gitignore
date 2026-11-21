@@ -92,6 +92,8 @@ InitTestScene*.unity*
 # files in platform-specific subfolders, for example:
 # /Assets/AddressableAssetsData/OSX/addressables_content_state.bin
 /[Aa]ssets/AddressableAssetsData/*/*.bin*
+# ...except Android's: a content update (new levels on CCD) for a shipped build needs the state of that build
+!/[Aa]ssets/AddressableAssetsData/Android/addressables_content_state.bin
 
 # Visual Scripting auto-generated files
 /[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Flow/UnitOptions.db
@@ -107,4 +109,3 @@ InitTestScene*.unity*
 
 #Google Play Keystore
 *.keystore
-Assets/AddressableAssetsData/Android.meta

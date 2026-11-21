@@ -23,6 +23,13 @@ public class BootManager : MonoBehaviour
     [Tooltip("Optional. Remote Config ID of the 'production' environment. Empty: the environment of the sign-in.")]
     [SerializeField] private string productionEnvironmentId = "";
 
+    [Header("Remote content (Cloud Content Delivery)")]
+    [Tooltip("Off: the game never asks CCD for new content and plays with the content in the build. Kill switch.")]
+    [SerializeField] private bool contentUpdateEnabled = true;
+    [Tooltip("Longest wait (seconds, counted from the start of the Boot) for new content before loading the levels. " +
+             "After that the game goes on with what it has; a late download is used on the next launch.")]
+    [SerializeField] private float contentUpdateTimeout = 6f;
+
     [Header("Privacy")]
     [Tooltip("ConsentPopup prefab. On the first launch (or after a new consent version) the menu doesn't load until the player answers it.")]
     [SerializeField] private ConsentPopup consentPopupPrefab;
@@ -40,6 +47,10 @@ public class BootManager : MonoBehaviour
     private IProfileRepository _profiles;
 
     private IRemoteConfigService _remoteConfig;
+
+    private IContentUpdater _contentUpdater;
+    private Task<ContentUpdateResult?> _contentUpdate;
+    private float _contentDeadline;
 
     private IConsentService _consent;
     private IPopupService _popups;
@@ -64,6 +75,14 @@ public class BootManager : MonoBehaviour
         _profiles = profiles;
         if (timeout.HasValue) cloudTimeout = timeout.Value;
         cloudEnabled = enabled;
+    }
+
+    /// <summary>Optional injection of the remote content check (tests). Without it, Addressables with CCD.</summary>
+    public void InitializeContent(IContentUpdater updater, bool enabled = true, float? timeout = null)
+    {
+        _contentUpdater = updater;
+        contentUpdateEnabled = enabled;
+        if (timeout.HasValue) contentUpdateTimeout = timeout.Value;
     }
 
     /// <summary>Optional injection of the remote settings (tests). Without it, Unity Remote Config with the copy saved on the device.</summary>
@@ -118,6 +137,9 @@ public class BootManager : MonoBehaviour
     {
         Debug.Log("[BOOT] Init services...");
 
+        // CCD needs no sign-in: the content check runs while the rest of the Boot signs in
+        StartContentUpdate();
+
         // Language tables and sign-in load at the same time
         bool localizationReady = false;
         _localization.Initialize(() => localizationReady = true);
@@ -147,6 +169,9 @@ public class BootManager : MonoBehaviour
             // Cloud off: the platform ID identifies the profile, as before the cloud existed
             UserDataManager.Instance.SetUserId(_authProvider.PlayerId);
         }
+
+        // New levels published on CCD, before the levels are read
+        yield return ContentStep();
 
         // Before Remote Config: the segments need to know where the level loop starts
         yield return LevelsStep();
@@ -230,6 +255,50 @@ public class BootManager : MonoBehaviour
 
         // Tells the analytics when the app goes to the background and comes back (sessions)
         if (Application.isPlaying) AnalyticsAppLifecycle.Ensure();
+    }
+
+    private void StartContentUpdate()
+    {
+        if (!contentUpdateEnabled)
+        {
+            Debug.Log("[BOOT] Remote content off (kill switch). Using the content in the build.");
+            return;
+        }
+
+        _contentUpdater ??= new AddressablesContentUpdater();
+        _contentDeadline = Time.realtimeSinceStartup + contentUpdateTimeout;
+        _contentUpdate = SafeUpdateAsync(_contentUpdater);
+    }
+
+    // Never throws: no network or no bucket yet is a normal case (null = nothing new)
+    private static async Task<ContentUpdateResult?> SafeUpdateAsync(IContentUpdater updater)
+    {
+        try
+        {
+            return await updater.UpdateAsync();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[Content] No content update now, using what the device has: {e.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Waits for the content check started at the beginning of the Boot, at most until contentUpdateTimeout
+    /// seconds after that start. If it isn't done by then the Boot goes on: what it downloads stays in the
+    /// Addressables cache and the game uses it on the next launch.
+    /// </summary>
+    private IEnumerator ContentStep()
+    {
+        if (_contentUpdate == null) yield break;
+
+        yield return new WaitUntil(() => _contentUpdate.IsCompleted || Time.realtimeSinceStartup >= _contentDeadline);
+
+        if (!_contentUpdate.IsCompleted)
+            Debug.LogWarning($"[BOOT] Content check not done in {contentUpdateTimeout} s. Going on with the content on the device.");
+        else if (_contentUpdate.Result.HasValue)
+            Debug.Log($"[BOOT] Content up to date ({_contentUpdate.Result.Value})");
     }
 
     /// <summary>

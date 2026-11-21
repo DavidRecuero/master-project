@@ -11,6 +11,9 @@ using UnityEngine.ResourceManagement.ResourceLocations;
 /// Levels from Addressables: every TextAsset with the "level" label (group "Levels", addresses "level_001"...).
 /// The JSON text is copied and the assets released right away: a level is a few KB, so the whole catalog stays
 /// in memory and the gameplay reads it synchronously, with no loading screens between levels.
+///
+/// A level that can't be loaded is left out with a warning instead of failing the whole catalog: a remote level
+/// (CCD) that was never downloaded can't load offline, and the game must still play every level it has.
 /// </summary>
 public class AddressablesLevelSource : ILevelSource
 {
@@ -60,6 +63,10 @@ public class AddressablesLevelSource : ILevelSource
                     ThrowIfFailed(handle, location.PrimaryKey);
                     levels.Add(new KeyValuePair<string, string>(location.PrimaryKey, asset != null ? asset.text : null));
                 }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[Levels] {location.PrimaryKey} not available now: {e.Message}");
+                }
                 finally
                 {
                     if (handle.IsValid()) Addressables.Release(handle);
@@ -81,6 +88,12 @@ public class AddressablesLevelSource : ILevelSource
             TextAsset asset = await handle.Task;
             ThrowIfFailed(handle, location.PrimaryKey);
             return new KeyValuePair<string, string>(location.PrimaryKey, asset != null ? asset.text : null);
+        }
+        catch (Exception e)
+        {
+            // Left out (null JSON): the catalog ignores it and the levels after it wait for the next launch
+            Debug.LogWarning($"[Levels] {location.PrimaryKey} not available now: {e.Message}");
+            return new KeyValuePair<string, string>(location.PrimaryKey, null);
         }
         finally
         {

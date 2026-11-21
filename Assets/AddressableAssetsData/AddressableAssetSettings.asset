@@ -17,9 +17,9 @@ MonoBehaviour:
     serializedVersion: 2
     Hash: 00000000000000000000000000000000
   m_OptimizeCatalogSize: 0
-  m_BuildRemoteCatalog: 0
-  m_CatalogRequestsTimeout: 0
-  m_DisableCatalogUpdateOnStart: 0
+  m_BuildRemoteCatalog: 1
+  m_CatalogRequestsTimeout: 10
+  m_DisableCatalogUpdateOnStart: 1
   m_InternalIdNamingMode: 0
   m_InternalBundleIdMode: 1
   m_AssetLoadMode: 0
@@ -74,6 +74,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f7a8e7c1ddcfdf446b2305860f4314ac, type: 2}
   - {fileID: 11400000, guid: cd671dc411d299e4e8591710bca9b513, type: 2}
   - {fileID: 11400000, guid: 517e12e9c09340eb98b3bf6319075b43, type: 2}
+  - {fileID: 11400000, guid: fa94fdafcb2543a6af68c43648b3945b, type: 2}
   m_BuildSettings:
     m_LogResourceManagerExceptions: 1
     m_BundleBuildPath: Temp/com.unity.addressables/AssetBundles
@@ -84,7 +85,7 @@ MonoBehaviour:
       m_ProfileName: Default
       m_Values:
       - m_Id: 245ce1b1fb4ebfa4ca155476ceecef3c
-        m_Value: <undefined>
+        m_Value: '{CcdContent.RemoteLoadPath}'
       - m_Id: 28707a138c4f69c4196505568db19295
         m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
       - m_Id: 91709663051d25249a36aa41d94ee176

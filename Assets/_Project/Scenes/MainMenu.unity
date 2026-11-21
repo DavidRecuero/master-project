@@ -408,7 +408,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19ed640c05bfadd4fa929851e0da488b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: GameScripts::SceneMusic
-  music: {fileID: 8300000, guid: b984589663804cc4181501e5b0990a02, type: 3}
+  track: pleasant_creek
   volume: 0.7
 --- !u!4 &154588380
 Transform:

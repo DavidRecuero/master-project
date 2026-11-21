@@ -3413,7 +3413,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19ed640c05bfadd4fa929851e0da488b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: GameScripts::SceneMusic
-  music: {fileID: 8300000, guid: d6f77153691d596479fb198a478f94a5, type: 3}
+  track: riverside_ride
   volume: 0.6
 --- !u!4 &1434465550
 Transform:

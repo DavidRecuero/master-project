@@ -1,0 +1,11 @@
+// Custom Play Asset Delivery pack with the game's music (see MusicPack.cs).
+// fast-follow: Google Play downloads it right after installing the app, without the player doing anything.
+// packName must match the folder name without ".androidpack".
+apply plugin: 'com.android.asset-pack'
+
+assetPack {
+    packName = "MusicPack"
+    dynamicDelivery {
+        deliveryType = "fast-follow"
+    }
+}

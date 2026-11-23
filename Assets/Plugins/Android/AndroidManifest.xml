@@ -1,5 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+  <!-- Haptics (HapticsManager): vibrations in gameplay and on the Settings switch -->
+  <uses-permission android:name="android.permission.VIBRATE" />
   <application>
     <activity android:name="com.unity3d.player.UnityPlayerGameActivity" android:theme="@style/BaseUnityGameActivityTheme">
       <intent-filter>

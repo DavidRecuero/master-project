@@ -14,6 +14,11 @@ public class BootAnalyticsTests
     private FakeSceneLoader _sceneLoader;
     private BootFakeConsent _consent;
     private BootFakeAnalytics _analytics;
+    private BootFakePopups _popups;
+
+    // The Boot now also loads the levels (Addressables) before the menu: the first load in the editor can take
+    // longer than a fixed wait, so the tests wait for the Boot to get there, with a generous limit
+    private const float MaxWait = 10f;
 
     [SetUp]
     public void SetUp()
@@ -25,10 +30,13 @@ public class BootAnalyticsTests
         _sceneLoader = new FakeSceneLoader();
         _consent = new BootFakeConsent();
         _analytics = new BootFakeAnalytics();
+        _popups = new BootFakePopups();
 
         _boot.Initialize(_sceneLoader, new FakeAuthProvider(), new FakeBootLocalization());
         _boot.InitializeCloud(null, null, null, enabled: false);
-        _boot.InitializeConsent(_consent, new BootFakePopups(), _prefab);
+        _boot.InitializeContent(null, enabled: false);                        // No CCD check (network)
+        _boot.InitializeRemoteConfig(new BootFakeRemoteConfig(), enabled: false); // No values cached on this PC
+        _boot.InitializeConsent(_consent, _popups, _prefab);
     }
 
     [TearDown]
@@ -45,7 +53,7 @@ public class BootAnalyticsTests
         _consent.SetAll(true);
         _boot.InitializeAnalytics(_analytics);
 
-        yield return new WaitForSeconds(0.3f);
+        yield return WaitForMenu();
 
         Assert.AreEqual(1, _analytics.StartCalls);
         Assert.AreSame(_analytics, AnalyticsServices.Current);
@@ -57,12 +65,12 @@ public class BootAnalyticsTests
     {
         _boot.InitializeAnalytics(_analytics);
 
-        yield return new WaitForSeconds(0.3f);
+        yield return WaitUntilOrTimeout(() => _popups.Count > 0);
+        Assert.AreEqual(1, _popups.Count, "The consent popup opened");
         Assert.AreEqual(0, _analytics.StartCalls, "Nothing may start while the popup waits");
 
         _prefab.OnAcceptClicked();
-        yield return null;
-        yield return null;
+        yield return WaitForMenu();
 
         Assert.AreEqual(1, _analytics.StartCalls);
     }
@@ -73,10 +81,18 @@ public class BootAnalyticsTests
         _consent.SetAll(true);
         _boot.InitializeAnalytics(_analytics, enabled: false);
 
-        yield return new WaitForSeconds(0.3f);
+        yield return WaitForMenu();
 
         Assert.AreEqual(0, _analytics.StartCalls);
         Assert.AreEqual(1, _sceneLoader.LoadedSceneIndex);
+    }
+
+    private IEnumerator WaitForMenu() => WaitUntilOrTimeout(() => _sceneLoader.LoadedSceneIndex >= 0);
+
+    private static IEnumerator WaitUntilOrTimeout(System.Func<bool> condition)
+    {
+        float limit = Time.realtimeSinceStartup + MaxWait;
+        yield return new WaitUntil(() => condition() || Time.realtimeSinceStartup >= limit);
     }
 }
 

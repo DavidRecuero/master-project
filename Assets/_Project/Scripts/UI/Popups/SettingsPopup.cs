@@ -4,15 +4,16 @@ using UnityEngine.Localization.Components;
 using UnityEngine.UI;
 
 /// <summary>
-/// Settings popup: music and SFX on/off, the language selector, the button that opens the credits
+/// Settings popup: music, SFX and vibration on/off, the language selector, the button that opens the credits
 /// on top, the Privacy button (opens the privacy preferences on top: analytics switch and the privacy policy,
 /// which Google Play requires to be reachable from inside the game), the button that opens the "delete account" confirmation (Google Play
 /// requires it for apps that create accounts), and a footer with the game version and the player ID (for
 /// support and bug reports).
 /// The same component drives the gameplay Settings (GameplaySettingsPopup prefab): there it only has the audio
-/// toggles, the language selector and the "Abandon level" button, which opens the confirmation on top. Every
+/// toggles (vibration included), the language selector and the "Abandon level" button, which opens the confirmation on top. Every
 /// section is optional: a prefab without that button simply doesn't show it.
-/// It only talks to IAudioService, which already saves the audio choices on the device.
+/// It only talks to IAudioService and IHapticsService, which already save their choices on the device.
+/// The vibration row hides on devices without a vibrator.
 /// The language selector is its own component (LanguageDropdown) inside the popup.
 /// Every fixed label of the prefab uses a LocalizeStringEvent; only the footer is filled from here.
 /// </summary>
@@ -24,6 +25,11 @@ public class SettingsPopup : PopupView
     [Header("Audio")]
     [SerializeField] private Toggle musicToggle;
     [SerializeField] private Toggle sfxToggle;
+
+    [Header("Haptics")]
+    [SerializeField] private Toggle vibrationToggle;
+    [Tooltip("Whole vibration row, hidden on devices without a vibrator. Empty = the toggle's parent")]
+    [SerializeField] private GameObject vibrationRow;
 
     [Header("Credits")]
     [SerializeField] private Button creditsButton;
@@ -54,6 +60,7 @@ public class SettingsPopup : PopupView
     [SerializeField] private LocalizedString infoText = new LocalizedString();
 
     private IAudioService _audio;
+    private IHapticsService _haptics;
     private IUserDataProvider _userData;
     private string _version;
     private ILocalizationService _localization;
@@ -61,12 +68,13 @@ public class SettingsPopup : PopupView
 
     /// <summary>
     /// Optional injection (tests). Without it, the AudioManager, the UserDataManager, Application.version,
-    /// the shared UnityLocalizationService and the device browser are used.
+    /// the shared UnityLocalizationService, the device browser and the HapticsManager are used.
     /// </summary>
     public void Initialize(IAudioService audio, IUserDataProvider userData = null, string version = null,
-        ILocalizationService localization = null, IUrlOpener urlOpener = null)
+        ILocalizationService localization = null, IUrlOpener urlOpener = null, IHapticsService haptics = null)
     {
         _audio = audio;
+        if (haptics != null) _haptics = haptics;
         if (userData != null) _userData = userData;
         if (version != null) _version = version;
         if (localization != null) _localization = localization;
@@ -78,6 +86,7 @@ public class SettingsPopup : PopupView
     {
         if (musicToggle != null) musicToggle.onValueChanged.AddListener(OnMusicToggled);
         if (sfxToggle != null) sfxToggle.onValueChanged.AddListener(OnSfxToggled);
+        if (vibrationToggle != null) vibrationToggle.onValueChanged.AddListener(OnVibrationToggled);
         if (creditsButton != null) creditsButton.onClick.AddListener(OnCreditsClicked);
         if (privacyButton != null) privacyButton.onClick.AddListener(OnPrivacyClicked);
         if (deleteAccountButton != null) deleteAccountButton.onClick.AddListener(OnDeleteAccountClicked);
@@ -88,6 +97,7 @@ public class SettingsPopup : PopupView
     {
         if (musicToggle != null) musicToggle.onValueChanged.RemoveListener(OnMusicToggled);
         if (sfxToggle != null) sfxToggle.onValueChanged.RemoveListener(OnSfxToggled);
+        if (vibrationToggle != null) vibrationToggle.onValueChanged.RemoveListener(OnVibrationToggled);
         if (creditsButton != null) creditsButton.onClick.RemoveListener(OnCreditsClicked);
         if (privacyButton != null) privacyButton.onClick.RemoveListener(OnPrivacyClicked);
         if (deleteAccountButton != null) deleteAccountButton.onClick.RemoveListener(OnDeleteAccountClicked);
@@ -97,6 +107,7 @@ public class SettingsPopup : PopupView
     protected override void OnOpened()
     {
         _audio ??= AudioManager.Instance;
+        _haptics ??= HapticsManager.Instance;
         _userData ??= UserDataManager.Instance;
         _localization ??= UnityLocalizationService.Instance;
         if (_audio == null) Debug.LogWarning("[SettingsPopup] No AudioManager found. Start from Boot scene.");
@@ -113,6 +124,8 @@ public class SettingsPopup : PopupView
             if (sfxToggle != null) sfxToggle.SetIsOnWithoutNotify(_audio.SfxEnabled);
         }
 
+        RefreshVibration();
+
         // The gameplay Settings has no footer
         if (infoLabel == null) return;
 
@@ -123,6 +136,18 @@ public class SettingsPopup : PopupView
 
         if (!ReferenceEquals(infoLabel.StringReference, infoText))
             infoLabel.StringReference = infoText;
+    }
+
+    /// <summary>Shows the saved vibration choice, or hides the row where the device can't vibrate.</summary>
+    private void RefreshVibration()
+    {
+        if (vibrationToggle == null) return;
+
+        GameObject row = vibrationRow != null ? vibrationRow : vibrationToggle.transform.parent?.gameObject;
+        bool supported = _haptics != null && _haptics.IsSupported;
+        if (row != null && row != gameObject) row.SetActive(supported);
+
+        if (_haptics != null) vibrationToggle.SetIsOnWithoutNotify(_haptics.Enabled);
     }
 
     /// <summary>A missing value shows as a dash, never as an empty gap.</summary>
@@ -140,6 +165,15 @@ public class SettingsPopup : PopupView
 
         // Turning the sounds back on gives a click, so the player hears they are on
         if (isOn) _audio.PlaySfx(SfxId.ButtonClick);
+    }
+
+    public void OnVibrationToggled(bool isOn)
+    {
+        if (_haptics == null) return;
+        _haptics.Enabled = isOn;
+
+        // Turning vibration back on gives a pulse, so the player feels it is on
+        if (isOn) _haptics.Play(HapticType.MediumImpact);
     }
 
     public void OnCreditsClicked()

@@ -114,6 +114,32 @@ public class UIManagerTests
     }
 
     [Test]
+    public void PlayButton_KeepsTheOtherListeners_SoundAndVibration()
+    {
+        int otherCalls = 0;
+        _uiManager.playButton.onClick.AddListener(() => otherCalls++); // As ButtonSound and UiHaptic do
+        _uiManager.Initialize(1, () => { });
+
+        GameEvents.TriggerLevelCleared();
+        _uiManager.playButton.onClick.Invoke();
+
+        Assert.AreEqual(1, otherCalls);
+    }
+
+    [Test]
+    public void PlayButton_ShowingTheResultTwice_RunsTheActionOnce()
+    {
+        int actionCalls = 0;
+        _uiManager.Initialize(1, () => actionCalls++);
+
+        GameEvents.TriggerLevelFailed();
+        GameEvents.TriggerLevelCleared();
+        _uiManager.playButton.onClick.Invoke();
+
+        Assert.AreEqual(1, actionCalls);
+    }
+
+    [Test]
     public void Result_WaitsForTheDelay_BeforeShowingUp()
     {
         _uiManager.resultPanel.SetActive(false);

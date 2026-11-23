@@ -243,6 +243,10 @@ MonoBehaviour:
     m_Key: privacy.analytics
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000033
+    m_Key: settings.vibration
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

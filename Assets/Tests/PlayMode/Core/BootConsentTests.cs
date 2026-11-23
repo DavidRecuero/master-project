@@ -31,6 +31,7 @@ public class BootConsentTests
 
         _boot.Initialize(_sceneLoader, new FakeAuthProvider(), new FakeBootLocalization());
         _boot.InitializeCloud(null, null, null, enabled: false);
+        _boot.InitializeContent(null, enabled: false); // No CCD check: these tests wait less than its timeout
         _boot.InitializeConsent(_consent, _popups, _prefab);
         _boot.InitializeAnalytics(null, enabled: false);   // these tests are about the popup only
     }

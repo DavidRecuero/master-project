@@ -53,6 +53,7 @@ public class UIManager : MonoBehaviour
     public event Action<bool> ResultShown;
 
     private Action _onPlayAgainAction;
+    private UnityEngine.Events.UnityAction _resultButtonAction;
     private int _currentLevelIndex = 1;
     private Coroutine _resultRoutine;
     private ILivesService _lives;
@@ -171,9 +172,11 @@ public class UIManager : MonoBehaviour
 
         if (playButton != null)
         {
-            // Cleans previous events to not accumulate calls and assings new behaviour
-            playButton.onClick.RemoveAllListeners();
-            playButton.onClick.AddListener(buttonAction);
+            // Swaps only our own action, so the calls don't pile up. Not RemoveAllListeners: that also
+            // removed the click sound (ButtonSound) and the vibration (UiHaptic) of the button.
+            if (_resultButtonAction != null) playButton.onClick.RemoveListener(_resultButtonAction);
+            _resultButtonAction = buttonAction;
+            playButton.onClick.AddListener(_resultButtonAction);
         }
     }
 }

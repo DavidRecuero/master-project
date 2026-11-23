@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 7017016486144909084}
   - component: {fileID: 9210461516424544162}
   - component: {fileID: 4050172393669679233}
+  - component: {fileID: 6665116052642043332}
   m_Layer: 5
   m_Name: CloseButton
   m_TagString: Untagged
@@ -183,3 +184,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2aa9963f40f478d488a9b19237f6c091, type: 3}
   m_Name: 
   m_EditorClassIdentifier: GameScripts::PopupCloseButton
+--- !u!114 &6665116052642043332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6735278593515795659}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c69af30e975d42989e101348c2c79302, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameScripts::UiHaptic
+  haptic: 1

@@ -253,6 +253,10 @@ MonoBehaviour:
     m_Localized: "Anal\xEDticas"
     m_Metadata:
       m_Items: []
+  - m_Id: 348100000000033
+    m_Localized: "Vibraci\xF3n"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds:

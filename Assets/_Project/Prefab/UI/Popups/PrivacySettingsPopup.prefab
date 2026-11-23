@@ -660,6 +660,7 @@ GameObject:
   - component: {fileID: 5714502776695744108}
   - component: {fileID: 8415396818227959315}
   - component: {fileID: 8503042225651207079}
+  - component: {fileID: 3842612748226888005}
   m_Layer: 5
   m_Name: Toggle
   m_TagString: Untagged
@@ -1637,3 +1638,16 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 7890285705900138386, guid: f3d2a74f5e6b8e84f89e70fc1793017e, type: 3}
   m_PrefabInstance: {fileID: 7699054237211669916}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &3842612748226888005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4293429644417432269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c69af30e975d42989e101348c2c79302, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameScripts::UiHaptic
+  haptic: 1
